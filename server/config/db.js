@@ -1,5 +1,12 @@
 const { Pool } = require('pg');
 
+// Check if DATABASE_URL is set
+if (!process.env.DATABASE_URL) {
+    console.error('ERROR: DATABASE_URL environment variable is not set!');
+    console.error('Please set DATABASE_URL in Railway Variables or .env file');
+    process.exit(1);
+}
+
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
