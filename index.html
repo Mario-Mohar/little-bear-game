@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Little Bear - Platformer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui" class="hidden">
+            <div id="level">Level: <span id="level-value">1</span></div>
+            <div id="score">Score: <span id="score-value">0</span></div>
+            <div id="lives">Lives: <span id="lives-value">3</span></div>
+            <div id="timer">Time: <span id="timer-value">0:00</span></div>
+            <div id="coins">Coins: <span id="coins-value">0/0</span></div>
+        </div>
+        <div id="start-screen">
+            <h1>Little Bear</h1>
+            <div class="user-coins">Your Coins: <span id="user-coins-display">0</span></div>
+            <p>Use Arrow Keys or WASD to move</p>
+            <p>Press SPACE or W to jump (double jump!)</p>
+            <div class="name-input">
+                <label for="player-name">Enter your name:</label>
+                <input type="text" id="player-name" maxlength="12" placeholder="Player">
+            </div>
+            <div id="highscore-table" class="highscore-list">
+                <h3>Top 5 Highscores</h3>
+                <ol id="highscore-entries"></ol>
+            </div>
+            <div class="start-buttons">
+                <button id="start-btn">Start Game</button>
+                <button id="shop-btn" class="shop-button">Shop</button>
+            </div>
+        </div>
+
+        <div id="shop-screen" class="hidden">
+            <h1>Shop</h1>
+            <div class="shop-coins">Your Coins: <span id="shop-coins-display">0</span></div>
+
+            <div class="shop-tabs">
+                <button class="shop-tab active" data-tab="skins">Skins</button>
+                <button class="shop-tab" data-tab="upgrades">Upgrades</button>
+            </div>
+
+            <div class="shop-content">
+                <div id="skins-tab" class="tab-content active">
+                    <div id="skins-grid" class="shop-grid"></div>
+                </div>
+                <div id="upgrades-tab" class="tab-content">
+                    <div id="upgrades-grid" class="shop-grid"></div>
+                </div>
+            </div>
+
+            <button id="shop-close-btn">Back to Menu</button>
+        </div>
+        <div id="level-complete" class="hidden">
+            <h1>Level Complete!</h1>
+            <p>Level <span id="completed-level">1</span> cleared!</p>
+            <p>Time: <span id="level-time">0:00</span> <span id="level-time-bonus" class="bonus">+0</span></p>
+            <p>Coins: <span id="level-coins">0/0</span></p>
+            <p>Score: <span id="level-score">0</span></p>
+            <p class="earned-coins">Earned: <span id="level-earned-coins">0</span> Coins!</p>
+            <button id="next-level-btn">Next Level</button>
+        </div>
+        <div id="game-complete" class="hidden">
+            <h1>You Win!</h1>
+            <p>All levels completed!</p>
+            <p>Final Score: <span id="win-score">0</span></p>
+            <div class="highscore-list">
+                <h3>Top 5 Highscores</h3>
+                <ol id="win-highscore-entries"></ol>
+            </div>
+            <button id="play-again-btn">Play Again</button>
+        </div>
+        <div id="game-over" class="hidden">
+            <h1>Game Over</h1>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <div class="highscore-list">
+                <h3>Top 5 Highscores</h3>
+                <ol id="gameover-highscore-entries"></ol>
+            </div>
+            <button id="restart-btn">Play Again</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
