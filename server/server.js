@@ -12,6 +12,9 @@ const { initDatabase } = require('./config/db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy (required for Railway/Heroku/etc behind load balancer)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors({
     origin: process.env.FRONTEND_URL || '*',

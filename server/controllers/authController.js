@@ -50,22 +50,30 @@ async function register(req, res) {
 
         const user = result.rows[0];
 
-        // Send verification email if SMTP is configured
+        // Send verification email if SMTP is configured, otherwise auto-verify
+        let emailSent = false;
         if (transporter) {
-            const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/api/auth/verify/${verificationToken}`;
-            await transporter.sendMail({
-                from: process.env.SMTP_USER,
-                to: email,
-                subject: 'Little Bear - Verify your email',
-                html: `
-                    <h1>Welcome to Little Bear!</h1>
-                    <p>Please click the link below to verify your email:</p>
-                    <a href="${verifyUrl}">${verifyUrl}</a>
-                    <p>This link expires in 24 hours.</p>
-                `
-            });
-        } else {
-            // Auto-verify if no email service configured
+            try {
+                const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/api/auth/verify/${verificationToken}`;
+                await transporter.sendMail({
+                    from: process.env.SMTP_USER,
+                    to: email,
+                    subject: 'Little Bear - Verify your email',
+                    html: `
+                        <h1>Welcome to Little Bear!</h1>
+                        <p>Please click the link below to verify your email:</p>
+                        <a href="${verifyUrl}">${verifyUrl}</a>
+                        <p>This link expires in 24 hours.</p>
+                    `
+                });
+                emailSent = true;
+            } catch (emailError) {
+                console.log('Email sending failed, auto-verifying user:', emailError.message);
+            }
+        }
+
+        // Auto-verify if no email service or email failed
+        if (!emailSent) {
             await pool.query('UPDATE users SET email_verified = true WHERE id = $1', [user.id]);
             user.email_verified = true;
         }
