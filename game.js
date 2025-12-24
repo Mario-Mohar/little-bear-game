@@ -167,6 +167,21 @@ const API = {
             return response.ok;
         } catch (e) { console.error('Failed to sync guest data:', e); }
         return false;
+    },
+
+    async updateSelectedSkin(skinId) {
+        if (this.isGuest || !this.token) return false;
+        try {
+            const response = await this.request('/users/profile', {
+                method: 'PUT',
+                body: JSON.stringify({ selectedSkin: skinId })
+            });
+            if (response.ok && this.user) {
+                this.user.selectedSkin = skinId;
+            }
+            return response.ok;
+        } catch (e) { console.error('Failed to update skin:', e); }
+        return false;
     }
 };
 
@@ -1501,7 +1516,7 @@ function addCoinsToProfile(amount, level) {
 }
 
 // Buy item from shop
-function buyShopItem(type, itemId) {
+async function buyShopItem(type, itemId) {
     const items = type === 'skins' ? SHOP.skins : SHOP.upgrades;
     const item = items.find(i => i.id === itemId);
 
@@ -1525,7 +1540,22 @@ function buyShopItem(type, itemId) {
         return { success: false, message: 'Nicht genug Münzen' };
     }
 
-    // Purchase
+    // Sync with server if logged in
+    if (!API.isGuest) {
+        const result = await API.purchase(type, itemId);
+        if (result && result.ok) {
+            // Update local profile from server response
+            game.userProfile.totalCoins = result.data.totalCoins;
+            game.userProfile.ownedSkins = ['default', ...(result.data.purchasedSkins || [])];
+            game.userProfile.ownedUpgrades = result.data.purchasedUpgrades || [];
+            game.userProfile.extraLives = calculateExtraLives(game.userProfile.ownedUpgrades);
+            return { success: true, message: 'Kauf erfolgreich!' };
+        } else {
+            return { success: false, message: result?.data?.error || 'Kauf fehlgeschlagen' };
+        }
+    }
+
+    // Guest purchase (local only)
     game.userProfile.totalCoins -= item.price;
 
     if (type === 'skins') {
@@ -1543,10 +1573,15 @@ function buyShopItem(type, itemId) {
 }
 
 // Select skin
-function selectSkin(skinId) {
+async function selectSkin(skinId) {
     if (game.userProfile.ownedSkins.includes(skinId)) {
         game.userProfile.selectedSkin = skinId;
         saveUserProfile();
+
+        // Sync with server if logged in
+        if (!API.isGuest) {
+            await API.updateSelectedSkin(skinId);
+        }
         return true;
     }
     return false;
@@ -5361,10 +5396,10 @@ function renderSkinsShop() {
 
     // Add event listeners for buy buttons
     grid.querySelectorAll('.buy-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const result = buyShopItem(btn.dataset.type, btn.dataset.id);
+        btn.addEventListener('click', async () => {
+            const result = await buyShopItem(btn.dataset.type, btn.dataset.id);
             if (result.success) {
-                selectSkin(btn.dataset.id);
+                await selectSkin(btn.dataset.id);
                 updateCoinsDisplay();
                 renderShop();
             } else {
@@ -5401,8 +5436,8 @@ function renderUpgradesShop() {
     // Add event listeners for buy buttons
     grid.querySelectorAll('.buy-btn').forEach(btn => {
         if (!btn.disabled) {
-            btn.addEventListener('click', () => {
-                const result = buyShopItem(btn.dataset.type, btn.dataset.id);
+            btn.addEventListener('click', async () => {
+                const result = await buyShopItem(btn.dataset.type, btn.dataset.id);
                 if (result.success) {
                     updateCoinsDisplay();
                     renderShop();
