@@ -4899,17 +4899,18 @@ function createParticles(x, y, count, color) {
 // Reset enemies and boss when player respawns
 function resetEnemies() {
     const levelData = LEVELS[game.level - 1];
+    const yOffset = getYOffset();
 
     // Reset enemies
     game.enemies = [];
     const enemyType = levelData.enemyType || 'default';
     for (let e of levelData.enemies) {
-        game.enemies.push(new Enemy(e.x, e.y, e.left, e.right, enemyType));
+        game.enemies.push(new Enemy(e.x, e.y + yOffset, e.left, e.right, enemyType));
     }
 
     // Reset boss
     if (levelData.boss) {
-        game.boss = new Boss(levelData.boss.x, levelData.boss.y, levelData.boss.type);
+        game.boss = new Boss(levelData.boss.x, levelData.boss.y + yOffset, levelData.boss.type);
         game.bossDefeated = false;
     }
 }
