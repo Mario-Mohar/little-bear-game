@@ -303,8 +303,8 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
 
 // Game Configuration
 const CONFIG = {
-    WIDTH: 800,
-    HEIGHT: 600,
+    WIDTH: window.innerWidth,
+    HEIGHT: window.innerHeight,
     GRAVITY: 0.6,
     FRICTION: 0.8,
     PLAYER: {
@@ -315,6 +315,18 @@ const CONFIG = {
         COLOR: '#8B4513'
     }
 };
+
+// Handle window resize
+function resizeCanvas() {
+    CONFIG.WIDTH = window.innerWidth;
+    CONFIG.HEIGHT = window.innerHeight;
+    if (game.canvas) {
+        game.canvas.width = CONFIG.WIDTH;
+        game.canvas.height = CONFIG.HEIGHT;
+    }
+}
+
+window.addEventListener('resize', resizeCanvas);
 
 // Theme configurations for different levels
 const THEMES = {
@@ -1869,7 +1881,7 @@ class Player {
 
     respawn() {
         this.x = 100;
-        this.y = 300;
+        this.y = 300 + getYOffset();
         this.velX = 0;
         this.velY = 0;
         this.jumpCount = 0;
@@ -4803,7 +4815,7 @@ class Obstacle {
 class Goal {
     constructor(x) {
         this.x = x;
-        this.y = 450;
+        this.y = 450 + getYOffset();
         this.width = 50;
         this.height = 100;
         this.flagWave = 0;
@@ -4898,6 +4910,12 @@ function resetEnemies() {
 }
 
 // Level Generation
+const DESIGN_HEIGHT = 600; // Original design height
+
+function getYOffset() {
+    return CONFIG.HEIGHT - DESIGN_HEIGHT;
+}
+
 function generateLevel(levelNum) {
     const levelData = LEVELS[levelNum - 1];
     game.levelWidth = levelData.width;
@@ -4911,42 +4929,44 @@ function generateLevel(levelNum) {
     game.boss = null;
     game.bossDefeated = false;
 
+    const yOffset = getYOffset();
+
     // Create static platforms
     for (let p of levelData.platforms) {
-        game.platforms.push(new Platform(p.x, p.y, p.w, p.h, p.type));
+        game.platforms.push(new Platform(p.x, p.y + yOffset, p.w, p.h, p.type));
     }
 
     // Create moving platforms
     if (levelData.movingPlatforms) {
         for (let p of levelData.movingPlatforms) {
-            game.movingPlatforms.push(new MovingPlatform(p.x, p.y, p.w, p.h, p.type, p.moveX, p.moveY, p.speed));
+            game.movingPlatforms.push(new MovingPlatform(p.x, p.y + yOffset, p.w, p.h, p.type, p.moveX, p.moveY, p.speed));
         }
     }
 
     // Create coins
     for (let c of levelData.coins) {
-        game.coins.push(new Coin(c.x, c.y));
+        game.coins.push(new Coin(c.x, c.y + yOffset));
     }
 
     // Create enemies with level-specific type
     const enemyType = levelData.enemyType || 'default';
     for (let e of levelData.enemies) {
-        game.enemies.push(new Enemy(e.x, e.y, e.left, e.right, enemyType));
+        game.enemies.push(new Enemy(e.x, e.y + yOffset, e.left, e.right, enemyType));
     }
 
     // Create obstacles
     if (levelData.obstacles) {
         for (let o of levelData.obstacles) {
-            game.obstacles.push(new Obstacle(o.x, o.y, o.type));
+            game.obstacles.push(new Obstacle(o.x, o.y + yOffset, o.type));
         }
     }
 
     // Create boss
     if (levelData.boss) {
-        game.boss = new Boss(levelData.boss.x, levelData.boss.y, levelData.boss.type);
+        game.boss = new Boss(levelData.boss.x, levelData.boss.y + yOffset, levelData.boss.type);
     }
 
-    // Create goal
+    // Create goal (uses yOffset internally)
     game.goal = new Goal(levelData.goalX);
 
     // Initialize timer and coin tracking
@@ -5202,7 +5222,7 @@ function nextLevel() {
     updateUI();
 
     generateLevel(game.level);
-    game.player = new Player(100, 400);
+    game.player = new Player(100, 400 + getYOffset());
     game.running = true;
     gameLoop();
 }
@@ -5651,7 +5671,7 @@ function startGame() {
     }
 
     generateLevel(game.level);
-    game.player = new Player(100, 400);
+    game.player = new Player(100, 400 + getYOffset());
     game.running = true;
     gameLoop();
 }
