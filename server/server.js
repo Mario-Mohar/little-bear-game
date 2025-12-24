@@ -26,7 +26,7 @@ app.use(express.json());
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 20, // limit each IP to 20 requests per windowMs
-    message: { error: 'Too many attempts, please try again later' }
+    message: { error: 'Zu viele Versuche, bitte später erneut versuchen' }
 });
 
 // Serve static files from public folder
@@ -50,7 +50,7 @@ app.get('*', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Server Error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Interner Serverfehler' });
 });
 
 // Initialize database and start server

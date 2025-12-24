@@ -34,7 +34,7 @@ async function getHighscores(req, res) {
         });
     } catch (error) {
         console.error('Get highscores error:', error);
-        res.status(500).json({ error: 'Failed to get highscores' });
+        res.status(500).json({ error: 'Highscores konnten nicht geladen werden' });
     }
 }
 
@@ -69,7 +69,7 @@ async function getUserHighscores(req, res) {
         });
     } catch (error) {
         console.error('Get user highscores error:', error);
-        res.status(500).json({ error: 'Failed to get user highscores' });
+        res.status(500).json({ error: 'Benutzer-Highscores konnten nicht geladen werden' });
     }
 }
 
@@ -84,7 +84,7 @@ async function addHighscore(req, res) {
         );
 
         if (userResult.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({ error: 'Benutzer nicht gefunden' });
         }
 
         const username = userResult.rows[0].username;
@@ -115,7 +115,7 @@ async function addHighscore(req, res) {
         const isNewBest = score > previousBest;
 
         res.status(201).json({
-            message: 'Highscore saved',
+            message: 'Highscore gespeichert',
             id: result.rows[0].id,
             rank: parseInt(rankResult.rows[0].rank),
             isNewBest,
@@ -123,7 +123,7 @@ async function addHighscore(req, res) {
         });
     } catch (error) {
         console.error('Add highscore error:', error);
-        res.status(500).json({ error: 'Failed to save highscore' });
+        res.status(500).json({ error: 'Highscore konnte nicht gespeichert werden' });
     }
 }
 
@@ -138,7 +138,7 @@ async function getMyRank(req, res) {
         const bestScore = bestResult.rows[0].best_score;
 
         if (!bestScore) {
-            return res.json({ rank: null, bestScore: 0, message: 'No scores yet' });
+            return res.json({ rank: null, bestScore: 0, message: 'Noch keine Punkte' });
         }
 
         // Get rank
@@ -159,7 +159,7 @@ async function getMyRank(req, res) {
         });
     } catch (error) {
         console.error('Get my rank error:', error);
-        res.status(500).json({ error: 'Failed to get rank' });
+        res.status(500).json({ error: 'Rang konnte nicht geladen werden' });
     }
 }
 

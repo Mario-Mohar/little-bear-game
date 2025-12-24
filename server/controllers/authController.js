@@ -31,7 +31,7 @@ async function register(req, res) {
         );
 
         if (existingUser.rows.length > 0) {
-            return res.status(400).json({ error: 'Username or email already exists' });
+            return res.status(400).json({ error: 'Benutzername oder E-Mail existiert bereits' });
         }
 
         // Hash password
@@ -58,12 +58,12 @@ async function register(req, res) {
                 await transporter.sendMail({
                     from: process.env.SMTP_USER,
                     to: email,
-                    subject: 'Little Bear - Verify your email',
+                    subject: 'Little Bear - Bestätige deine E-Mail',
                     html: `
-                        <h1>Welcome to Little Bear!</h1>
-                        <p>Please click the link below to verify your email:</p>
+                        <h1>Willkommen bei Little Bear!</h1>
+                        <p>Bitte klicke auf den Link unten, um deine E-Mail zu bestätigen:</p>
                         <a href="${verifyUrl}">${verifyUrl}</a>
-                        <p>This link expires in 24 hours.</p>
+                        <p>Dieser Link läuft in 24 Stunden ab.</p>
                     `
                 });
                 emailSent = true;
@@ -82,7 +82,7 @@ async function register(req, res) {
         const token = generateToken(user);
 
         res.status(201).json({
-            message: 'Registration successful',
+            message: 'Registrierung erfolgreich',
             user: {
                 id: user.id,
                 username: user.username,
@@ -97,7 +97,7 @@ async function register(req, res) {
         });
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({ error: 'Registration failed' });
+        res.status(500).json({ error: 'Registrierung fehlgeschlagen' });
     }
 }
 
@@ -113,7 +113,7 @@ async function login(req, res) {
         );
 
         if (result.rows.length === 0) {
-            return res.status(401).json({ error: 'Invalid email or password' });
+            return res.status(401).json({ error: 'Ungültige E-Mail oder Passwort' });
         }
 
         const user = result.rows[0];
@@ -121,7 +121,7 @@ async function login(req, res) {
         // Verify password
         const validPassword = await bcrypt.compare(password, user.password_hash);
         if (!validPassword) {
-            return res.status(401).json({ error: 'Invalid email or password' });
+            return res.status(401).json({ error: 'Ungültige E-Mail oder Passwort' });
         }
 
         // Update last login
@@ -131,7 +131,7 @@ async function login(req, res) {
         const token = generateToken(user);
 
         res.json({
-            message: 'Login successful',
+            message: 'Anmeldung erfolgreich',
             user: {
                 id: user.id,
                 username: user.username,
@@ -146,7 +146,7 @@ async function login(req, res) {
         });
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ error: 'Login failed' });
+        res.status(500).json({ error: 'Anmeldung fehlgeschlagen' });
     }
 }
 
@@ -163,8 +163,8 @@ async function verifyEmail(req, res) {
             return res.status(400).send(`
                 <html>
                     <body style="font-family: Arial; text-align: center; padding: 50px;">
-                        <h1>Invalid or expired verification link</h1>
-                        <a href="/">Go to game</a>
+                        <h1>Ungültiger oder abgelaufener Bestätigungslink</h1>
+                        <a href="/">Zum Spiel</a>
                     </body>
                 </html>
             `);
@@ -173,15 +173,15 @@ async function verifyEmail(req, res) {
         res.send(`
             <html>
                 <body style="font-family: Arial; text-align: center; padding: 50px;">
-                    <h1>Email verified successfully!</h1>
-                    <p>You can now log in to Little Bear.</p>
-                    <a href="/">Go to game</a>
+                    <h1>E-Mail erfolgreich bestätigt!</h1>
+                    <p>Du kannst dich jetzt bei Little Bear anmelden.</p>
+                    <a href="/">Zum Spiel</a>
                 </body>
             </html>
         `);
     } catch (error) {
         console.error('Verification error:', error);
-        res.status(500).send('Verification failed');
+        res.status(500).send('Bestätigung fehlgeschlagen');
     }
 }
 
@@ -199,7 +199,7 @@ async function forgotPassword(req, res) {
 
         if (result.rows.length === 0) {
             // Don't reveal if email exists
-            return res.json({ message: 'If an account exists, a reset email has been sent' });
+            return res.json({ message: 'Falls ein Konto existiert, wurde eine E-Mail gesendet' });
         }
 
         if (transporter) {
@@ -207,21 +207,21 @@ async function forgotPassword(req, res) {
             await transporter.sendMail({
                 from: process.env.SMTP_USER,
                 to: email,
-                subject: 'Little Bear - Password Reset',
+                subject: 'Little Bear - Passwort zurücksetzen',
                 html: `
-                    <h1>Password Reset</h1>
-                    <p>Click the link below to reset your password:</p>
+                    <h1>Passwort zurücksetzen</h1>
+                    <p>Klicke auf den Link unten, um dein Passwort zurückzusetzen:</p>
                     <a href="${resetUrl}">${resetUrl}</a>
-                    <p>This link expires in 1 hour.</p>
-                    <p>If you didn't request this, please ignore this email.</p>
+                    <p>Dieser Link läuft in 1 Stunde ab.</p>
+                    <p>Falls du dies nicht angefordert hast, ignoriere bitte diese E-Mail.</p>
                 `
             });
         }
 
-        res.json({ message: 'If an account exists, a reset email has been sent' });
+        res.json({ message: 'Falls ein Konto existiert, wurde eine E-Mail gesendet' });
     } catch (error) {
         console.error('Forgot password error:', error);
-        res.status(500).json({ error: 'Failed to process request' });
+        res.status(500).json({ error: 'Anfrage konnte nicht verarbeitet werden' });
     }
 }
 
@@ -235,7 +235,7 @@ async function resetPassword(req, res) {
         );
 
         if (result.rows.length === 0) {
-            return res.status(400).json({ error: 'Invalid or expired reset token' });
+            return res.status(400).json({ error: 'Ungültiger oder abgelaufener Reset-Token' });
         }
 
         const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -245,10 +245,10 @@ async function resetPassword(req, res) {
             [passwordHash, result.rows[0].id]
         );
 
-        res.json({ message: 'Password reset successful' });
+        res.json({ message: 'Passwort erfolgreich zurückgesetzt' });
     } catch (error) {
         console.error('Reset password error:', error);
-        res.status(500).json({ error: 'Failed to reset password' });
+        res.status(500).json({ error: 'Passwort konnte nicht zurückgesetzt werden' });
     }
 }
 

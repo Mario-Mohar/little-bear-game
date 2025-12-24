@@ -3,18 +3,18 @@ const { pool } = require('../config/db');
 // Shop items configuration (must match frontend)
 const SHOP_ITEMS = {
     skins: {
-        'brown': { price: 50, name: 'Brown Bear' },
-        'polar': { price: 75, name: 'Polar Bear' },
+        'brown': { price: 50, name: 'Brauner Bär' },
+        'polar': { price: 75, name: 'Eisbär' },
         'panda': { price: 100, name: 'Panda' },
-        'red': { price: 100, name: 'Red Panda' },
+        'red': { price: 100, name: 'Roter Panda' },
         'koala': { price: 125, name: 'Koala' },
-        'golden': { price: 150, name: 'Golden Bear' }
+        'golden': { price: 150, name: 'Goldener Bär' }
     },
     upgrades: {
-        'extra_life_1': { price: 100, name: 'Extra Life I' },
-        'extra_life_2': { price: 250, name: 'Extra Life II', requires: 'extra_life_1' },
-        'coin_magnet': { price: 200, name: 'Coin Magnet' },
-        'double_coins': { price: 300, name: 'Double Coins' }
+        'extra_life_1': { price: 100, name: 'Extra Leben I' },
+        'extra_life_2': { price: 250, name: 'Extra Leben II', requires: 'extra_life_1' },
+        'coin_magnet': { price: 200, name: 'Münzmagnet' },
+        'double_coins': { price: 300, name: 'Doppelte Münzen' }
     }
 };
 
@@ -28,7 +28,7 @@ async function getProfile(req, res) {
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({ error: 'Benutzer nicht gefunden' });
         }
 
         const user = result.rows[0];
@@ -53,7 +53,7 @@ async function getProfile(req, res) {
         });
     } catch (error) {
         console.error('Get profile error:', error);
-        res.status(500).json({ error: 'Failed to get profile' });
+        res.status(500).json({ error: 'Profil konnte nicht geladen werden' });
     }
 }
 
@@ -71,7 +71,7 @@ async function updateProfile(req, res) {
 
         // Allow 'default' skin or check if skin is purchased
         if (selectedSkin !== 'default' && !purchasedSkins.includes(selectedSkin)) {
-            return res.status(400).json({ error: 'Skin not owned' });
+            return res.status(400).json({ error: 'Skin nicht gekauft' });
         }
 
         await pool.query(
@@ -79,10 +79,10 @@ async function updateProfile(req, res) {
             [selectedSkin, req.user.id]
         );
 
-        res.json({ message: 'Profile updated', selectedSkin });
+        res.json({ message: 'Profil aktualisiert', selectedSkin });
     } catch (error) {
         console.error('Update profile error:', error);
-        res.status(500).json({ error: 'Failed to update profile' });
+        res.status(500).json({ error: 'Profil konnte nicht aktualisiert werden' });
     }
 }
 
@@ -120,13 +120,13 @@ async function addCoins(req, res) {
         }
 
         res.json({
-            message: 'Coins added',
+            message: 'Münzen hinzugefügt',
             coinsAdded: finalCoins,
             totalCoins: result.rows[0].total_coins
         });
     } catch (error) {
         console.error('Add coins error:', error);
-        res.status(500).json({ error: 'Failed to add coins' });
+        res.status(500).json({ error: 'Münzen konnten nicht hinzugefügt werden' });
     }
 }
 
@@ -144,12 +144,12 @@ async function purchase(req, res) {
 
     try {
         if (!['skins', 'upgrades'].includes(itemType)) {
-            return res.status(400).json({ error: 'Invalid item type' });
+            return res.status(400).json({ error: 'Ungültiger Artikeltyp' });
         }
 
         const item = SHOP_ITEMS[itemType][itemId];
         if (!item) {
-            return res.status(400).json({ error: 'Item not found' });
+            return res.status(400).json({ error: 'Artikel nicht gefunden' });
         }
 
         const userResult = await pool.query(
@@ -162,19 +162,19 @@ async function purchase(req, res) {
 
         // Check if already purchased
         if (purchasedList && purchasedList.includes(itemId)) {
-            return res.status(400).json({ error: 'Item already owned' });
+            return res.status(400).json({ error: 'Artikel bereits gekauft' });
         }
 
         // Check requirements for upgrades
         if (itemType === 'upgrades' && item.requires) {
             if (!user.purchased_upgrades || !user.purchased_upgrades.includes(item.requires)) {
-                return res.status(400).json({ error: `Requires ${SHOP_ITEMS.upgrades[item.requires].name} first` });
+                return res.status(400).json({ error: `Benötigt zuerst ${SHOP_ITEMS.upgrades[item.requires].name}` });
             }
         }
 
         // Check if user has enough coins
         if (user.total_coins < item.price) {
-            return res.status(400).json({ error: 'Not enough coins' });
+            return res.status(400).json({ error: 'Nicht genug Münzen' });
         }
 
         // Perform purchase
@@ -194,7 +194,7 @@ async function purchase(req, res) {
         );
 
         res.json({
-            message: 'Purchase successful',
+            message: 'Kauf erfolgreich',
             item: { type: itemType, id: itemId, name: item.name },
             totalCoins: updatedUser.rows[0].total_coins,
             purchasedSkins: updatedUser.rows[0].purchased_skins,
@@ -202,7 +202,7 @@ async function purchase(req, res) {
         });
     } catch (error) {
         console.error('Purchase error:', error);
-        res.status(500).json({ error: 'Purchase failed' });
+        res.status(500).json({ error: 'Kauf fehlgeschlagen' });
     }
 }
 
@@ -214,7 +214,7 @@ async function getInventory(req, res) {
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({ error: 'Benutzer nicht gefunden' });
         }
 
         const user = result.rows[0];
@@ -228,7 +228,7 @@ async function getInventory(req, res) {
         });
     } catch (error) {
         console.error('Get inventory error:', error);
-        res.status(500).json({ error: 'Failed to get inventory' });
+        res.status(500).json({ error: 'Inventar konnte nicht geladen werden' });
     }
 }
 
@@ -244,7 +244,7 @@ async function syncProfile(req, res) {
         );
 
         if (userResult.rows[0].total_coins > 0) {
-            return res.status(400).json({ error: 'Account already has data' });
+            return res.status(400).json({ error: 'Konto hat bereits Daten' });
         }
 
         // Validate skins and upgrades
@@ -261,10 +261,10 @@ async function syncProfile(req, res) {
             [totalCoins || 0, validSkins, validUpgrades, selectedSkin || 'default', req.user.id]
         );
 
-        res.json({ message: 'Profile synced successfully' });
+        res.json({ message: 'Profil erfolgreich synchronisiert' });
     } catch (error) {
         console.error('Sync profile error:', error);
-        res.status(500).json({ error: 'Failed to sync profile' });
+        res.status(500).json({ error: 'Profil konnte nicht synchronisiert werden' });
     }
 }
 
