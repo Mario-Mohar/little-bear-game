@@ -181,6 +181,10 @@ function showAuthScreen() {
 
 function showStartScreen() {
     document.getElementById('auth-screen')?.classList.add('hidden');
+    document.getElementById('game-over')?.classList.add('hidden');
+    document.getElementById('level-complete')?.classList.add('hidden');
+    document.getElementById('game-complete')?.classList.add('hidden');
+    document.getElementById('ui')?.classList.add('hidden');
     document.getElementById('start-screen')?.classList.remove('hidden');
     updateUserInfoDisplay();
     updateCoinsDisplay();
@@ -226,6 +230,7 @@ async function loadGlobalHighscores() {
         displayHighscores(data.highscores, 'highscore-entries');
         displayHighscores(data.highscores, 'win-highscore-entries');
         displayHighscores(data.highscores, 'gameover-highscore-entries');
+        displayHighscores(data.highscores, 'auth-highscore-entries');
     }
 
     // Show user's rank
@@ -342,6 +347,67 @@ const THEMES = {
         hills: '#1a0a0a',
         clouds: 'rgba(50, 50, 50, 0.6)',
         platformColors: { rock: ['#463E3F', '#5C5355'], lava: ['#FF4500', '#FF6347'] }
+    },
+    // New worlds (Level 6-15)
+    beach: {
+        sky: ['#87CEEB', '#FFE4B5'],
+        hills: '#C2B280',
+        clouds: 'rgba(255, 255, 255, 0.9)',
+        platformColors: { sand: ['#F4A460', '#DEB887', '#D2B48C'], wood: ['#8B4513', '#A0522D', '#654321'] }
+    },
+    jungle: {
+        sky: ['#228B22', '#90EE90'],
+        hills: '#2E8B57',
+        clouds: null,
+        platformColors: { moss: ['#556B2F', '#6B8E23', '#8B4513'], wood: ['#5D4E37', '#8B7355', '#3D2914'] }
+    },
+    underwater: {
+        sky: ['#006994', '#00CED1'],
+        hills: null,
+        clouds: null,
+        platformColors: { coral: ['#FF7F50', '#FF6347', '#E9967A'], seaweed: ['#20B2AA', '#3CB371', '#2E8B57'] }
+    },
+    snow: {
+        sky: ['#B0E0E6', '#FFFFFF'],
+        hills: '#F0F8FF',
+        clouds: 'rgba(200, 200, 220, 0.8)',
+        platformColors: { ice: ['#E0FFFF', '#B0E0E6', '#87CEEB'], snow: ['#FFFAFA', '#F5F5F5', '#DCDCDC'] }
+    },
+    swamp: {
+        sky: ['#556B2F', '#8FBC8F'],
+        hills: '#6B8E23',
+        clouds: 'rgba(154, 205, 50, 0.4)',
+        platformColors: { mud: ['#5D4E37', '#8B7355', '#6B4423'], moss: ['#556B2F', '#6B8E23', '#808000'] }
+    },
+    ruins: {
+        sky: ['#DEB887', '#F5DEB3'],
+        hills: '#D2B48C',
+        clouds: 'rgba(245, 222, 179, 0.5)',
+        platformColors: { sandstone: ['#D2691E', '#CD853F', '#DEB887'], gold: ['#FFD700', '#DAA520', '#B8860B'] }
+    },
+    factory: {
+        sky: ['#2F4F4F', '#708090'],
+        hills: null,
+        clouds: 'rgba(105, 105, 105, 0.7)',
+        platformColors: { metal: ['#708090', '#778899', '#696969'], conveyor: ['#4A4A4A', '#5A5A5A', '#FFD700'] }
+    },
+    underground: {
+        sky: ['#3D2914', '#5C4033'],
+        hills: null,
+        clouds: null,
+        platformColors: { dirt: ['#8B4513', '#A0522D', '#6B4423'], roots: ['#5D4E37', '#8B7355', '#654321'] }
+    },
+    candy: {
+        sky: ['#FFB6C1', '#FFDAB9'],
+        hills: '#FF69B4',
+        clouds: 'rgba(255, 255, 255, 0.9)',
+        platformColors: { candy: ['#FF69B4', '#FF1493', '#FFB6C1'], chocolate: ['#8B4513', '#D2691E', '#A0522D'] }
+    },
+    space: {
+        sky: ['#000033', '#191970'],
+        hills: null,
+        clouds: null,
+        platformColors: { asteroid: ['#4A4A4A', '#696969', '#808080'], energy: ['#00FFFF', '#00CED1', '#7B68EE'] }
     }
 };
 
@@ -617,6 +683,675 @@ const LEVELS = [
         ],
         boss: { x: 4900, y: 450, type: 'lava_dragon' },
         goalX: 5100
+    },
+    // Level 6 - Beach - Crab enemies + Octopus Boss
+    {
+        theme: 'beach',
+        width: 4000,
+        enemyType: 'crab',
+        platforms: [
+            { x: 0, y: 550, w: 400, h: 50, type: 'sand' },
+            { x: 500, y: 550, w: 350, h: 50, type: 'sand' },
+            { x: 950, y: 550, w: 500, h: 50, type: 'sand' },
+            { x: 1550, y: 550, w: 400, h: 50, type: 'sand' },
+            { x: 2050, y: 550, w: 500, h: 50, type: 'sand' },
+            { x: 2650, y: 550, w: 350, h: 50, type: 'sand' },
+            { x: 3100, y: 550, w: 900, h: 50, type: 'sand' },
+            { x: 200, y: 450, w: 100, h: 25, type: 'wood' },
+            { x: 400, y: 380, w: 120, h: 25, type: 'wood' },
+            { x: 700, y: 320, w: 100, h: 25, type: 'sand' },
+            { x: 1000, y: 400, w: 150, h: 25, type: 'wood' },
+            { x: 1300, y: 350, w: 120, h: 25, type: 'sand' },
+            { x: 1600, y: 280, w: 100, h: 25, type: 'wood' },
+            { x: 1900, y: 380, w: 130, h: 25, type: 'sand' },
+            { x: 2200, y: 300, w: 120, h: 25, type: 'wood' },
+            { x: 2500, y: 400, w: 140, h: 25, type: 'sand' },
+            { x: 2800, y: 320, w: 100, h: 25, type: 'wood' },
+            { x: 3200, y: 350, w: 130, h: 25, type: 'sand' },
+            { x: 3500, y: 280, w: 100, h: 25, type: 'wood' }
+        ],
+        movingPlatforms: [
+            { x: 550, y: 450, w: 100, h: 25, type: 'wood', moveX: 120, moveY: 0, speed: 2 },
+            { x: 1450, y: 300, w: 100, h: 25, type: 'wood', moveX: 0, moveY: 80, speed: 1.5 },
+            { x: 2350, y: 350, w: 100, h: 25, type: 'wood', moveX: 100, moveY: 0, speed: 2 }
+        ],
+        coins: [
+            { x: 230, y: 400 }, { x: 430, y: 330 }, { x: 730, y: 270 },
+            { x: 1030, y: 350 }, { x: 1330, y: 300 }, { x: 1630, y: 230 },
+            { x: 1930, y: 330 }, { x: 2230, y: 250 }, { x: 2530, y: 350 },
+            { x: 2830, y: 270 }, { x: 3230, y: 300 }, { x: 3530, y: 230 },
+            { x: 150, y: 500 }, { x: 600, y: 500 }, { x: 1100, y: 500 },
+            { x: 1700, y: 500 }, { x: 2200, y: 500 }, { x: 2800, y: 500 },
+            { x: 3300, y: 500 }, { x: 3600, y: 500 }
+        ],
+        enemies: [
+            { x: 200, y: 520, left: 50, right: 350 },
+            { x: 600, y: 520, left: 550, right: 800 },
+            { x: 1100, y: 520, left: 1000, right: 1400 },
+            { x: 1700, y: 520, left: 1600, right: 1900 },
+            { x: 2200, y: 520, left: 2100, right: 2500 },
+            { x: 2800, y: 520, left: 2700, right: 2950 },
+            { x: 3300, y: 520, left: 3150, right: 3600 }
+        ],
+        obstacles: [],
+        boss: { x: 3700, y: 420, type: 'octopus' },
+        goalX: 3900
+    },
+    // Level 7 - Jungle - Snake enemies + Gorilla Boss
+    {
+        theme: 'jungle',
+        width: 4200,
+        enemyType: 'snake',
+        platforms: [
+            { x: 0, y: 550, w: 350, h: 50, type: 'moss' },
+            { x: 450, y: 550, w: 400, h: 50, type: 'moss' },
+            { x: 950, y: 550, w: 350, h: 50, type: 'moss' },
+            { x: 1400, y: 550, w: 500, h: 50, type: 'moss' },
+            { x: 2000, y: 550, w: 400, h: 50, type: 'moss' },
+            { x: 2500, y: 550, w: 450, h: 50, type: 'moss' },
+            { x: 3050, y: 550, w: 350, h: 50, type: 'moss' },
+            { x: 3500, y: 550, w: 700, h: 50, type: 'moss' },
+            { x: 150, y: 450, w: 120, h: 25, type: 'wood' },
+            { x: 350, y: 350, w: 100, h: 25, type: 'moss' },
+            { x: 600, y: 280, w: 130, h: 25, type: 'wood' },
+            { x: 900, y: 380, w: 100, h: 25, type: 'moss' },
+            { x: 1150, y: 300, w: 120, h: 25, type: 'wood' },
+            { x: 1450, y: 400, w: 140, h: 25, type: 'moss' },
+            { x: 1750, y: 320, w: 100, h: 25, type: 'wood' },
+            { x: 2050, y: 250, w: 130, h: 25, type: 'moss' },
+            { x: 2350, y: 380, w: 120, h: 25, type: 'wood' },
+            { x: 2650, y: 300, w: 100, h: 25, type: 'moss' },
+            { x: 2950, y: 400, w: 140, h: 25, type: 'wood' },
+            { x: 3250, y: 320, w: 120, h: 25, type: 'moss' },
+            { x: 3550, y: 250, w: 100, h: 25, type: 'wood' },
+            { x: 3850, y: 350, w: 130, h: 25, type: 'moss' }
+        ],
+        movingPlatforms: [
+            { x: 500, y: 400, w: 100, h: 25, type: 'wood', moveX: 0, moveY: 100, speed: 1.5 },
+            { x: 1300, y: 350, w: 100, h: 25, type: 'wood', moveX: 130, moveY: 0, speed: 2 },
+            { x: 2200, y: 280, w: 100, h: 25, type: 'wood', moveX: 0, moveY: 90, speed: 1.8 },
+            { x: 3100, y: 350, w: 100, h: 25, type: 'wood', moveX: 100, moveY: 0, speed: 2 }
+        ],
+        coins: [
+            { x: 180, y: 400 }, { x: 380, y: 300 }, { x: 630, y: 230 },
+            { x: 930, y: 330 }, { x: 1180, y: 250 }, { x: 1480, y: 350 },
+            { x: 1780, y: 270 }, { x: 2080, y: 200 }, { x: 2380, y: 330 },
+            { x: 2680, y: 250 }, { x: 2980, y: 350 }, { x: 3280, y: 270 },
+            { x: 3580, y: 200 }, { x: 3880, y: 300 },
+            { x: 100, y: 500 }, { x: 550, y: 500 }, { x: 1050, y: 500 },
+            { x: 1550, y: 500 }, { x: 2150, y: 500 }, { x: 2650, y: 500 },
+            { x: 3200, y: 500 }, { x: 3700, y: 500 }
+        ],
+        enemies: [
+            { x: 150, y: 525, left: 50, right: 300 },
+            { x: 550, y: 525, left: 500, right: 800 },
+            { x: 1050, y: 525, left: 1000, right: 1250 },
+            { x: 1550, y: 525, left: 1450, right: 1850 },
+            { x: 2150, y: 525, left: 2050, right: 2350 },
+            { x: 2650, y: 525, left: 2550, right: 2900 },
+            { x: 3200, y: 525, left: 3100, right: 3350 },
+            { x: 3700, y: 525, left: 3550, right: 3950 }
+        ],
+        obstacles: [],
+        boss: { x: 3950, y: 410, type: 'gorilla' },
+        goalX: 4100
+    },
+    // Level 8 - Underwater - Jellyfish enemies + Shark Boss
+    {
+        theme: 'underwater',
+        width: 4400,
+        enemyType: 'jellyfish',
+        platforms: [
+            { x: 0, y: 550, w: 400, h: 50, type: 'coral' },
+            { x: 500, y: 550, w: 350, h: 50, type: 'seaweed' },
+            { x: 950, y: 550, w: 400, h: 50, type: 'coral' },
+            { x: 1450, y: 550, w: 350, h: 50, type: 'seaweed' },
+            { x: 1900, y: 550, w: 500, h: 50, type: 'coral' },
+            { x: 2500, y: 550, w: 400, h: 50, type: 'seaweed' },
+            { x: 3000, y: 550, w: 350, h: 50, type: 'coral' },
+            { x: 3450, y: 550, w: 950, h: 50, type: 'seaweed' },
+            { x: 200, y: 450, w: 100, h: 25, type: 'coral' },
+            { x: 450, y: 380, w: 120, h: 25, type: 'seaweed' },
+            { x: 700, y: 300, w: 100, h: 25, type: 'coral' },
+            { x: 1000, y: 400, w: 130, h: 25, type: 'seaweed' },
+            { x: 1300, y: 320, w: 120, h: 25, type: 'coral' },
+            { x: 1600, y: 250, w: 100, h: 25, type: 'seaweed' },
+            { x: 1950, y: 380, w: 140, h: 25, type: 'coral' },
+            { x: 2250, y: 300, w: 120, h: 25, type: 'seaweed' },
+            { x: 2550, y: 400, w: 100, h: 25, type: 'coral' },
+            { x: 2850, y: 320, w: 130, h: 25, type: 'seaweed' },
+            { x: 3150, y: 250, w: 120, h: 25, type: 'coral' },
+            { x: 3500, y: 380, w: 100, h: 25, type: 'seaweed' },
+            { x: 3800, y: 300, w: 140, h: 25, type: 'coral' },
+            { x: 4100, y: 380, w: 120, h: 25, type: 'seaweed' }
+        ],
+        movingPlatforms: [
+            { x: 350, y: 350, w: 100, h: 25, type: 'coral', moveX: 0, moveY: 100, speed: 1.2 },
+            { x: 1100, y: 280, w: 100, h: 25, type: 'coral', moveX: 120, moveY: 0, speed: 1.8 },
+            { x: 1800, y: 320, w: 100, h: 25, type: 'coral', moveX: 0, moveY: 80, speed: 1.5 },
+            { x: 2700, y: 280, w: 100, h: 25, type: 'coral', moveX: 100, moveY: 0, speed: 2 },
+            { x: 3350, y: 300, w: 100, h: 25, type: 'coral', moveX: 0, moveY: 90, speed: 1.3 }
+        ],
+        coins: [
+            { x: 230, y: 400 }, { x: 480, y: 330 }, { x: 730, y: 250 },
+            { x: 1030, y: 350 }, { x: 1330, y: 270 }, { x: 1630, y: 200 },
+            { x: 1980, y: 330 }, { x: 2280, y: 250 }, { x: 2580, y: 350 },
+            { x: 2880, y: 270 }, { x: 3180, y: 200 }, { x: 3530, y: 330 },
+            { x: 3830, y: 250 }, { x: 4130, y: 330 },
+            { x: 100, y: 500 }, { x: 600, y: 500 }, { x: 1100, y: 500 },
+            { x: 1600, y: 500 }, { x: 2100, y: 500 }, { x: 2650, y: 500 },
+            { x: 3150, y: 500 }, { x: 3650, y: 500 }, { x: 4050, y: 500 }
+        ],
+        enemies: [
+            { x: 200, y: 505, left: 50, right: 350 },
+            { x: 600, y: 505, left: 550, right: 800 },
+            { x: 1100, y: 505, left: 1000, right: 1300 },
+            { x: 1600, y: 505, left: 1500, right: 1750 },
+            { x: 2100, y: 505, left: 1950, right: 2350 },
+            { x: 2650, y: 505, left: 2550, right: 2850 },
+            { x: 3150, y: 505, left: 3050, right: 3300 },
+            { x: 3650, y: 505, left: 3500, right: 3900 },
+            { x: 4050, y: 505, left: 3950, right: 4250 }
+        ],
+        obstacles: [],
+        boss: { x: 4150, y: 460, type: 'shark' },
+        goalX: 4300
+    },
+    // Level 9 - Snow - Penguin enemies + Yeti Boss
+    {
+        theme: 'snow',
+        width: 4600,
+        enemyType: 'penguin',
+        platforms: [
+            { x: 0, y: 550, w: 350, h: 50, type: 'snow' },
+            { x: 450, y: 550, w: 400, h: 50, type: 'ice' },
+            { x: 950, y: 550, w: 350, h: 50, type: 'snow' },
+            { x: 1400, y: 550, w: 450, h: 50, type: 'ice' },
+            { x: 1950, y: 550, w: 400, h: 50, type: 'snow' },
+            { x: 2450, y: 550, w: 350, h: 50, type: 'ice' },
+            { x: 2900, y: 550, w: 500, h: 50, type: 'snow' },
+            { x: 3500, y: 550, w: 400, h: 50, type: 'ice' },
+            { x: 4000, y: 550, w: 600, h: 50, type: 'snow' },
+            { x: 150, y: 450, w: 100, h: 25, type: 'ice' },
+            { x: 400, y: 370, w: 120, h: 25, type: 'snow' },
+            { x: 650, y: 290, w: 100, h: 25, type: 'ice' },
+            { x: 950, y: 400, w: 130, h: 25, type: 'snow' },
+            { x: 1200, y: 320, w: 120, h: 25, type: 'ice' },
+            { x: 1500, y: 250, w: 100, h: 25, type: 'snow' },
+            { x: 1800, y: 380, w: 140, h: 25, type: 'ice' },
+            { x: 2100, y: 300, w: 120, h: 25, type: 'snow' },
+            { x: 2400, y: 400, w: 100, h: 25, type: 'ice' },
+            { x: 2700, y: 320, w: 130, h: 25, type: 'snow' },
+            { x: 3000, y: 250, w: 120, h: 25, type: 'ice' },
+            { x: 3300, y: 380, w: 100, h: 25, type: 'snow' },
+            { x: 3600, y: 300, w: 140, h: 25, type: 'ice' },
+            { x: 3900, y: 400, w: 120, h: 25, type: 'snow' },
+            { x: 4200, y: 320, w: 100, h: 25, type: 'ice' }
+        ],
+        movingPlatforms: [
+            { x: 300, y: 400, w: 100, h: 25, type: 'ice', moveX: 100, moveY: 0, speed: 2.5 },
+            { x: 1050, y: 280, w: 100, h: 25, type: 'ice', moveX: 0, moveY: 100, speed: 1.5 },
+            { x: 1650, y: 320, w: 100, h: 25, type: 'ice', moveX: 120, moveY: 0, speed: 2 },
+            { x: 2550, y: 280, w: 100, h: 25, type: 'ice', moveX: 0, moveY: 90, speed: 1.8 },
+            { x: 3450, y: 350, w: 100, h: 25, type: 'ice', moveX: 100, moveY: 0, speed: 2.2 }
+        ],
+        coins: [
+            { x: 180, y: 400 }, { x: 430, y: 320 }, { x: 680, y: 240 },
+            { x: 980, y: 350 }, { x: 1230, y: 270 }, { x: 1530, y: 200 },
+            { x: 1830, y: 330 }, { x: 2130, y: 250 }, { x: 2430, y: 350 },
+            { x: 2730, y: 270 }, { x: 3030, y: 200 }, { x: 3330, y: 330 },
+            { x: 3630, y: 250 }, { x: 3930, y: 350 }, { x: 4230, y: 270 },
+            { x: 100, y: 500 }, { x: 550, y: 500 }, { x: 1050, y: 500 },
+            { x: 1550, y: 500 }, { x: 2100, y: 500 }, { x: 2600, y: 500 },
+            { x: 3100, y: 500 }, { x: 3650, y: 500 }, { x: 4150, y: 500 }
+        ],
+        enemies: [
+            { x: 150, y: 510, left: 50, right: 300 },
+            { x: 550, y: 510, left: 500, right: 800 },
+            { x: 1050, y: 510, left: 1000, right: 1300 },
+            { x: 1550, y: 510, left: 1450, right: 1800 },
+            { x: 2100, y: 510, left: 2000, right: 2300 },
+            { x: 2600, y: 510, left: 2500, right: 2750 },
+            { x: 3100, y: 510, left: 2950, right: 3350 },
+            { x: 3650, y: 510, left: 3550, right: 3850 },
+            { x: 4150, y: 510, left: 4050, right: 4350 }
+        ],
+        obstacles: [],
+        boss: { x: 4350, y: 400, type: 'yeti' },
+        goalX: 4500
+    },
+    // Level 10 - Swamp - Frog enemies + Swamp Monster Boss
+    {
+        theme: 'swamp',
+        width: 4800,
+        enemyType: 'frog',
+        platforms: [
+            { x: 0, y: 550, w: 300, h: 50, type: 'mud' },
+            { x: 400, y: 550, w: 350, h: 50, type: 'moss' },
+            { x: 850, y: 550, w: 300, h: 50, type: 'mud' },
+            { x: 1250, y: 550, w: 400, h: 50, type: 'moss' },
+            { x: 1750, y: 550, w: 350, h: 50, type: 'mud' },
+            { x: 2200, y: 550, w: 300, h: 50, type: 'moss' },
+            { x: 2600, y: 550, w: 450, h: 50, type: 'mud' },
+            { x: 3150, y: 550, w: 350, h: 50, type: 'moss' },
+            { x: 3600, y: 550, w: 300, h: 50, type: 'mud' },
+            { x: 4000, y: 550, w: 800, h: 50, type: 'moss' },
+            { x: 150, y: 450, w: 100, h: 25, type: 'moss' },
+            { x: 350, y: 370, w: 120, h: 25, type: 'mud' },
+            { x: 600, y: 290, w: 100, h: 25, type: 'moss' },
+            { x: 900, y: 400, w: 130, h: 25, type: 'mud' },
+            { x: 1150, y: 320, w: 120, h: 25, type: 'moss' },
+            { x: 1450, y: 250, w: 100, h: 25, type: 'mud' },
+            { x: 1750, y: 380, w: 140, h: 25, type: 'moss' },
+            { x: 2050, y: 300, w: 120, h: 25, type: 'mud' },
+            { x: 2350, y: 400, w: 100, h: 25, type: 'moss' },
+            { x: 2650, y: 320, w: 130, h: 25, type: 'mud' },
+            { x: 2950, y: 250, w: 120, h: 25, type: 'moss' },
+            { x: 3250, y: 380, w: 100, h: 25, type: 'mud' },
+            { x: 3550, y: 300, w: 140, h: 25, type: 'moss' },
+            { x: 3850, y: 400, w: 120, h: 25, type: 'mud' },
+            { x: 4150, y: 320, w: 100, h: 25, type: 'moss' },
+            { x: 4450, y: 400, w: 130, h: 25, type: 'mud' }
+        ],
+        movingPlatforms: [
+            { x: 250, y: 400, w: 100, h: 25, type: 'moss', moveX: 0, moveY: 100, speed: 1.5 },
+            { x: 1000, y: 280, w: 100, h: 25, type: 'moss', moveX: 120, moveY: 0, speed: 2 },
+            { x: 1600, y: 320, w: 100, h: 25, type: 'moss', moveX: 0, moveY: 90, speed: 1.8 },
+            { x: 2500, y: 280, w: 100, h: 25, type: 'moss', moveX: 100, moveY: 0, speed: 2.2 },
+            { x: 3400, y: 350, w: 100, h: 25, type: 'moss', moveX: 0, moveY: 80, speed: 1.6 }
+        ],
+        coins: [
+            { x: 180, y: 400 }, { x: 380, y: 320 }, { x: 630, y: 240 },
+            { x: 930, y: 350 }, { x: 1180, y: 270 }, { x: 1480, y: 200 },
+            { x: 1780, y: 330 }, { x: 2080, y: 250 }, { x: 2380, y: 350 },
+            { x: 2680, y: 270 }, { x: 2980, y: 200 }, { x: 3280, y: 330 },
+            { x: 3580, y: 250 }, { x: 3880, y: 350 }, { x: 4180, y: 270 },
+            { x: 4480, y: 350 },
+            { x: 100, y: 500 }, { x: 500, y: 500 }, { x: 950, y: 500 },
+            { x: 1400, y: 500 }, { x: 1900, y: 500 }, { x: 2350, y: 500 },
+            { x: 2800, y: 500 }, { x: 3300, y: 500 }, { x: 3750, y: 500 },
+            { x: 4200, y: 500 }
+        ],
+        enemies: [
+            { x: 100, y: 515, left: 50, right: 250 },
+            { x: 500, y: 515, left: 450, right: 700 },
+            { x: 950, y: 515, left: 900, right: 1100 },
+            { x: 1400, y: 515, left: 1300, right: 1600 },
+            { x: 1900, y: 515, left: 1800, right: 2050 },
+            { x: 2350, y: 515, left: 2250, right: 2450 },
+            { x: 2800, y: 515, left: 2650, right: 3000 },
+            { x: 3300, y: 515, left: 3200, right: 3450 },
+            { x: 3750, y: 515, left: 3650, right: 3850 },
+            { x: 4200, y: 515, left: 4050, right: 4450 }
+        ],
+        obstacles: [],
+        boss: { x: 4550, y: 430, type: 'swamp_monster' },
+        goalX: 4700
+    },
+    // Level 11 - Ruins - Mummy enemies + Pharaoh Boss
+    {
+        theme: 'ruins',
+        width: 5000,
+        enemyType: 'mummy',
+        platforms: [
+            { x: 0, y: 550, w: 400, h: 50, type: 'sandstone' },
+            { x: 500, y: 550, w: 350, h: 50, type: 'gold' },
+            { x: 950, y: 550, w: 400, h: 50, type: 'sandstone' },
+            { x: 1450, y: 550, w: 350, h: 50, type: 'gold' },
+            { x: 1900, y: 550, w: 450, h: 50, type: 'sandstone' },
+            { x: 2450, y: 550, w: 400, h: 50, type: 'gold' },
+            { x: 2950, y: 550, w: 350, h: 50, type: 'sandstone' },
+            { x: 3400, y: 550, w: 500, h: 50, type: 'gold' },
+            { x: 4000, y: 550, w: 1000, h: 50, type: 'sandstone' },
+            { x: 200, y: 450, w: 100, h: 25, type: 'gold' },
+            { x: 450, y: 370, w: 120, h: 25, type: 'sandstone' },
+            { x: 700, y: 290, w: 100, h: 25, type: 'gold' },
+            { x: 1000, y: 400, w: 130, h: 25, type: 'sandstone' },
+            { x: 1300, y: 320, w: 120, h: 25, type: 'gold' },
+            { x: 1600, y: 250, w: 100, h: 25, type: 'sandstone' },
+            { x: 1950, y: 380, w: 140, h: 25, type: 'gold' },
+            { x: 2250, y: 300, w: 120, h: 25, type: 'sandstone' },
+            { x: 2550, y: 400, w: 100, h: 25, type: 'gold' },
+            { x: 2850, y: 320, w: 130, h: 25, type: 'sandstone' },
+            { x: 3150, y: 250, w: 120, h: 25, type: 'gold' },
+            { x: 3500, y: 380, w: 100, h: 25, type: 'sandstone' },
+            { x: 3800, y: 300, w: 140, h: 25, type: 'gold' },
+            { x: 4150, y: 400, w: 120, h: 25, type: 'sandstone' },
+            { x: 4450, y: 320, w: 100, h: 25, type: 'gold' },
+            { x: 4700, y: 400, w: 130, h: 25, type: 'sandstone' }
+        ],
+        movingPlatforms: [
+            { x: 350, y: 400, w: 100, h: 25, type: 'gold', moveX: 0, moveY: 100, speed: 1.5 },
+            { x: 1150, y: 280, w: 100, h: 25, type: 'gold', moveX: 130, moveY: 0, speed: 2 },
+            { x: 1800, y: 320, w: 100, h: 25, type: 'gold', moveX: 0, moveY: 90, speed: 1.8 },
+            { x: 2700, y: 280, w: 100, h: 25, type: 'gold', moveX: 100, moveY: 0, speed: 2.2 },
+            { x: 3650, y: 350, w: 100, h: 25, type: 'gold', moveX: 0, moveY: 80, speed: 1.6 },
+            { x: 4300, y: 280, w: 100, h: 25, type: 'gold', moveX: 110, moveY: 0, speed: 2 }
+        ],
+        coins: [
+            { x: 230, y: 400 }, { x: 480, y: 320 }, { x: 730, y: 240 },
+            { x: 1030, y: 350 }, { x: 1330, y: 270 }, { x: 1630, y: 200 },
+            { x: 1980, y: 330 }, { x: 2280, y: 250 }, { x: 2580, y: 350 },
+            { x: 2880, y: 270 }, { x: 3180, y: 200 }, { x: 3530, y: 330 },
+            { x: 3830, y: 250 }, { x: 4180, y: 350 }, { x: 4480, y: 270 },
+            { x: 4730, y: 350 },
+            { x: 100, y: 500 }, { x: 600, y: 500 }, { x: 1100, y: 500 },
+            { x: 1600, y: 500 }, { x: 2050, y: 500 }, { x: 2600, y: 500 },
+            { x: 3100, y: 500 }, { x: 3600, y: 500 }, { x: 4200, y: 500 },
+            { x: 4600, y: 500 }
+        ],
+        enemies: [
+            { x: 200, y: 500, left: 50, right: 350 },
+            { x: 600, y: 500, left: 550, right: 800 },
+            { x: 1100, y: 500, left: 1000, right: 1300 },
+            { x: 1600, y: 500, left: 1500, right: 1750 },
+            { x: 2050, y: 500, left: 1950, right: 2300 },
+            { x: 2600, y: 500, left: 2500, right: 2800 },
+            { x: 3100, y: 500, left: 3000, right: 3300 },
+            { x: 3600, y: 500, left: 3450, right: 3850 },
+            { x: 4200, y: 500, left: 4050, right: 4500 },
+            { x: 4600, y: 500, left: 4500, right: 4800 }
+        ],
+        obstacles: [],
+        boss: { x: 4750, y: 410, type: 'pharaoh' },
+        goalX: 4900
+    },
+    // Level 12 - Factory - Robot enemies + Mega Robot Boss
+    {
+        theme: 'factory',
+        width: 5200,
+        enemyType: 'robot',
+        platforms: [
+            { x: 0, y: 550, w: 350, h: 50, type: 'metal' },
+            { x: 450, y: 550, w: 400, h: 50, type: 'conveyor' },
+            { x: 950, y: 550, w: 350, h: 50, type: 'metal' },
+            { x: 1400, y: 550, w: 450, h: 50, type: 'conveyor' },
+            { x: 1950, y: 550, w: 400, h: 50, type: 'metal' },
+            { x: 2450, y: 550, w: 350, h: 50, type: 'conveyor' },
+            { x: 2900, y: 550, w: 500, h: 50, type: 'metal' },
+            { x: 3500, y: 550, w: 400, h: 50, type: 'conveyor' },
+            { x: 4000, y: 550, w: 350, h: 50, type: 'metal' },
+            { x: 4450, y: 550, w: 750, h: 50, type: 'conveyor' },
+            { x: 150, y: 450, w: 100, h: 25, type: 'metal' },
+            { x: 400, y: 370, w: 120, h: 25, type: 'conveyor' },
+            { x: 650, y: 290, w: 100, h: 25, type: 'metal' },
+            { x: 950, y: 400, w: 130, h: 25, type: 'conveyor' },
+            { x: 1200, y: 320, w: 120, h: 25, type: 'metal' },
+            { x: 1500, y: 250, w: 100, h: 25, type: 'conveyor' },
+            { x: 1800, y: 380, w: 140, h: 25, type: 'metal' },
+            { x: 2100, y: 300, w: 120, h: 25, type: 'conveyor' },
+            { x: 2400, y: 400, w: 100, h: 25, type: 'metal' },
+            { x: 2700, y: 320, w: 130, h: 25, type: 'conveyor' },
+            { x: 3000, y: 250, w: 120, h: 25, type: 'metal' },
+            { x: 3300, y: 380, w: 100, h: 25, type: 'conveyor' },
+            { x: 3600, y: 300, w: 140, h: 25, type: 'metal' },
+            { x: 3900, y: 400, w: 120, h: 25, type: 'conveyor' },
+            { x: 4200, y: 320, w: 100, h: 25, type: 'metal' },
+            { x: 4500, y: 400, w: 130, h: 25, type: 'conveyor' },
+            { x: 4800, y: 320, w: 120, h: 25, type: 'metal' }
+        ],
+        movingPlatforms: [
+            { x: 300, y: 400, w: 100, h: 25, type: 'metal', moveX: 100, moveY: 0, speed: 2.5 },
+            { x: 1050, y: 280, w: 100, h: 25, type: 'metal', moveX: 0, moveY: 100, speed: 1.5 },
+            { x: 1650, y: 320, w: 100, h: 25, type: 'metal', moveX: 120, moveY: 0, speed: 2 },
+            { x: 2550, y: 280, w: 100, h: 25, type: 'metal', moveX: 0, moveY: 90, speed: 1.8 },
+            { x: 3450, y: 350, w: 100, h: 25, type: 'metal', moveX: 100, moveY: 0, speed: 2.2 },
+            { x: 4350, y: 280, w: 100, h: 25, type: 'metal', moveX: 0, moveY: 80, speed: 1.6 }
+        ],
+        coins: [
+            { x: 180, y: 400 }, { x: 430, y: 320 }, { x: 680, y: 240 },
+            { x: 980, y: 350 }, { x: 1230, y: 270 }, { x: 1530, y: 200 },
+            { x: 1830, y: 330 }, { x: 2130, y: 250 }, { x: 2430, y: 350 },
+            { x: 2730, y: 270 }, { x: 3030, y: 200 }, { x: 3330, y: 330 },
+            { x: 3630, y: 250 }, { x: 3930, y: 350 }, { x: 4230, y: 270 },
+            { x: 4530, y: 350 }, { x: 4830, y: 270 },
+            { x: 100, y: 500 }, { x: 550, y: 500 }, { x: 1050, y: 500 },
+            { x: 1550, y: 500 }, { x: 2100, y: 500 }, { x: 2600, y: 500 },
+            { x: 3100, y: 500 }, { x: 3650, y: 500 }, { x: 4150, y: 500 },
+            { x: 4650, y: 500 }
+        ],
+        enemies: [
+            { x: 150, y: 505, left: 50, right: 300 },
+            { x: 550, y: 505, left: 500, right: 800 },
+            { x: 1050, y: 505, left: 1000, right: 1300 },
+            { x: 1550, y: 505, left: 1450, right: 1800 },
+            { x: 2100, y: 505, left: 2000, right: 2300 },
+            { x: 2600, y: 505, left: 2500, right: 2750 },
+            { x: 3100, y: 505, left: 2950, right: 3350 },
+            { x: 3650, y: 505, left: 3550, right: 3850 },
+            { x: 4150, y: 505, left: 4050, right: 4300 },
+            { x: 4650, y: 505, left: 4500, right: 4900 }
+        ],
+        obstacles: [],
+        boss: { x: 4950, y: 390, type: 'mega_robot' },
+        goalX: 5100
+    },
+    // Level 13 - Underground - Mole enemies + Worm King Boss
+    {
+        theme: 'underground',
+        width: 5400,
+        enemyType: 'mole',
+        platforms: [
+            { x: 0, y: 550, w: 400, h: 50, type: 'dirt' },
+            { x: 500, y: 550, w: 350, h: 50, type: 'roots' },
+            { x: 950, y: 550, w: 400, h: 50, type: 'dirt' },
+            { x: 1450, y: 550, w: 350, h: 50, type: 'roots' },
+            { x: 1900, y: 550, w: 500, h: 50, type: 'dirt' },
+            { x: 2500, y: 550, w: 400, h: 50, type: 'roots' },
+            { x: 3000, y: 550, w: 350, h: 50, type: 'dirt' },
+            { x: 3450, y: 550, w: 500, h: 50, type: 'roots' },
+            { x: 4050, y: 550, w: 400, h: 50, type: 'dirt' },
+            { x: 4550, y: 550, w: 850, h: 50, type: 'roots' },
+            { x: 200, y: 450, w: 100, h: 25, type: 'roots' },
+            { x: 450, y: 370, w: 120, h: 25, type: 'dirt' },
+            { x: 700, y: 290, w: 100, h: 25, type: 'roots' },
+            { x: 1000, y: 400, w: 130, h: 25, type: 'dirt' },
+            { x: 1300, y: 320, w: 120, h: 25, type: 'roots' },
+            { x: 1600, y: 250, w: 100, h: 25, type: 'dirt' },
+            { x: 1950, y: 380, w: 140, h: 25, type: 'roots' },
+            { x: 2250, y: 300, w: 120, h: 25, type: 'dirt' },
+            { x: 2550, y: 400, w: 100, h: 25, type: 'roots' },
+            { x: 2850, y: 320, w: 130, h: 25, type: 'dirt' },
+            { x: 3150, y: 250, w: 120, h: 25, type: 'roots' },
+            { x: 3500, y: 380, w: 100, h: 25, type: 'dirt' },
+            { x: 3800, y: 300, w: 140, h: 25, type: 'roots' },
+            { x: 4150, y: 400, w: 120, h: 25, type: 'dirt' },
+            { x: 4450, y: 320, w: 100, h: 25, type: 'roots' },
+            { x: 4750, y: 400, w: 130, h: 25, type: 'dirt' },
+            { x: 5050, y: 320, w: 120, h: 25, type: 'roots' }
+        ],
+        movingPlatforms: [
+            { x: 350, y: 400, w: 100, h: 25, type: 'dirt', moveX: 0, moveY: 100, speed: 1.5 },
+            { x: 1150, y: 280, w: 100, h: 25, type: 'dirt', moveX: 130, moveY: 0, speed: 2 },
+            { x: 1800, y: 320, w: 100, h: 25, type: 'dirt', moveX: 0, moveY: 90, speed: 1.8 },
+            { x: 2700, y: 280, w: 100, h: 25, type: 'dirt', moveX: 100, moveY: 0, speed: 2.2 },
+            { x: 3650, y: 350, w: 100, h: 25, type: 'dirt', moveX: 0, moveY: 80, speed: 1.6 },
+            { x: 4600, y: 280, w: 100, h: 25, type: 'dirt', moveX: 110, moveY: 0, speed: 2 }
+        ],
+        coins: [
+            { x: 230, y: 400 }, { x: 480, y: 320 }, { x: 730, y: 240 },
+            { x: 1030, y: 350 }, { x: 1330, y: 270 }, { x: 1630, y: 200 },
+            { x: 1980, y: 330 }, { x: 2280, y: 250 }, { x: 2580, y: 350 },
+            { x: 2880, y: 270 }, { x: 3180, y: 200 }, { x: 3530, y: 330 },
+            { x: 3830, y: 250 }, { x: 4180, y: 350 }, { x: 4480, y: 270 },
+            { x: 4780, y: 350 }, { x: 5080, y: 270 },
+            { x: 100, y: 500 }, { x: 600, y: 500 }, { x: 1100, y: 500 },
+            { x: 1600, y: 500 }, { x: 2100, y: 500 }, { x: 2650, y: 500 },
+            { x: 3150, y: 500 }, { x: 3650, y: 500 }, { x: 4200, y: 500 },
+            { x: 4700, y: 500 }, { x: 5100, y: 500 }
+        ],
+        enemies: [
+            { x: 200, y: 515, left: 50, right: 350 },
+            { x: 600, y: 515, left: 550, right: 800 },
+            { x: 1100, y: 515, left: 1000, right: 1300 },
+            { x: 1600, y: 515, left: 1500, right: 1750 },
+            { x: 2100, y: 515, left: 1950, right: 2350 },
+            { x: 2650, y: 515, left: 2550, right: 2850 },
+            { x: 3150, y: 515, left: 3050, right: 3300 },
+            { x: 3650, y: 515, left: 3500, right: 3900 },
+            { x: 4200, y: 515, left: 4100, right: 4400 },
+            { x: 4700, y: 515, left: 4600, right: 4950 },
+            { x: 5100, y: 515, left: 4950, right: 5250 }
+        ],
+        obstacles: [],
+        boss: { x: 5150, y: 450, type: 'worm_king' },
+        goalX: 5300
+    },
+    // Level 14 - Candy World - Gummy Bear enemies + Candy Boss
+    {
+        theme: 'candy',
+        width: 5600,
+        enemyType: 'gummy_bear',
+        platforms: [
+            { x: 0, y: 550, w: 350, h: 50, type: 'candy' },
+            { x: 450, y: 550, w: 400, h: 50, type: 'chocolate' },
+            { x: 950, y: 550, w: 350, h: 50, type: 'candy' },
+            { x: 1400, y: 550, w: 450, h: 50, type: 'chocolate' },
+            { x: 1950, y: 550, w: 400, h: 50, type: 'candy' },
+            { x: 2450, y: 550, w: 350, h: 50, type: 'chocolate' },
+            { x: 2900, y: 550, w: 500, h: 50, type: 'candy' },
+            { x: 3500, y: 550, w: 400, h: 50, type: 'chocolate' },
+            { x: 4000, y: 550, w: 350, h: 50, type: 'candy' },
+            { x: 4450, y: 550, w: 500, h: 50, type: 'chocolate' },
+            { x: 5050, y: 550, w: 550, h: 50, type: 'candy' },
+            { x: 150, y: 450, w: 100, h: 25, type: 'chocolate' },
+            { x: 400, y: 370, w: 120, h: 25, type: 'candy' },
+            { x: 650, y: 290, w: 100, h: 25, type: 'chocolate' },
+            { x: 950, y: 400, w: 130, h: 25, type: 'candy' },
+            { x: 1200, y: 320, w: 120, h: 25, type: 'chocolate' },
+            { x: 1500, y: 250, w: 100, h: 25, type: 'candy' },
+            { x: 1800, y: 380, w: 140, h: 25, type: 'chocolate' },
+            { x: 2100, y: 300, w: 120, h: 25, type: 'candy' },
+            { x: 2400, y: 400, w: 100, h: 25, type: 'chocolate' },
+            { x: 2700, y: 320, w: 130, h: 25, type: 'candy' },
+            { x: 3000, y: 250, w: 120, h: 25, type: 'chocolate' },
+            { x: 3300, y: 380, w: 100, h: 25, type: 'candy' },
+            { x: 3600, y: 300, w: 140, h: 25, type: 'chocolate' },
+            { x: 3900, y: 400, w: 120, h: 25, type: 'candy' },
+            { x: 4200, y: 320, w: 100, h: 25, type: 'chocolate' },
+            { x: 4500, y: 400, w: 130, h: 25, type: 'candy' },
+            { x: 4800, y: 320, w: 120, h: 25, type: 'chocolate' },
+            { x: 5150, y: 400, w: 100, h: 25, type: 'candy' }
+        ],
+        movingPlatforms: [
+            { x: 300, y: 400, w: 100, h: 25, type: 'candy', moveX: 100, moveY: 0, speed: 2.5 },
+            { x: 1050, y: 280, w: 100, h: 25, type: 'candy', moveX: 0, moveY: 100, speed: 1.5 },
+            { x: 1650, y: 320, w: 100, h: 25, type: 'candy', moveX: 120, moveY: 0, speed: 2 },
+            { x: 2550, y: 280, w: 100, h: 25, type: 'candy', moveX: 0, moveY: 90, speed: 1.8 },
+            { x: 3450, y: 350, w: 100, h: 25, type: 'candy', moveX: 100, moveY: 0, speed: 2.2 },
+            { x: 4350, y: 280, w: 100, h: 25, type: 'candy', moveX: 0, moveY: 80, speed: 1.6 },
+            { x: 5000, y: 350, w: 100, h: 25, type: 'candy', moveX: 100, moveY: 0, speed: 2 }
+        ],
+        coins: [
+            { x: 180, y: 400 }, { x: 430, y: 320 }, { x: 680, y: 240 },
+            { x: 980, y: 350 }, { x: 1230, y: 270 }, { x: 1530, y: 200 },
+            { x: 1830, y: 330 }, { x: 2130, y: 250 }, { x: 2430, y: 350 },
+            { x: 2730, y: 270 }, { x: 3030, y: 200 }, { x: 3330, y: 330 },
+            { x: 3630, y: 250 }, { x: 3930, y: 350 }, { x: 4230, y: 270 },
+            { x: 4530, y: 350 }, { x: 4830, y: 270 }, { x: 5180, y: 350 },
+            { x: 100, y: 500 }, { x: 550, y: 500 }, { x: 1050, y: 500 },
+            { x: 1550, y: 500 }, { x: 2100, y: 500 }, { x: 2600, y: 500 },
+            { x: 3100, y: 500 }, { x: 3650, y: 500 }, { x: 4150, y: 500 },
+            { x: 4650, y: 500 }, { x: 5200, y: 500 }
+        ],
+        enemies: [
+            { x: 150, y: 510, left: 50, right: 300 },
+            { x: 550, y: 510, left: 500, right: 800 },
+            { x: 1050, y: 510, left: 1000, right: 1300 },
+            { x: 1550, y: 510, left: 1450, right: 1800 },
+            { x: 2100, y: 510, left: 2000, right: 2300 },
+            { x: 2600, y: 510, left: 2500, right: 2750 },
+            { x: 3100, y: 510, left: 2950, right: 3350 },
+            { x: 3650, y: 510, left: 3550, right: 3850 },
+            { x: 4150, y: 510, left: 4050, right: 4350 },
+            { x: 4650, y: 510, left: 4500, right: 4900 },
+            { x: 5200, y: 510, left: 5100, right: 5400 }
+        ],
+        obstacles: [],
+        boss: { x: 5350, y: 410, type: 'candy_boss' },
+        goalX: 5500
+    },
+    // Level 15 - Space (Final Level) - Alien enemies + UFO Boss
+    {
+        theme: 'space',
+        width: 6000,
+        enemyType: 'alien',
+        platforms: [
+            { x: 0, y: 550, w: 300, h: 50, type: 'asteroid' },
+            { x: 400, y: 550, w: 350, h: 50, type: 'energy' },
+            { x: 850, y: 550, w: 300, h: 50, type: 'asteroid' },
+            { x: 1250, y: 550, w: 400, h: 50, type: 'energy' },
+            { x: 1750, y: 550, w: 350, h: 50, type: 'asteroid' },
+            { x: 2200, y: 550, w: 300, h: 50, type: 'energy' },
+            { x: 2600, y: 550, w: 450, h: 50, type: 'asteroid' },
+            { x: 3150, y: 550, w: 350, h: 50, type: 'energy' },
+            { x: 3600, y: 550, w: 300, h: 50, type: 'asteroid' },
+            { x: 4000, y: 550, w: 400, h: 50, type: 'energy' },
+            { x: 4500, y: 550, w: 350, h: 50, type: 'asteroid' },
+            { x: 4950, y: 550, w: 300, h: 50, type: 'energy' },
+            { x: 5350, y: 550, w: 650, h: 50, type: 'asteroid' },
+            { x: 150, y: 450, w: 100, h: 25, type: 'energy' },
+            { x: 350, y: 370, w: 120, h: 25, type: 'asteroid' },
+            { x: 600, y: 290, w: 100, h: 25, type: 'energy' },
+            { x: 900, y: 400, w: 130, h: 25, type: 'asteroid' },
+            { x: 1150, y: 320, w: 120, h: 25, type: 'energy' },
+            { x: 1450, y: 250, w: 100, h: 25, type: 'asteroid' },
+            { x: 1750, y: 380, w: 140, h: 25, type: 'energy' },
+            { x: 2050, y: 300, w: 120, h: 25, type: 'asteroid' },
+            { x: 2350, y: 400, w: 100, h: 25, type: 'energy' },
+            { x: 2650, y: 320, w: 130, h: 25, type: 'asteroid' },
+            { x: 2950, y: 250, w: 120, h: 25, type: 'energy' },
+            { x: 3250, y: 380, w: 100, h: 25, type: 'asteroid' },
+            { x: 3550, y: 300, w: 140, h: 25, type: 'energy' },
+            { x: 3850, y: 400, w: 120, h: 25, type: 'asteroid' },
+            { x: 4150, y: 320, w: 100, h: 25, type: 'energy' },
+            { x: 4450, y: 250, w: 130, h: 25, type: 'asteroid' },
+            { x: 4750, y: 380, w: 120, h: 25, type: 'energy' },
+            { x: 5050, y: 300, w: 100, h: 25, type: 'asteroid' },
+            { x: 5350, y: 400, w: 140, h: 25, type: 'energy' },
+            { x: 5650, y: 320, w: 120, h: 25, type: 'asteroid' }
+        ],
+        movingPlatforms: [
+            { x: 250, y: 400, w: 100, h: 25, type: 'energy', moveX: 0, moveY: 100, speed: 1.5 },
+            { x: 1000, y: 280, w: 100, h: 25, type: 'energy', moveX: 120, moveY: 0, speed: 2.5 },
+            { x: 1600, y: 320, w: 100, h: 25, type: 'energy', moveX: 0, moveY: 90, speed: 2 },
+            { x: 2500, y: 280, w: 100, h: 25, type: 'energy', moveX: 100, moveY: 0, speed: 2.2 },
+            { x: 3400, y: 350, w: 100, h: 25, type: 'energy', moveX: 0, moveY: 80, speed: 1.8 },
+            { x: 4300, y: 280, w: 100, h: 25, type: 'energy', moveX: 110, moveY: 0, speed: 2.5 },
+            { x: 5200, y: 350, w: 100, h: 25, type: 'energy', moveX: 0, moveY: 100, speed: 1.5 }
+        ],
+        coins: [
+            { x: 180, y: 400 }, { x: 380, y: 320 }, { x: 630, y: 240 },
+            { x: 930, y: 350 }, { x: 1180, y: 270 }, { x: 1480, y: 200 },
+            { x: 1780, y: 330 }, { x: 2080, y: 250 }, { x: 2380, y: 350 },
+            { x: 2680, y: 270 }, { x: 2980, y: 200 }, { x: 3280, y: 330 },
+            { x: 3580, y: 250 }, { x: 3880, y: 350 }, { x: 4180, y: 270 },
+            { x: 4480, y: 200 }, { x: 4780, y: 330 }, { x: 5080, y: 250 },
+            { x: 5380, y: 350 }, { x: 5680, y: 270 },
+            { x: 100, y: 500 }, { x: 500, y: 500 }, { x: 950, y: 500 },
+            { x: 1400, y: 500 }, { x: 1900, y: 500 }, { x: 2350, y: 500 },
+            { x: 2800, y: 500 }, { x: 3300, y: 500 }, { x: 3750, y: 500 },
+            { x: 4200, y: 500 }, { x: 4650, y: 500 }, { x: 5100, y: 500 },
+            { x: 5550, y: 500 }
+        ],
+        enemies: [
+            { x: 100, y: 505, left: 50, right: 250 },
+            { x: 500, y: 505, left: 450, right: 700 },
+            { x: 950, y: 505, left: 900, right: 1100 },
+            { x: 1400, y: 505, left: 1300, right: 1600 },
+            { x: 1900, y: 505, left: 1800, right: 2100 },
+            { x: 2350, y: 505, left: 2250, right: 2450 },
+            { x: 2800, y: 505, left: 2650, right: 3000 },
+            { x: 3300, y: 505, left: 3200, right: 3450 },
+            { x: 3750, y: 505, left: 3650, right: 3850 },
+            { x: 4200, y: 505, left: 4050, right: 4350 },
+            { x: 4650, y: 505, left: 4550, right: 4850 },
+            { x: 5100, y: 505, left: 5000, right: 5200 },
+            { x: 5550, y: 505, left: 5400, right: 5750 }
+        ],
+        obstacles: [],
+        boss: { x: 5750, y: 440, type: 'ufo' },
+        goalX: 5900
     }
 ];
 
@@ -1360,6 +2095,268 @@ class Platform {
                     ctx.fill();
                 }
                 break;
+
+            // === NEW PLATFORM TYPES ===
+            case 'wood':
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(screenX, this.y, this.width, this.height);
+                ctx.fillStyle = '#A0522D';
+                for (let i = 0; i < this.width; i += 15) {
+                    ctx.fillRect(screenX + i, this.y, 2, this.height);
+                }
+                ctx.fillStyle = '#654321';
+                for (let j = 0; j < this.height; j += 8) {
+                    ctx.fillRect(screenX, this.y + j, this.width, 1);
+                }
+                break;
+
+            case 'moss':
+                ctx.fillStyle = '#556B2F';
+                ctx.fillRect(screenX, this.y + 5, this.width, this.height - 5);
+                ctx.fillStyle = '#6B8E23';
+                ctx.beginPath();
+                ctx.roundRect(screenX, this.y, this.width, 10, [5, 5, 0, 0]);
+                ctx.fill();
+                ctx.fillStyle = '#9ACD32';
+                for (let i = 0; i < this.width; i += 12) {
+                    ctx.beginPath();
+                    ctx.arc(screenX + i + 6, this.y + 3, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                break;
+
+            case 'coral':
+                ctx.fillStyle = '#FF7F50';
+                ctx.fillRect(screenX, this.y, this.width, this.height);
+                ctx.fillStyle = '#FF6347';
+                for (let i = 0; i < this.width; i += 25) {
+                    ctx.beginPath();
+                    ctx.moveTo(screenX + i + 5, this.y + this.height);
+                    ctx.lineTo(screenX + i + 12, this.y);
+                    ctx.lineTo(screenX + i + 19, this.y + this.height);
+                    ctx.fill();
+                }
+                ctx.fillStyle = '#E9967A';
+                for (let i = 0; i < this.width; i += 30) {
+                    ctx.beginPath();
+                    ctx.arc(screenX + i + 15, this.y + 8, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                break;
+
+            case 'seaweed':
+                ctx.fillStyle = '#20B2AA';
+                ctx.fillRect(screenX, this.y, this.width, this.height);
+                ctx.fillStyle = '#3CB371';
+                for (let i = 0; i < this.width; i += 15) {
+                    const wave = Math.sin(Date.now() / 300 + i) * 3;
+                    ctx.beginPath();
+                    ctx.moveTo(screenX + i + 7, this.y + this.height);
+                    ctx.quadraticCurveTo(screenX + i + 7 + wave, this.y + this.height / 2, screenX + i + 7, this.y);
+                    ctx.lineTo(screenX + i + 10, this.y);
+                    ctx.quadraticCurveTo(screenX + i + 10 + wave, this.y + this.height / 2, screenX + i + 10, this.y + this.height);
+                    ctx.fill();
+                }
+                break;
+
+            case 'ice':
+                ctx.fillStyle = '#B0E0E6';
+                ctx.fillRect(screenX, this.y, this.width, this.height);
+                ctx.fillStyle = '#E0FFFF';
+                ctx.beginPath();
+                ctx.roundRect(screenX + 2, this.y + 2, this.width - 4, this.height / 2, 3);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                for (let i = 0; i < this.width; i += 20) {
+                    ctx.fillRect(screenX + i + 5, this.y + 3, 8, 4);
+                }
+                break;
+
+            case 'snow':
+                ctx.fillStyle = '#F5F5F5';
+                ctx.fillRect(screenX, this.y + 8, this.width, this.height - 8);
+                ctx.fillStyle = '#FFFAFA';
+                ctx.beginPath();
+                ctx.roundRect(screenX, this.y, this.width, 12, [8, 8, 0, 0]);
+                ctx.fill();
+                ctx.fillStyle = '#DCDCDC';
+                for (let i = 0; i < this.width; i += 18) {
+                    ctx.beginPath();
+                    ctx.arc(screenX + i + 9, this.y + 5, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                break;
+
+            case 'mud':
+                ctx.fillStyle = '#5D4E37';
+                ctx.fillRect(screenX, this.y, this.width, this.height);
+                ctx.fillStyle = '#8B7355';
+                for (let i = 0; i < this.width; i += 20) {
+                    ctx.beginPath();
+                    ctx.arc(screenX + i + 10, this.y + this.height / 2, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.fillStyle = '#6B4423';
+                ctx.beginPath();
+                ctx.roundRect(screenX, this.y, this.width, 5, [3, 3, 0, 0]);
+                ctx.fill();
+                break;
+
+            case 'sandstone':
+                ctx.fillStyle = '#D2691E';
+                ctx.fillRect(screenX, this.y, this.width, this.height);
+                ctx.fillStyle = '#CD853F';
+                for (let i = 0; i < this.width; i += 25) {
+                    for (let j = 0; j < this.height; j += 15) {
+                        ctx.fillRect(screenX + i + 2, this.y + j + 2, 18, 10);
+                    }
+                }
+                ctx.strokeStyle = '#8B4513';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < this.width; i += 25) {
+                    ctx.beginPath();
+                    ctx.moveTo(screenX + i, this.y);
+                    ctx.lineTo(screenX + i, this.y + this.height);
+                    ctx.stroke();
+                }
+                break;
+
+            case 'gold':
+                ctx.fillStyle = '#DAA520';
+                ctx.fillRect(screenX, this.y, this.width, this.height);
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.roundRect(screenX + 3, this.y + 3, this.width - 6, this.height - 6, 3);
+                ctx.fill();
+                ctx.fillStyle = '#B8860B';
+                for (let i = 0; i < this.width; i += 15) {
+                    ctx.fillRect(screenX + i + 6, this.y + 5, 3, this.height - 10);
+                }
+                // Shine effect
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.fillRect(screenX + 5, this.y + 5, this.width / 4, 5);
+                break;
+
+            case 'metal':
+                ctx.fillStyle = '#708090';
+                ctx.fillRect(screenX, this.y, this.width, this.height);
+                ctx.fillStyle = '#778899';
+                for (let i = 0; i < this.width; i += 30) {
+                    ctx.beginPath();
+                    ctx.arc(screenX + i + 8, this.y + this.height / 2, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(screenX + i + 22, this.y + this.height / 2, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.strokeStyle = '#4A4A4A';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(screenX + 1, this.y + 1, this.width - 2, this.height - 2);
+                break;
+
+            case 'conveyor':
+                ctx.fillStyle = '#4A4A4A';
+                ctx.fillRect(screenX, this.y, this.width, this.height);
+                ctx.fillStyle = '#5A5A5A';
+                const offset = (Date.now() / 50) % 20;
+                for (let i = -20; i < this.width + 20; i += 20) {
+                    ctx.fillRect(screenX + i + offset, this.y + 3, 10, this.height - 6);
+                }
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(screenX, this.y, this.width, 3);
+                ctx.fillRect(screenX, this.y + this.height - 3, this.width, 3);
+                break;
+
+            case 'dirt':
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(screenX, this.y, this.width, this.height);
+                ctx.fillStyle = '#A0522D';
+                for (let i = 0; i < this.width; i += 12) {
+                    for (let j = 0; j < this.height; j += 10) {
+                        ctx.beginPath();
+                        ctx.arc(screenX + i + 6, this.y + j + 5, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                ctx.fillStyle = '#6B4423';
+                ctx.beginPath();
+                ctx.roundRect(screenX, this.y, this.width, 6, [4, 4, 0, 0]);
+                ctx.fill();
+                break;
+
+            case 'roots':
+                ctx.fillStyle = '#5D4E37';
+                ctx.fillRect(screenX, this.y, this.width, this.height);
+                ctx.fillStyle = '#8B7355';
+                for (let i = 0; i < this.width; i += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(screenX + i, this.y);
+                    ctx.quadraticCurveTo(screenX + i + 10, this.y + this.height / 2, screenX + i + 5, this.y + this.height);
+                    ctx.lineTo(screenX + i + 8, this.y + this.height);
+                    ctx.quadraticCurveTo(screenX + i + 13, this.y + this.height / 2, screenX + i + 3, this.y);
+                    ctx.fill();
+                }
+                break;
+
+            case 'candy':
+                const candyColors = ['#FF69B4', '#FF1493', '#FFB6C1', '#FF6EB4'];
+                const stripeW = 15;
+                for (let i = 0; i < this.width; i += stripeW) {
+                    ctx.fillStyle = candyColors[Math.floor(i / stripeW) % candyColors.length];
+                    ctx.fillRect(screenX + i, this.y, stripeW, this.height);
+                }
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.fillRect(screenX, this.y, this.width, this.height / 3);
+                break;
+
+            case 'chocolate':
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(screenX, this.y, this.width, this.height);
+                ctx.fillStyle = '#D2691E';
+                for (let i = 0; i < this.width; i += 20) {
+                    ctx.beginPath();
+                    ctx.roundRect(screenX + i + 2, this.y + 2, 16, this.height - 4, 3);
+                    ctx.fill();
+                }
+                ctx.fillStyle = '#A0522D';
+                ctx.fillRect(screenX, this.y + this.height - 4, this.width, 4);
+                break;
+
+            case 'asteroid':
+                ctx.fillStyle = '#4A4A4A';
+                ctx.beginPath();
+                ctx.roundRect(screenX, this.y, this.width, this.height, 8);
+                ctx.fill();
+                ctx.fillStyle = '#696969';
+                for (let i = 0; i < this.width; i += 25) {
+                    ctx.beginPath();
+                    ctx.arc(screenX + i + 12, this.y + this.height / 2, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.fillStyle = '#808080';
+                for (let i = 0; i < this.width; i += 35) {
+                    ctx.beginPath();
+                    ctx.arc(screenX + i + 8, this.y + 8, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                break;
+
+            case 'energy':
+                ctx.fillStyle = '#191970';
+                ctx.fillRect(screenX, this.y, this.width, this.height);
+                const pulse = Math.sin(Date.now() / 150) * 0.3 + 0.7;
+                ctx.fillStyle = `rgba(0, 255, 255, ${pulse})`;
+                ctx.beginPath();
+                ctx.roundRect(screenX + 3, this.y + 3, this.width - 6, this.height - 6, 4);
+                ctx.fill();
+                ctx.fillStyle = '#7B68EE';
+                for (let i = 0; i < this.width; i += 15) {
+                    const sparkY = Math.sin(Date.now() / 100 + i) * 3;
+                    ctx.beginPath();
+                    ctx.arc(screenX + i + 7, this.y + this.height / 2 + sparkY, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                break;
         }
     }
 }
@@ -1484,6 +2481,59 @@ class Enemy {
                 this.height = 35;
                 this.velX = 2;
                 break;
+            // New enemy types (Level 6-15)
+            case 'crab':
+                this.width = 45;
+                this.height = 30;
+                this.velX = 2.5;
+                break;
+            case 'snake':
+                this.width = 50;
+                this.height = 25;
+                this.velX = 2.5;
+                break;
+            case 'jellyfish':
+                this.width = 35;
+                this.height = 45;
+                this.velX = 2.8;
+                this.floatOffset = 0;
+                break;
+            case 'penguin':
+                this.width = 35;
+                this.height = 40;
+                this.velX = 2.8;
+                break;
+            case 'frog':
+                this.width = 40;
+                this.height = 35;
+                this.velX = 3;
+                this.jumpTimer = 0;
+                break;
+            case 'mummy':
+                this.width = 35;
+                this.height = 50;
+                this.velX = 3;
+                break;
+            case 'robot':
+                this.width = 40;
+                this.height = 45;
+                this.velX = 3.2;
+                break;
+            case 'mole':
+                this.width = 40;
+                this.height = 35;
+                this.velX = 3.2;
+                break;
+            case 'gummy_bear':
+                this.width = 35;
+                this.height = 40;
+                this.velX = 3.5;
+                break;
+            case 'alien':
+                this.width = 40;
+                this.height = 45;
+                this.velX = 4;
+                break;
             default:
                 this.width = 35;
                 this.height = 35;
@@ -1522,6 +2572,37 @@ class Enemy {
                 break;
             case 'fire_slime':
                 this.drawFireSlime(ctx, screenX);
+                break;
+            // New enemy types (Level 6-15)
+            case 'crab':
+                this.drawCrab(ctx, screenX);
+                break;
+            case 'snake':
+                this.drawSnake(ctx, screenX);
+                break;
+            case 'jellyfish':
+                this.drawJellyfish(ctx, screenX);
+                break;
+            case 'penguin':
+                this.drawPenguin(ctx, screenX);
+                break;
+            case 'frog':
+                this.drawFrog(ctx, screenX);
+                break;
+            case 'mummy':
+                this.drawMummy(ctx, screenX);
+                break;
+            case 'robot':
+                this.drawRobot(ctx, screenX);
+                break;
+            case 'mole':
+                this.drawMole(ctx, screenX);
+                break;
+            case 'gummy_bear':
+                this.drawGummyBear(ctx, screenX);
+                break;
+            case 'alien':
+                this.drawAlien(ctx, screenX);
                 break;
             default:
                 this.drawDefault(ctx, screenX);
@@ -1762,6 +2843,501 @@ class Enemy {
         ctx.arc(screenX + this.width - 10 + eyeDir, this.y + 15, 3, 0, Math.PI * 2);
         ctx.fill();
     }
+
+    // === NEW ENEMY DRAW METHODS ===
+
+    // Beach Crab Enemy (Level 6)
+    drawCrab(ctx, screenX) {
+        const facingRight = this.velX > 0;
+        const legMove = Math.sin(this.animFrame * 4) * 5;
+
+        // Body
+        ctx.fillStyle = '#FF6347';
+        ctx.beginPath();
+        ctx.ellipse(screenX + this.width / 2, this.y + 18, 20, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Shell pattern
+        ctx.fillStyle = '#CD5C5C';
+        ctx.beginPath();
+        ctx.ellipse(screenX + this.width / 2, this.y + 16, 12, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Legs
+        ctx.strokeStyle = '#FF6347';
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            ctx.moveTo(screenX + 8, this.y + 20);
+            ctx.lineTo(screenX - 5 + i * 3, this.y + 28 + legMove);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(screenX + this.width - 8, this.y + 20);
+            ctx.lineTo(screenX + this.width + 5 - i * 3, this.y + 28 - legMove);
+            ctx.stroke();
+        }
+
+        // Claws
+        ctx.fillStyle = '#FF4500';
+        const clawX = facingRight ? screenX + this.width - 5 : screenX + 5;
+        ctx.beginPath();
+        ctx.ellipse(clawX + (facingRight ? 8 : -8), this.y + 10, 10, 6, facingRight ? 0.3 : -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(clawX + (facingRight ? 5 : -5), this.y + 5, 6, 4, facingRight ? -0.5 : 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes on stalks
+        ctx.fillStyle = '#FF6347';
+        ctx.fillRect(screenX + 15, this.y, 3, 10);
+        ctx.fillRect(screenX + 27, this.y, 3, 10);
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(screenX + 16, this.y, 4, 0, Math.PI * 2);
+        ctx.arc(screenX + 28, this.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Jungle Snake Enemy (Level 7)
+    drawSnake(ctx, screenX) {
+        const wave = Math.sin(this.animFrame * 2);
+        const facingRight = this.velX > 0;
+
+        // Body segments with wave
+        ctx.fillStyle = '#228B22';
+        for (let i = 0; i < 5; i++) {
+            const segX = screenX + (facingRight ? i * 10 : this.width - i * 10 - 10);
+            const segY = this.y + 12 + Math.sin(this.animFrame * 3 + i) * 4;
+            ctx.beginPath();
+            ctx.ellipse(segX + 5, segY, 8, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Pattern
+        ctx.fillStyle = '#32CD32';
+        for (let i = 0; i < 5; i++) {
+            const segX = screenX + (facingRight ? i * 10 : this.width - i * 10 - 10);
+            const segY = this.y + 12 + Math.sin(this.animFrame * 3 + i) * 4;
+            ctx.beginPath();
+            ctx.ellipse(segX + 5, segY - 2, 4, 3, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Head
+        const headX = facingRight ? screenX + this.width - 12 : screenX;
+        ctx.fillStyle = '#228B22';
+        ctx.beginPath();
+        ctx.ellipse(headX + 6, this.y + 12, 10, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(headX + (facingRight ? 10 : 2), this.y + 8, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(headX + (facingRight ? 11 : 1), this.y + 8, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tongue
+        ctx.strokeStyle = '#FF0000';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(headX + (facingRight ? 16 : -4), this.y + 14);
+        ctx.lineTo(headX + (facingRight ? 22 : -10), this.y + 12 + wave * 3);
+        ctx.lineTo(headX + (facingRight ? 24 : -12), this.y + 10);
+        ctx.moveTo(headX + (facingRight ? 22 : -10), this.y + 12 + wave * 3);
+        ctx.lineTo(headX + (facingRight ? 24 : -12), this.y + 16);
+        ctx.stroke();
+    }
+
+    // Underwater Jellyfish Enemy (Level 8)
+    drawJellyfish(ctx, screenX) {
+        const float = Math.sin(this.animFrame) * 5;
+        const pulse = Math.sin(this.animFrame * 2) * 3;
+
+        // Tentacles
+        ctx.strokeStyle = 'rgba(147, 112, 219, 0.8)';
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 5; i++) {
+            const tentacleWave = Math.sin(this.animFrame * 2 + i) * 8;
+            ctx.beginPath();
+            ctx.moveTo(screenX + 5 + i * 7, this.y + 25 + float);
+            ctx.quadraticCurveTo(
+                screenX + 5 + i * 7 + tentacleWave,
+                this.y + 35 + float,
+                screenX + 5 + i * 7,
+                this.y + 45 + float
+            );
+            ctx.stroke();
+        }
+
+        // Bell (translucent)
+        ctx.fillStyle = 'rgba(186, 85, 211, 0.6)';
+        ctx.beginPath();
+        ctx.ellipse(screenX + this.width / 2, this.y + 15 + float, 16 + pulse, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Inner glow
+        ctx.fillStyle = 'rgba(238, 130, 238, 0.5)';
+        ctx.beginPath();
+        ctx.ellipse(screenX + this.width / 2, this.y + 12 + float, 10, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(screenX + 13, this.y + 15 + float, 3, 0, Math.PI * 2);
+        ctx.arc(screenX + 22, this.y + 15 + float, 3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Snow Penguin Enemy (Level 9)
+    drawPenguin(ctx, screenX) {
+        const waddle = Math.sin(this.animFrame * 4) * 3;
+        const facingRight = this.velX > 0;
+
+        // Body
+        ctx.fillStyle = '#1C1C1C';
+        ctx.beginPath();
+        ctx.ellipse(screenX + this.width / 2 + waddle, this.y + 25, 14, 18, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Belly
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.ellipse(screenX + this.width / 2 + waddle, this.y + 28, 10, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = '#1C1C1C';
+        ctx.beginPath();
+        ctx.arc(screenX + this.width / 2 + waddle, this.y + 8, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#FFF';
+        ctx.beginPath();
+        ctx.arc(screenX + 13 + waddle, this.y + 6, 4, 0, Math.PI * 2);
+        ctx.arc(screenX + 22 + waddle, this.y + 6, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        const eyeDir = facingRight ? 1 : -1;
+        ctx.beginPath();
+        ctx.arc(screenX + 13 + waddle + eyeDir, this.y + 6, 2, 0, Math.PI * 2);
+        ctx.arc(screenX + 22 + waddle + eyeDir, this.y + 6, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Beak
+        ctx.fillStyle = '#FFA500';
+        ctx.beginPath();
+        ctx.moveTo(screenX + this.width / 2 + waddle, this.y + 10);
+        ctx.lineTo(screenX + this.width / 2 + waddle + (facingRight ? 8 : -8), this.y + 13);
+        ctx.lineTo(screenX + this.width / 2 + waddle, this.y + 16);
+        ctx.fill();
+
+        // Feet
+        ctx.fillStyle = '#FFA500';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 12 + waddle, this.y + 38, 6, 3, 0, 0, Math.PI * 2);
+        ctx.ellipse(screenX + 23 + waddle, this.y + 38, 6, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Swamp Frog Enemy (Level 10)
+    drawFrog(ctx, screenX) {
+        const jump = Math.abs(Math.sin(this.animFrame * 2)) * 8;
+        const crouch = jump > 4 ? 0 : 3;
+
+        // Back legs
+        ctx.fillStyle = '#228B22';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 5, this.y + 30 - jump + crouch, 8, 5, -0.5, 0, Math.PI * 2);
+        ctx.ellipse(screenX + this.width - 5, this.y + 30 - jump + crouch, 8, 5, 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Body
+        ctx.fillStyle = '#32CD32';
+        ctx.beginPath();
+        ctx.ellipse(screenX + this.width / 2, this.y + 22 - jump, 16, 12 - crouch, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Spots
+        ctx.fillStyle = '#228B22';
+        ctx.beginPath();
+        ctx.arc(screenX + 15, this.y + 20 - jump, 4, 0, Math.PI * 2);
+        ctx.arc(screenX + 28, this.y + 22 - jump, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes (bulging)
+        ctx.fillStyle = '#ADFF2F';
+        ctx.beginPath();
+        ctx.arc(screenX + 12, this.y + 8 - jump, 8, 0, Math.PI * 2);
+        ctx.arc(screenX + 28, this.y + 8 - jump, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        const eyeDir = this.velX > 0 ? 2 : -2;
+        ctx.beginPath();
+        ctx.arc(screenX + 12 + eyeDir, this.y + 8 - jump, 3, 0, Math.PI * 2);
+        ctx.arc(screenX + 28 + eyeDir, this.y + 8 - jump, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Mouth
+        ctx.strokeStyle = '#006400';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(screenX + this.width / 2, this.y + 22 - jump, 8, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+    }
+
+    // Ruins Mummy Enemy (Level 11)
+    drawMummy(ctx, screenX) {
+        const sway = Math.sin(this.animFrame) * 2;
+        const facingRight = this.velX > 0;
+
+        // Body wrapped in bandages
+        ctx.fillStyle = '#DEB887';
+        ctx.fillRect(screenX + 10 + sway, this.y + 15, 15, 35);
+
+        // Bandage wrapping effect
+        ctx.strokeStyle = '#F5DEB3';
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 8; i++) {
+            ctx.beginPath();
+            ctx.moveTo(screenX + 8 + sway, this.y + 18 + i * 5);
+            ctx.lineTo(screenX + 27 + sway, this.y + 20 + i * 5);
+            ctx.stroke();
+        }
+
+        // Head
+        ctx.fillStyle = '#DEB887';
+        ctx.beginPath();
+        ctx.arc(screenX + this.width / 2 + sway, this.y + 10, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head bandages
+        ctx.strokeStyle = '#F5DEB3';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 4; i++) {
+            ctx.beginPath();
+            ctx.arc(screenX + this.width / 2 + sway, this.y + 10, 10 - i * 2, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Glowing eyes
+        ctx.fillStyle = '#FF4500';
+        ctx.beginPath();
+        ctx.arc(screenX + 13 + sway, this.y + 8, 3, 0, Math.PI * 2);
+        ctx.arc(screenX + 22 + sway, this.y + 8, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Arms reaching out
+        ctx.fillStyle = '#DEB887';
+        const armReach = facingRight ? 10 : -10;
+        ctx.fillRect(screenX + (facingRight ? 25 : 0) + sway, this.y + 20, 15 + Math.abs(armReach), 6);
+    }
+
+    // Factory Robot Enemy (Level 12)
+    drawRobot(ctx, screenX) {
+        const bob = Math.sin(this.animFrame * 3) * 2;
+        const facingRight = this.velX > 0;
+
+        // Legs
+        ctx.fillStyle = '#4A4A4A';
+        ctx.fillRect(screenX + 10, this.y + 35 + bob, 8, 10);
+        ctx.fillRect(screenX + 22, this.y + 35 + bob, 8, 10);
+
+        // Body
+        ctx.fillStyle = '#708090';
+        ctx.fillRect(screenX + 5, this.y + 15 + bob, 30, 22);
+
+        // Chest panel
+        ctx.fillStyle = '#2F4F4F';
+        ctx.fillRect(screenX + 10, this.y + 20 + bob, 20, 12);
+
+        // Lights on chest
+        const blinkOn = Math.sin(this.animFrame * 5) > 0;
+        ctx.fillStyle = blinkOn ? '#FF0000' : '#8B0000';
+        ctx.beginPath();
+        ctx.arc(screenX + 15, this.y + 26 + bob, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = blinkOn ? '#00FF00' : '#006400';
+        ctx.beginPath();
+        ctx.arc(screenX + 25, this.y + 26 + bob, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = '#778899';
+        ctx.fillRect(screenX + 8, this.y + bob, 24, 16);
+
+        // Antenna
+        ctx.fillStyle = '#4A4A4A';
+        ctx.fillRect(screenX + 18, this.y - 8 + bob, 4, 10);
+        ctx.fillStyle = '#FF0000';
+        ctx.beginPath();
+        ctx.arc(screenX + 20, this.y - 10 + bob, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#00FFFF';
+        ctx.fillRect(screenX + 12, this.y + 5 + bob, 6, 4);
+        ctx.fillRect(screenX + 22, this.y + 5 + bob, 6, 4);
+
+        // Arms
+        ctx.fillStyle = '#708090';
+        ctx.fillRect(screenX - 3, this.y + 18 + bob, 8, 6);
+        ctx.fillRect(screenX + 35, this.y + 18 + bob, 8, 6);
+    }
+
+    // Underground Mole Enemy (Level 13)
+    drawMole(ctx, screenX) {
+        const dig = Math.sin(this.animFrame * 4) * 3;
+        const facingRight = this.velX > 0;
+
+        // Body
+        ctx.fillStyle = '#5D4E37';
+        ctx.beginPath();
+        ctx.ellipse(screenX + this.width / 2, this.y + 20, 18, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fur texture
+        ctx.fillStyle = '#8B7355';
+        ctx.beginPath();
+        ctx.ellipse(screenX + this.width / 2, this.y + 18, 12, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Nose (big pink)
+        ctx.fillStyle = '#FFB6C1';
+        ctx.beginPath();
+        ctx.ellipse(screenX + (facingRight ? this.width - 5 : 5), this.y + 18, 8, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes (tiny, moles are nearly blind)
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(screenX + (facingRight ? 28 : 12), this.y + 14, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Claws
+        ctx.fillStyle = '#3D2914';
+        for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            ctx.moveTo(screenX + 5 + i * 5, this.y + 32);
+            ctx.lineTo(screenX + 3 + i * 5, this.y + 35 + dig);
+            ctx.lineTo(screenX + 7 + i * 5, this.y + 35 + dig);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(screenX + this.width - 5 - i * 5, this.y + 32);
+            ctx.lineTo(screenX + this.width - 3 - i * 5, this.y + 35 - dig);
+            ctx.lineTo(screenX + this.width - 7 - i * 5, this.y + 35 - dig);
+            ctx.fill();
+        }
+    }
+
+    // Candy Gummy Bear Enemy (Level 14)
+    drawGummyBear(ctx, screenX) {
+        const bounce = Math.abs(Math.sin(this.animFrame * 3)) * 5;
+        const squish = bounce > 2 ? 0.9 : 1.1;
+
+        // Random bright color based on position
+        const colors = ['#FF69B4', '#00CED1', '#FFD700', '#32CD32', '#FF6347'];
+        const colorIndex = Math.floor(this.x / 100) % colors.length;
+        const mainColor = colors[colorIndex];
+
+        // Body
+        ctx.fillStyle = mainColor;
+        ctx.beginPath();
+        ctx.ellipse(screenX + this.width / 2, this.y + 25 - bounce, 14 * squish, 16 / squish, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ears
+        ctx.beginPath();
+        ctx.arc(screenX + 10, this.y + 5 - bounce, 6, 0, Math.PI * 2);
+        ctx.arc(screenX + 25, this.y + 5 - bounce, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Shine effect (gummy look)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(screenX + this.width / 2 - 4, this.y + 20 - bounce, 5, 8, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#000';
+        const eyeDir = this.velX > 0 ? 1 : -1;
+        ctx.beginPath();
+        ctx.arc(screenX + 13 + eyeDir, this.y + 18 - bounce, 3, 0, Math.PI * 2);
+        ctx.arc(screenX + 22 + eyeDir, this.y + 18 - bounce, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Cute mouth
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(screenX + this.width / 2, this.y + 26 - bounce, 5, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+    }
+
+    // Space Alien Enemy (Level 15)
+    drawAlien(ctx, screenX) {
+        const hover = Math.sin(this.animFrame * 2) * 4;
+        const facingRight = this.velX > 0;
+
+        // Glow effect
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.2)';
+        ctx.beginPath();
+        ctx.ellipse(screenX + this.width / 2, this.y + 25 + hover, 25, 22, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Body
+        ctx.fillStyle = '#32CD32';
+        ctx.beginPath();
+        ctx.ellipse(screenX + this.width / 2, this.y + 28 + hover, 14, 16, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head (big)
+        ctx.fillStyle = '#7CFC00';
+        ctx.beginPath();
+        ctx.ellipse(screenX + this.width / 2, this.y + 12 + hover, 16, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Big black eyes
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 12, this.y + 10 + hover, 6, 8, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(screenX + 28, this.y + 10 + hover, 6, 8, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eye shine
+        ctx.fillStyle = '#FFF';
+        ctx.beginPath();
+        ctx.arc(screenX + 10, this.y + 8 + hover, 2, 0, Math.PI * 2);
+        ctx.arc(screenX + 26, this.y + 8 + hover, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Antennae
+        ctx.strokeStyle = '#32CD32';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(screenX + 15, this.y + 2 + hover);
+        ctx.lineTo(screenX + 12, this.y - 8 + hover);
+        ctx.moveTo(screenX + 25, this.y + 2 + hover);
+        ctx.lineTo(screenX + 28, this.y - 8 + hover);
+        ctx.stroke();
+        ctx.fillStyle = '#ADFF2F';
+        ctx.beginPath();
+        ctx.arc(screenX + 12, this.y - 10 + hover, 4, 0, Math.PI * 2);
+        ctx.arc(screenX + 28, this.y - 10 + hover, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Arms
+        ctx.fillStyle = '#32CD32';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 3, this.y + 28 + hover, 5, 8, -0.5, 0, Math.PI * 2);
+        ctx.ellipse(screenX + this.width - 3, this.y + 28 + hover, 5, 8, 0.5, 0, Math.PI * 2);
+        ctx.fill();
+    }
 }
 
 // Boss Class
@@ -1805,6 +3381,71 @@ class Boss {
                 this.width = 150;
                 this.height = 100;
                 this.velX = 1.5;
+                break;
+            // New Boss Types (Level 6-15)
+            case 'octopus':
+                this.width = 140;
+                this.height = 120;
+                this.velX = 1.5;
+                break;
+            case 'gorilla':
+                this.width = 120;
+                this.height = 130;
+                this.velX = 1.2;
+                break;
+            case 'shark':
+                this.width = 160;
+                this.height = 80;
+                this.velX = 2.5;
+                break;
+            case 'yeti':
+                this.width = 130;
+                this.height = 140;
+                this.velX = 1;
+                this.health = 4;
+                this.maxHealth = 4;
+                break;
+            case 'swamp_monster':
+                this.width = 120;
+                this.height = 110;
+                this.velX = 1.3;
+                this.health = 4;
+                this.maxHealth = 4;
+                break;
+            case 'pharaoh':
+                this.width = 100;
+                this.height = 130;
+                this.velX = 1.5;
+                this.health = 4;
+                this.maxHealth = 4;
+                break;
+            case 'mega_robot':
+                this.width = 130;
+                this.height = 150;
+                this.velX = 1.2;
+                this.health = 4;
+                this.maxHealth = 4;
+                break;
+            case 'worm_king':
+                this.width = 160;
+                this.height = 90;
+                this.velX = 1.8;
+                this.health = 4;
+                this.maxHealth = 4;
+                break;
+            case 'candy_boss':
+                this.width = 140;
+                this.height = 130;
+                this.velX = 2;
+                this.health = 5;
+                this.maxHealth = 5;
+                break;
+            case 'ufo':
+                this.width = 160;
+                this.height = 100;
+                this.velX = 2.5;
+                this.health = 5;
+                this.maxHealth = 5;
                 break;
             default:
                 this.width = 100;
@@ -1883,6 +3524,37 @@ class Boss {
                 break;
             case 'lava_dragon':
                 this.drawLavaDragon(ctx, screenX);
+                break;
+            // New Boss Types (Level 6-15)
+            case 'octopus':
+                this.drawOctopus(ctx, screenX);
+                break;
+            case 'gorilla':
+                this.drawGorilla(ctx, screenX);
+                break;
+            case 'shark':
+                this.drawShark(ctx, screenX);
+                break;
+            case 'yeti':
+                this.drawYeti(ctx, screenX);
+                break;
+            case 'swamp_monster':
+                this.drawSwampMonster(ctx, screenX);
+                break;
+            case 'pharaoh':
+                this.drawPharaoh(ctx, screenX);
+                break;
+            case 'mega_robot':
+                this.drawMegaRobot(ctx, screenX);
+                break;
+            case 'worm_king':
+                this.drawWormKing(ctx, screenX);
+                break;
+            case 'candy_boss':
+                this.drawCandyBoss(ctx, screenX);
+                break;
+            case 'ufo':
+                this.drawUFO(ctx, screenX);
                 break;
         }
 
@@ -2258,6 +3930,720 @@ class Boss {
         ctx.quadraticCurveTo(screenX + 110, this.y - 10 + wingFlap, screenX + 130, this.y + 20 + breathe);
         ctx.lineTo(screenX + 100, this.y + 45 + breathe);
         ctx.fill();
+    }
+
+    // === NEW BOSS DRAW METHODS ===
+
+    // Giant Octopus Boss (Level 6 - Beach)
+    drawOctopus(ctx, screenX) {
+        const pulse = Math.sin(this.animFrame) * 5;
+        const facingRight = this.direction > 0;
+
+        // Tentacles
+        ctx.fillStyle = '#8B008B';
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const tentacleWave = Math.sin(this.animFrame * 2 + i) * 15;
+            ctx.beginPath();
+            const startX = screenX + 70 + Math.cos(angle) * 30;
+            const startY = this.y + 70 + Math.sin(angle) * 20;
+            ctx.moveTo(startX, startY);
+            ctx.quadraticCurveTo(
+                startX + Math.cos(angle) * 30 + tentacleWave,
+                startY + 30,
+                startX + Math.cos(angle) * 50,
+                startY + 50
+            );
+            ctx.lineWidth = 12;
+            ctx.strokeStyle = '#8B008B';
+            ctx.stroke();
+        }
+
+        // Suction cups
+        ctx.fillStyle = '#DDA0DD';
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            for (let j = 1; j < 4; j++) {
+                ctx.beginPath();
+                ctx.arc(
+                    screenX + 70 + Math.cos(angle) * (30 + j * 15),
+                    this.y + 70 + Math.sin(angle) * 20 + j * 12,
+                    4, 0, Math.PI * 2
+                );
+                ctx.fill();
+            }
+        }
+
+        // Head
+        ctx.fillStyle = '#9932CC';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 70, this.y + 50 + pulse, 45, 40, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#FFF';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 50, this.y + 45, 15, 12, 0, 0, Math.PI * 2);
+        ctx.ellipse(screenX + 90, this.y + 45, 15, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        const eyeDir = facingRight ? 3 : -3;
+        ctx.beginPath();
+        ctx.arc(screenX + 50 + eyeDir, this.y + 45, 6, 0, Math.PI * 2);
+        ctx.arc(screenX + 90 + eyeDir, this.y + 45, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ink spray (phase 2)
+        if (this.phase >= 2 && Math.sin(this.animFrame * 4) > 0.5) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.arc(
+                    screenX + 70 + (facingRight ? 60 : -60) + Math.random() * 30,
+                    this.y + 60 + Math.random() * 20,
+                    8 + Math.random() * 8, 0, Math.PI * 2
+                );
+                ctx.fill();
+            }
+        }
+    }
+
+    // Gorilla King Boss (Level 7 - Jungle)
+    drawGorilla(ctx, screenX) {
+        const beat = Math.sin(this.animFrame * 4) * 5;
+        const facingRight = this.direction > 0;
+
+        // Body
+        ctx.fillStyle = '#2F2F2F';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 60, this.y + 80, 50, 45, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Chest
+        ctx.fillStyle = '#4A4A4A';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 60, this.y + 85, 35, 35, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Arms
+        ctx.fillStyle = '#2F2F2F';
+        const armSwing = this.phase >= 2 ? beat * 2 : 0;
+        ctx.beginPath();
+        ctx.ellipse(screenX + 15 - armSwing, this.y + 70, 20, 35, -0.3, 0, Math.PI * 2);
+        ctx.ellipse(screenX + 105 + armSwing, this.y + 70, 20, 35, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hands
+        ctx.fillStyle = '#1C1C1C';
+        ctx.beginPath();
+        ctx.arc(screenX + 10 - armSwing, this.y + 100, 15, 0, Math.PI * 2);
+        ctx.arc(screenX + 110 + armSwing, this.y + 100, 15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = '#2F2F2F';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 60, this.y + 30, 35, 30, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Face
+        ctx.fillStyle = '#1C1C1C';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 60, this.y + 35, 25, 20, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes (angry)
+        ctx.fillStyle = '#FF4500';
+        ctx.beginPath();
+        ctx.arc(screenX + 48, this.y + 25, 8, 0, Math.PI * 2);
+        ctx.arc(screenX + 72, this.y + 25, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(screenX + 48 + (facingRight ? 2 : -2), this.y + 25, 4, 0, Math.PI * 2);
+        ctx.arc(screenX + 72 + (facingRight ? 2 : -2), this.y + 25, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Angry eyebrows
+        ctx.strokeStyle = '#2F2F2F';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(screenX + 40, this.y + 15);
+        ctx.lineTo(screenX + 55, this.y + 20);
+        ctx.moveTo(screenX + 80, this.y + 15);
+        ctx.lineTo(screenX + 65, this.y + 20);
+        ctx.stroke();
+
+        // Crown
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.moveTo(screenX + 35, this.y + 5);
+        ctx.lineTo(screenX + 40, this.y - 15);
+        ctx.lineTo(screenX + 50, this.y);
+        ctx.lineTo(screenX + 60, this.y - 20);
+        ctx.lineTo(screenX + 70, this.y);
+        ctx.lineTo(screenX + 80, this.y - 15);
+        ctx.lineTo(screenX + 85, this.y + 5);
+        ctx.fill();
+    }
+
+    // Shark Boss (Level 8 - Underwater)
+    drawShark(ctx, screenX) {
+        const swim = Math.sin(this.animFrame) * 8;
+        const facingRight = this.direction > 0;
+
+        // Body
+        ctx.fillStyle = '#4682B4';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 80, this.y + 40 + swim, 70, 30, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Underside
+        ctx.fillStyle = '#B0C4DE';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 80, this.y + 50 + swim, 50, 15, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dorsal fin
+        ctx.fillStyle = '#4682B4';
+        ctx.beginPath();
+        ctx.moveTo(screenX + 70, this.y + 15 + swim);
+        ctx.lineTo(screenX + 80, this.y - 15 + swim);
+        ctx.lineTo(screenX + 95, this.y + 20 + swim);
+        ctx.fill();
+
+        // Tail
+        const tailX = facingRight ? screenX : screenX + 140;
+        ctx.beginPath();
+        ctx.moveTo(tailX + (facingRight ? 20 : -20), this.y + 40 + swim);
+        ctx.lineTo(tailX, this.y + 20 + swim);
+        ctx.lineTo(tailX + (facingRight ? -10 : 10), this.y + 40 + swim);
+        ctx.lineTo(tailX, this.y + 60 + swim);
+        ctx.fill();
+
+        // Head
+        const headX = facingRight ? screenX + 130 : screenX + 30;
+        ctx.fillStyle = '#4682B4';
+        ctx.beginPath();
+        ctx.ellipse(headX, this.y + 40 + swim, 30, 25, facingRight ? 0.2 : -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eye
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(headX + (facingRight ? -5 : 5), this.y + 35 + swim, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#FF0000';
+        ctx.beginPath();
+        ctx.arc(headX + (facingRight ? -5 : 5), this.y + 35 + swim, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Teeth
+        ctx.fillStyle = '#FFF';
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+            const toothX = headX + (facingRight ? 15 : -15) + (facingRight ? i * 4 : -i * 4);
+            ctx.moveTo(toothX, this.y + 45 + swim);
+            ctx.lineTo(toothX + 2, this.y + 55 + swim);
+            ctx.lineTo(toothX + 4, this.y + 45 + swim);
+        }
+        ctx.fill();
+    }
+
+    // Yeti Boss (Level 9 - Snow)
+    drawYeti(ctx, screenX) {
+        const stomp = Math.abs(Math.sin(this.animFrame * 2)) * 5;
+        const facingRight = this.direction > 0;
+
+        // Body (furry)
+        ctx.fillStyle = '#F5F5F5';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 65, this.y + 85, 55, 50, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fur texture
+        ctx.fillStyle = '#E8E8E8';
+        for (let i = 0; i < 20; i++) {
+            ctx.beginPath();
+            ctx.arc(
+                screenX + 30 + Math.random() * 70,
+                this.y + 60 + Math.random() * 60,
+                5 + Math.random() * 5, 0, Math.PI * 2
+            );
+            ctx.fill();
+        }
+
+        // Arms
+        ctx.fillStyle = '#F5F5F5';
+        const armRaise = this.phase >= 2 ? stomp * 3 : stomp;
+        ctx.beginPath();
+        ctx.ellipse(screenX + 15, this.y + 60 - armRaise, 25, 40, -0.4, 0, Math.PI * 2);
+        ctx.ellipse(screenX + 115, this.y + 60 - armRaise, 25, 40, 0.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = '#F5F5F5';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 65, this.y + 25, 40, 35, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Face
+        ctx.fillStyle = '#ADD8E6';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 65, this.y + 30, 25, 22, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(screenX + 52, this.y + 22, 8, 0, Math.PI * 2);
+        ctx.arc(screenX + 78, this.y + 22, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#87CEEB';
+        ctx.beginPath();
+        ctx.arc(screenX + 52 + (facingRight ? 2 : -2), this.y + 22, 4, 0, Math.PI * 2);
+        ctx.arc(screenX + 78 + (facingRight ? 2 : -2), this.y + 22, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Horns
+        ctx.fillStyle = '#8B4513';
+        ctx.beginPath();
+        ctx.moveTo(screenX + 35, this.y + 5);
+        ctx.lineTo(screenX + 25, this.y - 25);
+        ctx.lineTo(screenX + 45, this.y + 10);
+        ctx.moveTo(screenX + 95, this.y + 5);
+        ctx.lineTo(screenX + 105, this.y - 25);
+        ctx.lineTo(screenX + 85, this.y + 10);
+        ctx.fill();
+
+        // Mouth (roaring)
+        ctx.fillStyle = '#8B0000';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 65, this.y + 45, 15, 10 + stomp, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Swamp Monster Boss (Level 10 - Swamp)
+    drawSwampMonster(ctx, screenX) {
+        const bubble = Math.sin(this.animFrame * 3) * 8;
+        const facingRight = this.direction > 0;
+
+        // Slime drips
+        ctx.fillStyle = 'rgba(107, 142, 35, 0.5)';
+        for (let i = 0; i < 6; i++) {
+            const dripY = (this.animFrame * 50 + i * 30) % 80;
+            ctx.beginPath();
+            ctx.ellipse(
+                screenX + 20 + i * 20,
+                this.y + 100 + dripY,
+                5, 10, 0, 0, Math.PI * 2
+            );
+            ctx.fill();
+        }
+
+        // Body (blob-like)
+        ctx.fillStyle = '#6B8E23';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 60, this.y + 60 + bubble, 55, 50, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Texture
+        ctx.fillStyle = '#556B2F';
+        for (let i = 0; i < 10; i++) {
+            ctx.beginPath();
+            ctx.arc(
+                screenX + 25 + Math.random() * 70,
+                this.y + 40 + Math.random() * 50 + bubble,
+                8 + Math.random() * 8, 0, Math.PI * 2
+            );
+            ctx.fill();
+        }
+
+        // Eyes (multiple)
+        ctx.fillStyle = '#ADFF2F';
+        ctx.beginPath();
+        ctx.arc(screenX + 40, this.y + 35 + bubble, 12, 0, Math.PI * 2);
+        ctx.arc(screenX + 70, this.y + 30 + bubble, 15, 0, Math.PI * 2);
+        ctx.arc(screenX + 90, this.y + 45 + bubble, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        const eyeDir = facingRight ? 3 : -3;
+        ctx.beginPath();
+        ctx.arc(screenX + 40 + eyeDir, this.y + 35 + bubble, 5, 0, Math.PI * 2);
+        ctx.arc(screenX + 70 + eyeDir, this.y + 30 + bubble, 6, 0, Math.PI * 2);
+        ctx.arc(screenX + 90 + eyeDir, this.y + 45 + bubble, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Mouth
+        ctx.fillStyle = '#2F4F4F';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 60, this.y + 75 + bubble, 25, 15, 0, 0, Math.PI);
+        ctx.fill();
+    }
+
+    // Pharaoh Boss (Level 11 - Ruins)
+    drawPharaoh(ctx, screenX) {
+        const hover = Math.sin(this.animFrame) * 5;
+        const facingRight = this.direction > 0;
+
+        // Aura
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 50, this.y + 70 + hover, 60, 70, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Body (wrapped)
+        ctx.fillStyle = '#DEB887';
+        ctx.fillRect(screenX + 25, this.y + 50 + hover, 50, 75);
+
+        // Bandage pattern
+        ctx.strokeStyle = '#F5DEB3';
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 10; i++) {
+            ctx.beginPath();
+            ctx.moveTo(screenX + 20, this.y + 55 + i * 8 + hover);
+            ctx.lineTo(screenX + 80, this.y + 58 + i * 8 + hover);
+            ctx.stroke();
+        }
+
+        // Arms crossed
+        ctx.fillStyle = '#DEB887';
+        ctx.beginPath();
+        ctx.moveTo(screenX + 25, this.y + 60 + hover);
+        ctx.lineTo(screenX + 10, this.y + 80 + hover);
+        ctx.lineTo(screenX + 75, this.y + 70 + hover);
+        ctx.fill();
+
+        // Head/Mask
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 50, this.y + 30 + hover, 30, 28, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Headdress
+        ctx.fillStyle = '#4169E1';
+        ctx.beginPath();
+        ctx.moveTo(screenX + 20, this.y + 30 + hover);
+        ctx.lineTo(screenX + 10, this.y + 60 + hover);
+        ctx.lineTo(screenX + 25, this.y + 50 + hover);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(screenX + 80, this.y + 30 + hover);
+        ctx.lineTo(screenX + 90, this.y + 60 + hover);
+        ctx.lineTo(screenX + 75, this.y + 50 + hover);
+        ctx.fill();
+
+        // Face
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 40, this.y + 25 + hover, 6, 8, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(screenX + 60, this.y + 25 + hover, 6, 8, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing eyes (phase 2)
+        if (this.phase >= 2) {
+            ctx.fillStyle = '#FF4500';
+            ctx.beginPath();
+            ctx.arc(screenX + 40, this.y + 25 + hover, 4, 0, Math.PI * 2);
+            ctx.arc(screenX + 60, this.y + 25 + hover, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Staff
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(screenX + (facingRight ? 75 : 15), this.y + 20 + hover, 6, 100);
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(screenX + (facingRight ? 78 : 18), this.y + 15 + hover, 12, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Mega Robot Boss (Level 12 - Factory)
+    drawMegaRobot(ctx, screenX) {
+        const step = Math.abs(Math.sin(this.animFrame * 2)) * 5;
+        const facingRight = this.direction > 0;
+
+        // Legs
+        ctx.fillStyle = '#4A4A4A';
+        ctx.fillRect(screenX + 30, this.y + 110, 25, 40);
+        ctx.fillRect(screenX + 75, this.y + 110, 25, 40);
+
+        // Feet
+        ctx.fillStyle = '#2F2F2F';
+        ctx.fillRect(screenX + 20, this.y + 140 + step, 45, 15);
+        ctx.fillRect(screenX + 65, this.y + 140 - step, 45, 15);
+
+        // Body
+        ctx.fillStyle = '#708090';
+        ctx.fillRect(screenX + 15, this.y + 40, 100, 75);
+
+        // Chest panel
+        ctx.fillStyle = '#2F4F4F';
+        ctx.fillRect(screenX + 30, this.y + 50, 70, 55);
+
+        // Reactor core
+        const coreGlow = Math.sin(this.animFrame * 3) * 0.3 + 0.7;
+        ctx.fillStyle = `rgba(0, 255, 255, ${coreGlow})`;
+        ctx.beginPath();
+        ctx.arc(screenX + 65, this.y + 77, 20, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Arms
+        ctx.fillStyle = '#708090';
+        const armSwing = this.phase >= 2 ? step * 2 : 0;
+        ctx.fillRect(screenX - 15, this.y + 50 - armSwing, 30, 60);
+        ctx.fillRect(screenX + 115, this.y + 50 + armSwing, 30, 60);
+
+        // Hands (claws)
+        ctx.fillStyle = '#4A4A4A';
+        ctx.beginPath();
+        ctx.moveTo(screenX - 15, this.y + 105 - armSwing);
+        ctx.lineTo(screenX - 25, this.y + 125 - armSwing);
+        ctx.lineTo(screenX - 5, this.y + 115 - armSwing);
+        ctx.lineTo(screenX + 5, this.y + 125 - armSwing);
+        ctx.lineTo(screenX + 15, this.y + 105 - armSwing);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(screenX + 115, this.y + 105 + armSwing);
+        ctx.lineTo(screenX + 105, this.y + 125 + armSwing);
+        ctx.lineTo(screenX + 125, this.y + 115 + armSwing);
+        ctx.lineTo(screenX + 135, this.y + 125 + armSwing);
+        ctx.lineTo(screenX + 145, this.y + 105 + armSwing);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = '#778899';
+        ctx.fillRect(screenX + 35, this.y + 5, 60, 40);
+
+        // Eyes
+        ctx.fillStyle = this.phase >= 2 ? '#FF0000' : '#00FF00';
+        ctx.fillRect(screenX + 45, this.y + 15, 15, 10);
+        ctx.fillRect(screenX + 70, this.y + 15, 15, 10);
+
+        // Antenna
+        ctx.fillStyle = '#4A4A4A';
+        ctx.fillRect(screenX + 62, this.y - 15, 6, 25);
+        const antennaGlow = Math.sin(this.animFrame * 5) > 0;
+        ctx.fillStyle = antennaGlow ? '#FF0000' : '#8B0000';
+        ctx.beginPath();
+        ctx.arc(screenX + 65, this.y - 20, 8, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Worm King Boss (Level 13 - Underground)
+    drawWormKing(ctx, screenX) {
+        const wave = this.animFrame;
+        const facingRight = this.direction > 0;
+
+        // Body segments
+        ctx.fillStyle = '#8B4513';
+        for (let i = 0; i < 8; i++) {
+            const segX = screenX + (facingRight ? i * 20 : 140 - i * 20);
+            const segY = this.y + 45 + Math.sin(wave + i * 0.5) * 15;
+            ctx.beginPath();
+            ctx.ellipse(segX + 10, segY, 18, 22, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Segment rings
+        ctx.strokeStyle = '#A0522D';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 8; i++) {
+            const segX = screenX + (facingRight ? i * 20 : 140 - i * 20);
+            const segY = this.y + 45 + Math.sin(wave + i * 0.5) * 15;
+            ctx.beginPath();
+            ctx.ellipse(segX + 10, segY, 16, 20, 0, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Head
+        const headX = facingRight ? screenX + 145 : screenX + 15;
+        const headY = this.y + 45 + Math.sin(wave + 4) * 15;
+        ctx.fillStyle = '#8B4513';
+        ctx.beginPath();
+        ctx.ellipse(headX, headY, 25, 30, facingRight ? 0.3 : -0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Crown
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.moveTo(headX - 20, headY - 25);
+        ctx.lineTo(headX - 15, headY - 45);
+        ctx.lineTo(headX - 5, headY - 30);
+        ctx.lineTo(headX, headY - 50);
+        ctx.lineTo(headX + 5, headY - 30);
+        ctx.lineTo(headX + 15, headY - 45);
+        ctx.lineTo(headX + 20, headY - 25);
+        ctx.fill();
+
+        // Mouth
+        ctx.fillStyle = '#2F2F2F';
+        ctx.beginPath();
+        ctx.arc(headX + (facingRight ? 15 : -15), headY, 15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Teeth
+        ctx.fillStyle = '#FFF';
+        for (let i = 0; i < 6; i++) {
+            ctx.beginPath();
+            ctx.moveTo(headX + (facingRight ? 20 : -20), headY - 10 + i * 4);
+            ctx.lineTo(headX + (facingRight ? 30 : -30), headY - 8 + i * 4);
+            ctx.lineTo(headX + (facingRight ? 20 : -20), headY - 6 + i * 4);
+            ctx.fill();
+        }
+
+        // Eyes
+        ctx.fillStyle = '#FF4500';
+        ctx.beginPath();
+        ctx.arc(headX - 5, headY - 10, 6, 0, Math.PI * 2);
+        ctx.arc(headX + 5, headY - 10, 6, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Candy Boss (Level 14 - Candy)
+    drawCandyBoss(ctx, screenX) {
+        const bounce = Math.abs(Math.sin(this.animFrame * 2)) * 10;
+        const spin = this.animFrame;
+
+        // Rainbow swirl body
+        const colors = ['#FF69B4', '#FFD700', '#00CED1', '#32CD32', '#FF6347', '#9370DB'];
+        for (let i = 0; i < 6; i++) {
+            ctx.fillStyle = colors[i];
+            ctx.beginPath();
+            ctx.arc(
+                screenX + 70,
+                this.y + 70 - bounce,
+                50 - i * 5,
+                spin + i * 0.5,
+                spin + i * 0.5 + Math.PI * 1.5
+            );
+            ctx.lineTo(screenX + 70, this.y + 70 - bounce);
+            ctx.fill();
+        }
+
+        // Outer swirl
+        ctx.fillStyle = '#FF69B4';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 70, this.y + 70 - bounce, 55, 50, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Face area
+        ctx.fillStyle = '#FFB6C1';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 70, this.y + 60 - bounce, 40, 35, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Candy eyes
+        ctx.fillStyle = '#FFF';
+        ctx.beginPath();
+        ctx.arc(screenX + 50, this.y + 50 - bounce, 15, 0, Math.PI * 2);
+        ctx.arc(screenX + 90, this.y + 50 - bounce, 15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#FF1493';
+        ctx.beginPath();
+        ctx.arc(screenX + 50, this.y + 50 - bounce, 8, 0, Math.PI * 2);
+        ctx.arc(screenX + 90, this.y + 50 - bounce, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#FFF';
+        ctx.beginPath();
+        ctx.arc(screenX + 48, this.y + 47 - bounce, 3, 0, Math.PI * 2);
+        ctx.arc(screenX + 88, this.y + 47 - bounce, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Mouth
+        ctx.fillStyle = '#FF1493';
+        ctx.beginPath();
+        ctx.arc(screenX + 70, this.y + 75 - bounce, 15, 0, Math.PI);
+        ctx.fill();
+
+        // Candy wrapper ears
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.moveTo(screenX + 20, this.y + 40 - bounce);
+        ctx.lineTo(screenX - 10, this.y + 30 - bounce);
+        ctx.lineTo(screenX + 25, this.y + 60 - bounce);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(screenX + 120, this.y + 40 - bounce);
+        ctx.lineTo(screenX + 150, this.y + 30 - bounce);
+        ctx.lineTo(screenX + 115, this.y + 60 - bounce);
+        ctx.fill();
+    }
+
+    // UFO Boss (Level 15 - Space)
+    drawUFO(ctx, screenX) {
+        const hover = Math.sin(this.animFrame * 2) * 8;
+        const rotation = this.animFrame * 0.5;
+
+        // Tractor beam (phase 2)
+        if (this.phase >= 2) {
+            const beamPulse = Math.sin(this.animFrame * 4) * 0.3 + 0.5;
+            ctx.fillStyle = `rgba(0, 255, 255, ${beamPulse})`;
+            ctx.beginPath();
+            ctx.moveTo(screenX + 50, this.y + 60 + hover);
+            ctx.lineTo(screenX + 20, this.y + 150);
+            ctx.lineTo(screenX + 140, this.y + 150);
+            ctx.lineTo(screenX + 110, this.y + 60 + hover);
+            ctx.fill();
+        }
+
+        // UFO body glow
+        ctx.fillStyle = 'rgba(127, 255, 0, 0.3)';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 80, this.y + 50 + hover, 85, 45, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // UFO body
+        ctx.fillStyle = '#708090';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 80, this.y + 55 + hover, 70, 25, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dome
+        ctx.fillStyle = 'rgba(135, 206, 250, 0.7)';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 80, this.y + 35 + hover, 35, 30, 0, Math.PI, 0);
+        ctx.fill();
+
+        // Dome reflection
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 70, this.y + 25 + hover, 15, 12, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Alien inside
+        ctx.fillStyle = '#32CD32';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 80, this.y + 30 + hover, 15, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.ellipse(screenX + 73, this.y + 28 + hover, 4, 6, 0, 0, Math.PI * 2);
+        ctx.ellipse(screenX + 87, this.y + 28 + hover, 4, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rotating lights
+        ctx.fillStyle = '#FF0000';
+        for (let i = 0; i < 8; i++) {
+            const lightAngle = rotation + (i / 8) * Math.PI * 2;
+            const lightX = screenX + 80 + Math.cos(lightAngle) * 55;
+            const lightY = this.y + 55 + hover + Math.sin(lightAngle) * 15;
+            const lightOn = Math.sin(this.animFrame * 5 + i) > 0;
+            ctx.fillStyle = lightOn ? '#FF0000' : '#8B0000';
+            ctx.beginPath();
+            ctx.arc(lightX, lightY, 6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Bottom lights
+        ctx.fillStyle = '#00FFFF';
+        for (let i = 0; i < 5; i++) {
+            const pulse = Math.sin(this.animFrame * 3 + i) * 0.5 + 0.5;
+            ctx.fillStyle = `rgba(0, 255, 255, ${pulse})`;
+            ctx.beginPath();
+            ctx.arc(screenX + 40 + i * 20, this.y + 70 + hover, 5, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 }
 
@@ -3023,6 +5409,9 @@ async function init() {
 
     // Initialize API and check for existing session
     const hasSession = await API.init();
+
+    // Load global highscores for everyone (auth screen and start screen)
+    loadGlobalHighscores();
 
     if (hasSession) {
         // User is logged in - sync profile from server
