@@ -15,7 +15,7 @@
     "express-rate-limit": "^7.1.5",
     "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.9.7",
+    "resend": "^2.0.0",
     "pg": "^8.11.3"
   },
   "engines": {

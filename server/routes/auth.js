@@ -9,34 +9,35 @@ const validateRegister = [
     body('username')
         .trim()
         .isLength({ min: 3, max: 50 })
-        .withMessage('Username must be 3-50 characters')
-        .matches(/^[a-zA-Z0-9_]+$/)
-        .withMessage('Username can only contain letters, numbers and underscores'),
+        .withMessage('Benutzername muss 3-50 Zeichen lang sein')
+        .matches(/^[a-zA-Z0-9_äöüÄÖÜß]+$/)
+        .withMessage('Benutzername darf nur Buchstaben, Zahlen und Unterstriche enthalten'),
     body('email')
         .isEmail()
         .normalizeEmail()
-        .withMessage('Valid email is required'),
+        .withMessage('Gültige E-Mail-Adresse erforderlich'),
     body('password')
         .isLength({ min: 6 })
-        .withMessage('Password must be at least 6 characters')
+        .withMessage('Passwort muss mindestens 6 Zeichen lang sein')
 ];
 
 const validateLogin = [
-    body('email').isEmail().normalizeEmail(),
-    body('password').notEmpty()
+    body('email').isEmail().normalizeEmail().withMessage('Gültige E-Mail-Adresse erforderlich'),
+    body('password').notEmpty().withMessage('Passwort erforderlich')
 ];
 
 const validatePassword = [
     body('password')
         .isLength({ min: 6 })
-        .withMessage('Password must be at least 6 characters')
+        .withMessage('Passwort muss mindestens 6 Zeichen lang sein')
 ];
 
 // Handle validation errors
 const handleValidation = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        // Gib den ersten Fehler als { error: "..." } zurück für Konsistenz
+        return res.status(400).json({ error: errors.array()[0].msg });
     }
     next();
 };

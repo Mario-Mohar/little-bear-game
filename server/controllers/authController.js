@@ -1,23 +1,50 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const { pool } = require('../config/db');
 const { generateToken } = require('../middleware/auth');
 
 const SALT_ROUNDS = 12;
 
-// Email transporter (configure in production)
-let transporter = null;
-if (process.env.SMTP_HOST) {
-    transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT || 587,
-        secure: false,
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS
+// Resend E-Mail Client
+let resend = null;
+if (process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+}
+
+// E-Mail Absender (muss bei Resend verifiziert sein)
+const EMAIL_FROM = process.env.EMAIL_FROM || 'Little Bear <onboarding@resend.dev>';
+
+async function sendEmail(to, subject, html) {
+    if (!resend) {
+        console.log('Resend nicht konfiguriert (RESEND_API_KEY fehlt), E-Mail wird übersprungen');
+        return false;
+    }
+
+    console.log('Sende E-Mail an:', to);
+    console.log('Von:', EMAIL_FROM);
+    console.log('API Key vorhanden:', process.env.RESEND_API_KEY ? 'Ja (' + process.env.RESEND_API_KEY.substring(0, 10) + '...)' : 'Nein');
+
+    try {
+        const { data, error } = await resend.emails.send({
+            from: EMAIL_FROM,
+            to: to,
+            subject: subject,
+            html: html
+        });
+
+        if (error) {
+            console.error('Resend API Fehler:', JSON.stringify(error, null, 2));
+            return false;
         }
-    });
+
+        console.log('E-Mail erfolgreich gesendet! ID:', data.id);
+        return true;
+    } catch (error) {
+        console.error('E-Mail senden fehlgeschlagen:', error.message);
+        console.error('Vollständiger Fehler:', error);
+        return false;
+    }
 }
 
 async function register(req, res) {
@@ -50,27 +77,22 @@ async function register(req, res) {
 
         const user = result.rows[0];
 
-        // Send verification email if SMTP is configured, otherwise auto-verify
-        let emailSent = false;
-        if (transporter) {
-            try {
-                const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/api/auth/verify/${verificationToken}`;
-                await transporter.sendMail({
-                    from: process.env.SMTP_USER,
-                    to: email,
-                    subject: 'Little Bear - Bestätige deine E-Mail',
-                    html: `
-                        <h1>Willkommen bei Little Bear!</h1>
-                        <p>Bitte klicke auf den Link unten, um deine E-Mail zu bestätigen:</p>
-                        <a href="${verifyUrl}">${verifyUrl}</a>
-                        <p>Dieser Link läuft in 24 Stunden ab.</p>
-                    `
-                });
-                emailSent = true;
-            } catch (emailError) {
-                console.log('Email sending failed, auto-verifying user:', emailError.message);
-            }
-        }
+        // Send verification email if Resend is configured, otherwise auto-verify
+        const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/api/auth/verify/${verificationToken}`;
+        const emailSent = await sendEmail(
+            email,
+            'Little Bear - Bestätige deine E-Mail',
+            `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h1 style="color: #8B4513;">Willkommen bei Little Bear!</h1>
+                    <p>Hallo ${username},</p>
+                    <p>Bitte klicke auf den Button unten, um deine E-Mail zu bestätigen:</p>
+                    <a href="${verifyUrl}" style="display: inline-block; background: #8B4513; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 20px 0;">E-Mail bestätigen</a>
+                    <p style="color: #666; font-size: 12px;">Oder kopiere diesen Link: ${verifyUrl}</p>
+                    <p style="color: #666; font-size: 12px;">Dieser Link läuft in 24 Stunden ab.</p>
+                </div>
+            `
+        );
 
         // Auto-verify if no email service or email failed
         if (!emailSent) {
@@ -193,7 +215,7 @@ async function forgotPassword(req, res) {
         const expires = new Date(Date.now() + 3600000); // 1 hour
 
         const result = await pool.query(
-            'UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE email = $3 RETURNING id',
+            'UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE email = $3 RETURNING id, username',
             [resetToken, expires, email.toLowerCase()]
         );
 
@@ -202,21 +224,24 @@ async function forgotPassword(req, res) {
             return res.json({ message: 'Falls ein Konto existiert, wurde eine E-Mail gesendet' });
         }
 
-        if (transporter) {
-            const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/?reset=${resetToken}`;
-            await transporter.sendMail({
-                from: process.env.SMTP_USER,
-                to: email,
-                subject: 'Little Bear - Passwort zurücksetzen',
-                html: `
-                    <h1>Passwort zurücksetzen</h1>
-                    <p>Klicke auf den Link unten, um dein Passwort zurückzusetzen:</p>
-                    <a href="${resetUrl}">${resetUrl}</a>
-                    <p>Dieser Link läuft in 1 Stunde ab.</p>
-                    <p>Falls du dies nicht angefordert hast, ignoriere bitte diese E-Mail.</p>
-                `
-            });
-        }
+        const username = result.rows[0].username;
+        const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/?reset=${resetToken}`;
+
+        await sendEmail(
+            email,
+            'Little Bear - Passwort zurücksetzen',
+            `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h1 style="color: #8B4513;">Passwort zurücksetzen</h1>
+                    <p>Hallo ${username},</p>
+                    <p>Klicke auf den Button unten, um dein Passwort zurückzusetzen:</p>
+                    <a href="${resetUrl}" style="display: inline-block; background: #8B4513; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 20px 0;">Passwort zurücksetzen</a>
+                    <p style="color: #666; font-size: 12px;">Oder kopiere diesen Link: ${resetUrl}</p>
+                    <p style="color: #666; font-size: 12px;">Dieser Link läuft in 1 Stunde ab.</p>
+                    <p style="color: #666; font-size: 12px;">Falls du dies nicht angefordert hast, ignoriere bitte diese E-Mail.</p>
+                </div>
+            `
+        );
 
         res.json({ message: 'Falls ein Konto existiert, wurde eine E-Mail gesendet' });
     } catch (error) {

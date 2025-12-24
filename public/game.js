@@ -187,6 +187,24 @@ function showStartScreen() {
     loadGlobalHighscores();
 }
 
+function showRegistrationSuccess(message) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+        <div class="modal-content" style="text-align: center; padding: 30px;">
+            <h2 style="color: #4CAF50; margin-bottom: 20px;">✓ Erfolgreich!</h2>
+            <p style="margin-bottom: 20px;">${message}</p>
+            <button id="success-continue-btn" class="shop-button" style="padding: 12px 30px;">Weiter zum Spiel</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    document.getElementById('success-continue-btn').addEventListener('click', () => {
+        overlay.remove();
+        showStartScreen();
+    });
+}
+
 function updateUserInfoDisplay() {
     const userInfo = document.getElementById('user-info');
     const loggedInUser = document.getElementById('logged-in-user');
@@ -3132,10 +3150,15 @@ function setupAuthHandlers() {
                 extraLives: 0
             };
             game.playerName = result.data.user.username;
-            showStartScreen();
+
+            // Zeige Bestätigungsmeldung
+            if (result.data.user.emailVerified) {
+                showRegistrationSuccess('Registrierung erfolgreich! Du kannst jetzt spielen.');
+            } else {
+                showRegistrationSuccess('Registrierung erfolgreich! Bitte bestätige deine E-Mail-Adresse.');
+            }
         } else {
-            const errors = result.data.errors;
-            errorEl.textContent = errors ? errors[0].msg : (result.data.error || 'Registrierung fehlgeschlagen');
+            errorEl.textContent = result.data.error || 'Registrierung fehlgeschlagen';
         }
     });
 
