@@ -41,7 +41,7 @@ const API = {
     updateOnlineStatus() {
         const statusEl = document.getElementById('online-status');
         if (statusEl) {
-            statusEl.textContent = this.isOnline ? 'Online' : 'Offline';
+            statusEl.textContent = this.isOnline ? 'Verbunden' : 'Nicht verbunden';
             statusEl.className = this.isOnline ? 'online' : 'offline';
         }
     },
@@ -645,18 +645,18 @@ const game = {
 // Shop items configuration
 const SHOP = {
     skins: [
-        { id: 'default', name: 'Classic Bear', price: 0, color: '#8B4513' },
-        { id: 'polar', name: 'Polar Bear', price: 50, color: '#F5F5F5' },
-        { id: 'panda', name: 'Panda Bear', price: 75, color: '#1a1a1a' },
-        { id: 'golden', name: 'Golden Bear', price: 150, color: '#FFD700' },
-        { id: 'pink', name: 'Pink Bear', price: 100, color: '#FF69B4' },
-        { id: 'blue', name: 'Ice Bear', price: 100, color: '#4169E1' }
+        { id: 'default', name: 'Klassischer Bär', price: 0, color: '#8B4513' },
+        { id: 'polar', name: 'Eisbär', price: 50, color: '#F5F5F5' },
+        { id: 'panda', name: 'Pandabär', price: 75, color: '#1a1a1a' },
+        { id: 'golden', name: 'Goldener Bär', price: 150, color: '#FFD700' },
+        { id: 'pink', name: 'Rosa Bär', price: 100, color: '#FF69B4' },
+        { id: 'blue', name: 'Blauer Bär', price: 100, color: '#4169E1' }
     ],
     upgrades: [
-        { id: 'extra_life_1', name: '+1 Start Life', price: 100, type: 'extraLife', value: 1, maxOwned: 1 },
-        { id: 'extra_life_2', name: '+2 Start Lives', price: 250, type: 'extraLife', value: 2, maxOwned: 1, requires: 'extra_life_1' },
-        { id: 'coin_magnet', name: 'Coin Magnet', price: 200, type: 'coinMagnet', description: 'Coins attracted to you' },
-        { id: 'double_coins', name: 'Double Coins', price: 300, type: 'doubleCoins', description: '2x coins from levels' }
+        { id: 'extra_life_1', name: '+1 Startleben', price: 100, type: 'extraLife', value: 1, maxOwned: 1 },
+        { id: 'extra_life_2', name: '+2 Startleben', price: 250, type: 'extraLife', value: 2, maxOwned: 1, requires: 'extra_life_1' },
+        { id: 'coin_magnet', name: 'Münzmagnet', price: 200, type: 'coinMagnet', description: 'Münzen werden angezogen' },
+        { id: 'double_coins', name: 'Doppelte Münzen', price: 300, type: 'doubleCoins', description: '2x Münzen aus Leveln' }
     ]
 };
 
@@ -735,24 +735,24 @@ function buyShopItem(type, itemId) {
     const items = type === 'skins' ? SHOP.skins : SHOP.upgrades;
     const item = items.find(i => i.id === itemId);
 
-    if (!item) return { success: false, message: 'Item not found' };
+    if (!item) return { success: false, message: 'Artikel nicht gefunden' };
 
     // Check if already owned
     if (type === 'skins' && game.userProfile.ownedSkins.includes(itemId)) {
-        return { success: false, message: 'Already owned' };
+        return { success: false, message: 'Bereits gekauft' };
     }
     if (type === 'upgrades' && game.userProfile.ownedUpgrades.includes(itemId)) {
-        return { success: false, message: 'Already owned' };
+        return { success: false, message: 'Bereits gekauft' };
     }
 
     // Check requirements
     if (item.requires && !game.userProfile.ownedUpgrades.includes(item.requires)) {
-        return { success: false, message: 'Requirement not met' };
+        return { success: false, message: 'Voraussetzung nicht erfüllt' };
     }
 
     // Check if enough coins
     if (game.userProfile.totalCoins < item.price) {
-        return { success: false, message: 'Not enough coins' };
+        return { success: false, message: 'Nicht genug Münzen' };
     }
 
     // Purchase
@@ -769,7 +769,7 @@ function buyShopItem(type, itemId) {
     }
 
     saveUserProfile();
-    return { success: true, message: 'Purchase successful!' };
+    return { success: true, message: 'Kauf erfolgreich!' };
 }
 
 // Select skin
@@ -839,7 +839,7 @@ function renderHighscoreList(containerId) {
     container.innerHTML = '';
 
     if (game.highscores.length === 0) {
-        container.innerHTML = '<li style="justify-content: center; color: #888;">No highscores yet</li>';
+        container.innerHTML = '<li style="justify-content: center; color: #888;">Noch keine Highscores</li>';
         return;
     }
 
@@ -2909,8 +2909,8 @@ function renderSkinsShop() {
                 <div class="bear-preview" style="background: ${skin.color};"></div>
             </div>
             <div class="item-name">${skin.name}</div>
-            <div class="item-price ${skin.price === 0 ? 'free' : ''}">${skin.price === 0 ? 'Free' : skin.price + ' Coins'}</div>
-            ${owned ? (selected ? '<span class="item-status selected">Selected</span>' : `<button class="select-btn" data-skin="${skin.id}">Select</button>`) : `<button class="buy-btn" data-type="skins" data-id="${skin.id}" ${game.userProfile.totalCoins < skin.price ? 'disabled' : ''}>Buy</button>`}
+            <div class="item-price ${skin.price === 0 ? 'free' : ''}">${skin.price === 0 ? 'Gratis' : skin.price + ' Münzen'}</div>
+            ${owned ? (selected ? '<span class="item-status selected">Ausgewählt</span>' : `<button class="select-btn" data-skin="${skin.id}">Auswählen</button>`) : `<button class="buy-btn" data-type="skins" data-id="${skin.id}" ${game.userProfile.totalCoins < skin.price ? 'disabled' : ''}>Kaufen</button>`}
         `;
 
         grid.appendChild(item);
@@ -2956,8 +2956,8 @@ function renderUpgradesShop() {
             </div>
             <div class="item-name">${upgrade.name}</div>
             ${upgrade.description ? `<div class="item-description">${upgrade.description}</div>` : ''}
-            <div class="item-price">${upgrade.price} Coins</div>
-            ${owned ? '<span class="item-status owned">Owned</span>' : `<button class="buy-btn" data-type="upgrades" data-id="${upgrade.id}" ${locked || game.userProfile.totalCoins < upgrade.price ? 'disabled' : ''}>${locked ? 'Locked' : 'Buy'}</button>`}
+            <div class="item-price">${upgrade.price} Münzen</div>
+            ${owned ? '<span class="item-status owned">Gekauft</span>' : `<button class="buy-btn" data-type="upgrades" data-id="${upgrade.id}" ${locked || game.userProfile.totalCoins < upgrade.price ? 'disabled' : ''}>${locked ? 'Gesperrt' : 'Kaufen'}</button>`}
         `;
 
         grid.appendChild(item);
