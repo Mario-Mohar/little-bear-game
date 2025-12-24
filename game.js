@@ -1405,6 +1405,7 @@ const game = {
     obstacles: [],
     boss: null,
     bossDefeated: false,
+    bossHintShown: false,
     particles: [],
     goal: null,
     cameraX: 0,
@@ -1803,14 +1804,21 @@ class Player {
 
         // Enemy collision
         for (let enemy of game.enemies) {
-            if (this.intersects(enemy)) {
-                if (this.velY > 0 && this.y + this.height - 10 < enemy.y + enemy.height / 2) {
+            if (enemy.alive && this.intersects(enemy)) {
+                // Check if player is jumping on enemy from above
+                const playerBottom = this.y + this.height;
+                const enemyTop = enemy.y;
+                const enemyMiddle = enemy.y + enemy.height * 0.5;
+
+                if (this.velY > 0 && playerBottom < enemyMiddle && playerBottom > enemyTop) {
+                    // Player jumped on enemy
                     enemy.alive = false;
-                    this.velY = -10;
+                    this.velY = -12;
                     game.score += 50;
                     updateUI();
                     createParticles(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 10, '#FF6347');
-                } else if (enemy.alive) {
+                } else {
+                    // Player touched enemy from side or below
                     this.die();
                 }
             }
@@ -1818,11 +1826,16 @@ class Player {
 
         // Boss collision
         if (game.boss && game.boss.alive && this.intersects(game.boss)) {
-            // Allow jumping on top 85% of boss (very forgiving for tall bosses like giant_cactus)
-            if (this.velY > 0 && this.y + this.height - 5 < game.boss.y + game.boss.height * 0.85) {
+            // Check if player is jumping on boss from above
+            // Conditions: player is falling AND player's bottom is in the top 50% of boss
+            const playerBottom = this.y + this.height;
+            const bossTop = game.boss.y;
+            const bossMiddle = game.boss.y + game.boss.height * 0.5;
+
+            if (this.velY > 0 && playerBottom < bossMiddle && playerBottom > bossTop) {
                 // Player jumped on boss
                 const killed = game.boss.takeDamage();
-                this.velY = -12; // Bigger bounce
+                this.velY = -14; // Bigger bounce
 
                 if (killed) {
                     // Boss defeated!
@@ -1833,8 +1846,12 @@ class Player {
                     // Boss damaged
                     createParticles(game.boss.x + game.boss.width / 2, game.boss.y + game.boss.height / 2, 15, '#FF0000');
                 }
+            } else if (game.boss.invulnerable > 0) {
+                // Boss is invulnerable - just bounce player back without damage
+                this.velY = -8;
+                this.velX = this.x < game.boss.x ? -5 : 5;
             } else {
-                // Player touched boss from side - take damage
+                // Player touched boss from side or below - take damage
                 this.die();
             }
         }
@@ -1859,6 +1876,13 @@ class Player {
         if (game.goal && this.intersects(game.goal)) {
             if (!game.boss || game.bossDefeated) {
                 levelComplete();
+            } else if (game.boss && game.boss.alive) {
+                // Show hint that boss must be defeated first
+                if (!game.bossHintShown) {
+                    game.bossHintShown = true;
+                    // Create warning particles
+                    createParticles(game.goal.x + 25, game.goal.y + 50, 10, '#FF0000');
+                }
             }
         }
     }
@@ -4969,6 +4993,7 @@ function generateLevel(levelNum) {
     game.obstacles = [];
     game.boss = null;
     game.bossDefeated = false;
+    game.bossHintShown = false;
 
     const yOffset = getYOffset();
 
