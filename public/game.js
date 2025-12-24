@@ -175,17 +175,22 @@ const API = {
 // ============================================
 
 function showAuthScreen() {
-    document.getElementById('start-screen')?.classList.add('hidden');
-    document.getElementById('auth-screen')?.classList.remove('hidden');
+    hideAllScreens();
+    document.getElementById('auth-screen').classList.remove('hidden');
+    loadGlobalHighscores();
+}
+
+function hideAllScreens() {
+    const screens = ['auth-screen', 'start-screen', 'game-over', 'level-complete', 'game-complete', 'shop-screen', 'ui'];
+    screens.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
 }
 
 function showStartScreen() {
-    document.getElementById('auth-screen')?.classList.add('hidden');
-    document.getElementById('game-over')?.classList.add('hidden');
-    document.getElementById('level-complete')?.classList.add('hidden');
-    document.getElementById('game-complete')?.classList.add('hidden');
-    document.getElementById('ui')?.classList.add('hidden');
-    document.getElementById('start-screen')?.classList.remove('hidden');
+    hideAllScreens();
+    document.getElementById('start-screen').classList.remove('hidden');
     updateUserInfoDisplay();
     updateCoinsDisplay();
     loadGlobalHighscores();
@@ -5162,13 +5167,14 @@ function levelComplete() {
 
     updateUI();
 
+    hideAllScreens();
+
     if (game.level >= LEVELS.length) {
         // Game complete - save highscore only at the end
         const bonusCoins = addCoinsToProfile(50, game.level); // Bonus for completing the game
         saveHighscore();
         updateCoinsDisplay();
         document.getElementById('win-score').textContent = game.score;
-        document.getElementById('ui').classList.add('hidden');
 
         // Add guest warning to game complete screen
         const gameCompleteEl = document.getElementById('game-complete');
@@ -5181,6 +5187,7 @@ function levelComplete() {
         }
 
         gameCompleteEl.classList.remove('hidden');
+        loadGlobalHighscores();
     } else {
         document.getElementById('completed-level').textContent = game.level;
         document.getElementById('level-score').textContent = game.score;
@@ -5212,7 +5219,9 @@ function formatTime(seconds) {
 
 // Next Level
 function nextLevel() {
-    document.getElementById('level-complete').classList.add('hidden');
+    hideAllScreens();
+    document.getElementById('ui').classList.remove('hidden');
+
     game.level++;
     game.cameraX = 0;
     game.particles = [];
@@ -5233,8 +5242,9 @@ function gameOver() {
     saveHighscore();
     updateCoinsDisplay();
     document.getElementById('final-score').textContent = game.score;
-    document.getElementById('ui').classList.add('hidden');
+    hideAllScreens();
     document.getElementById('game-over').classList.remove('hidden');
+    loadGlobalHighscores();
 }
 
 // Game Loop
@@ -5409,13 +5419,13 @@ function updateCoinsDisplay() {
 }
 
 function openShop() {
-    document.getElementById('start-screen').classList.add('hidden');
+    hideAllScreens();
     document.getElementById('shop-screen').classList.remove('hidden');
     renderShop();
 }
 
 function closeShop() {
-    document.getElementById('shop-screen').classList.add('hidden');
+    hideAllScreens();
     document.getElementById('start-screen').classList.remove('hidden');
     updateCoinsDisplay();
 }
@@ -5647,12 +5657,7 @@ function startGame() {
     }
     updateCoinsDisplay();
 
-    document.getElementById('start-screen').classList.add('hidden');
-    document.getElementById('auth-screen').classList.add('hidden');
-    document.getElementById('game-over').classList.add('hidden');
-    document.getElementById('level-complete').classList.add('hidden');
-    document.getElementById('game-complete').classList.add('hidden');
-    document.getElementById('shop-screen').classList.add('hidden');
+    hideAllScreens();
     document.getElementById('ui').classList.remove('hidden');
 
     game.score = 0;
