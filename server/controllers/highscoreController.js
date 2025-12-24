@@ -5,18 +5,24 @@ async function getHighscores(req, res) {
     const offset = parseInt(req.query.offset) || 0;
 
     try {
+        // Only show the highest score per player
         const result = await pool.query(
-            `SELECT h.id, h.username, h.score, h.level_reached, h.created_at,
-                    u.selected_skin
-             FROM highscores h
-             LEFT JOIN users u ON h.user_id = u.id
-             ORDER BY h.score DESC
-             LIMIT $1 OFFSET $2`,
+            `WITH best_scores AS (
+                SELECT h.id, h.username, h.score, h.level_reached, h.created_at, h.user_id,
+                       ROW_NUMBER() OVER (PARTITION BY h.username ORDER BY h.score DESC) as rn
+                FROM highscores h
+            )
+            SELECT b.id, b.username, b.score, b.level_reached, b.created_at, u.selected_skin
+            FROM best_scores b
+            LEFT JOIN users u ON b.user_id = u.id
+            WHERE b.rn = 1
+            ORDER BY b.score DESC
+            LIMIT $1 OFFSET $2`,
             [limit, offset]
         );
 
-        // Get total count
-        const countResult = await pool.query('SELECT COUNT(*) FROM highscores');
+        // Get total count of unique players
+        const countResult = await pool.query('SELECT COUNT(DISTINCT username) FROM highscores');
         const totalCount = parseInt(countResult.rows[0].count);
 
         res.json({
@@ -141,9 +147,11 @@ async function getMyRank(req, res) {
             return res.json({ rank: null, bestScore: 0, message: 'Noch keine Punkte' });
         }
 
-        // Get rank
+        // Get rank based on unique players' best scores
         const rankResult = await pool.query(
-            'SELECT COUNT(*) + 1 as rank FROM highscores WHERE score > $1',
+            `SELECT COUNT(*) + 1 as rank FROM (
+                SELECT MAX(score) as best FROM highscores GROUP BY username
+            ) AS player_bests WHERE best > $1`,
             [bestScore]
         );
 
