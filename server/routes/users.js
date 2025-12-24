@@ -28,7 +28,7 @@ router.put('/profile',
 
 router.post('/coins',
     body('coins').isInt({ min: 0, max: 1000 }),
-    body('level').isInt({ min: 1, max: 10 }),
+    body('level').isInt({ min: 1, max: 15 }),
     handleValidation,
     userController.addCoins
 );
