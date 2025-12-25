@@ -2021,20 +2021,28 @@ class Player {
         // Enemy collision
         for (let enemy of game.enemies) {
             if (enemy.alive && this.intersects(enemy)) {
-                // Check if player is jumping on enemy from above
                 const playerBottom = this.y + this.height;
+                const playerTop = this.y;
                 const enemyTop = enemy.y;
-                const enemyMiddle = enemy.y + enemy.height * 0.5;
+                const enemyBottom = enemy.y + enemy.height;
 
-                if (this.velY > 0 && playerBottom < enemyMiddle && playerBottom > enemyTop) {
-                    // Player jumped on enemy
+                // Spieler besiegt Gegner wenn:
+                // - Spieler fällt nach unten (velY > 0) ODER hat gerade erst angefangen zu fallen
+                // - Spieler-Füße sind über der Mitte des Gegners
+                // - Spieler kam von oben (Spieler-Unterseite war über Gegner-Oberseite)
+                const isFalling = this.velY >= 0;
+                const feetAboveMiddle = playerBottom < enemyTop + enemy.height * 0.6;
+                const comingFromAbove = playerTop < enemyTop;
+
+                if (isFalling && (feetAboveMiddle || comingFromAbove)) {
+                    // Player jumped on enemy - Gegner besiegt
                     enemy.alive = false;
                     this.velY = -12;
                     game.score += 50;
                     updateUI();
                     createParticles(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 10, '#FF6347');
                 } else {
-                    // Player touched enemy from side or below
+                    // Player touched enemy from side or below - Spieler verliert Leben
                     this.die();
                 }
             }
@@ -2042,13 +2050,16 @@ class Player {
 
         // Boss collision
         if (game.boss && game.boss.alive && this.intersects(game.boss)) {
-            // Check if player is jumping on boss from above
-            // Conditions: player is falling AND player's bottom is in the top 50% of boss
             const playerBottom = this.y + this.height;
+            const playerTop = this.y;
             const bossTop = game.boss.y;
-            const bossMiddle = game.boss.y + game.boss.height * 0.5;
 
-            if (this.velY > 0 && playerBottom < bossMiddle && playerBottom > bossTop) {
+            // Gleiche großzügige Logik wie bei normalen Gegnern
+            const isFalling = this.velY >= 0;
+            const feetAboveMiddle = playerBottom < bossTop + game.boss.height * 0.6;
+            const comingFromAbove = playerTop < bossTop;
+
+            if (isFalling && (feetAboveMiddle || comingFromAbove)) {
                 // Player jumped on boss
                 const killed = game.boss.takeDamage();
                 this.velY = -14; // Bigger bounce
@@ -2914,8 +2925,51 @@ class Enemy {
         this.x += this.velX;
         this.animFrame += 0.1;
 
+        // Prüfe Patrouillengrenzen
         if (this.x <= this.patrolLeft || this.x + this.width >= this.patrolRight) {
             this.velX *= -1;
+            // Korrigiere Position um Feststecken zu vermeiden
+            if (this.x < this.patrolLeft) this.x = this.patrolLeft;
+            if (this.x + this.width > this.patrolRight) this.x = this.patrolRight - this.width;
+        }
+
+        // Finde die Plattform unter dem Gegner
+        const feetY = this.y + this.height;
+        let currentPlatform = null;
+
+        for (let platform of game.platforms) {
+            if (this.x + this.width > platform.x && this.x < platform.x + platform.width &&
+                feetY >= platform.y - 5 && feetY <= platform.y + 20) {
+                currentPlatform = platform;
+                break;
+            }
+        }
+
+        // Prüfe auch bewegende Plattformen
+        if (!currentPlatform && game.movingPlatforms) {
+            for (let platform of game.movingPlatforms) {
+                if (this.x + this.width > platform.x && this.x < platform.x + platform.width &&
+                    feetY >= platform.y - 5 && feetY <= platform.y + 20) {
+                    currentPlatform = platform;
+                    break;
+                }
+            }
+        }
+
+        // Wenn der Gegner auf einer Plattform steht, prüfe Kanten
+        if (currentPlatform) {
+            // Berechne effektive Grenzen (das Minimum von Patrol und Plattform)
+            const platformLeft = currentPlatform.x + 10;
+            const platformRight = currentPlatform.x + currentPlatform.width - 10;
+            const effectiveLeft = Math.max(this.patrolLeft, platformLeft);
+            const effectiveRight = Math.min(this.patrolRight, platformRight);
+
+            if (this.x <= effectiveLeft || this.x + this.width >= effectiveRight) {
+                this.velX *= -1;
+                // Korrigiere Position
+                if (this.x < effectiveLeft) this.x = effectiveLeft;
+                if (this.x + this.width > effectiveRight) this.x = effectiveRight - this.width;
+            }
         }
     }
 
