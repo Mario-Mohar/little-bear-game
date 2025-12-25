@@ -483,7 +483,11 @@ const LEVELS = [
             { x: 300, y: 510, left: 100, right: 450 },
             { x: 700, y: 510, left: 650, right: 950 },
             { x: 1200, y: 510, left: 1150, right: 1650 },
-            { x: 2000, y: 510, left: 1850, right: 2250 }
+            { x: 2000, y: 510, left: 1850, right: 2250 },
+            // Gegner auf Plattformen (verschoben um Coin-Überlappung zu vermeiden)
+            { x: 250, y: 415, left: 200, right: 300 },
+            { x: 920, y: 265, left: 850, right: 950 },
+            { x: 2400, y: 265, left: 2350, right: 2470 }
         ],
         obstacles: [],
         boss: { x: 2700, y: 475, type: 'worm' },
@@ -522,14 +526,18 @@ const LEVELS = [
         enemies: [
             { x: 1350, y: 350, left: 1300, right: 1500 },
             { x: 2150, y: 520, left: 2050, right: 2400 },
-            { x: 3350, y: 520, left: 3300, right: 3550 }
+            { x: 3350, y: 520, left: 3300, right: 3550 },
+            // Gegner auf Plattformen (verschoben um Überlappung zu vermeiden)
+            { x: 550, y: 465, left: 400, right: 550 },
+            { x: 780, y: 415, left: 650, right: 800 },
+            { x: 3050, y: 285, left: 2950, right: 3100 }
         ],
         obstacles: [
-            { x: 480, y: 450, type: 'cactus' },
+            { x: 520, y: 450, type: 'cactus' },
             { x: 700, y: 410, type: 'ruins' },
             { x: 1850, y: 450, type: 'cactus' },
-            { x: 2200, y: 510, type: 'ruins' },
-            { x: 2150, y: 500, type: 'cactus' }
+            { x: 2350, y: 510, type: 'ruins' },
+            { x: 2300, y: 500, type: 'cactus' }
         ],
         boss: { x: 3450, y: 400, type: 'giant_cactus' },
         goalX: 3600
@@ -584,7 +592,13 @@ const LEVELS = [
             { x: 1250, y: 500, left: 1150, right: 1500 },
             { x: 1850, y: 500, left: 1700, right: 2150 },
             { x: 2450, y: 500, left: 2300, right: 2650 },
-            { x: 2950, y: 500, left: 2800, right: 3150 }
+            { x: 2950, y: 500, left: 2800, right: 3150 },
+            // Gegner auf Plattformen (angepasste Positionen)
+            { x: 550, y: 265, left: 450, right: 600 },
+            { x: 1000, y: 315, left: 900, right: 1050 },
+            { x: 1700, y: 215, left: 1600, right: 1720 },
+            { x: 2500, y: 315, left: 2350, right: 2520 },
+            { x: 3500, y: 345, left: 3400, right: 3550 }
         ],
         obstacles: [
             { x: 300, y: 505, type: 'stalagmite' },
@@ -640,7 +654,13 @@ const LEVELS = [
             { x: 1000, y: 160, left: 950, right: 1100 },
             { x: 1800, y: 160, left: 1750, right: 1900 },
             { x: 2700, y: 210, left: 2650, right: 2750 },
-            { x: 4280, y: 510, left: 4200, right: 4480 }
+            { x: 4280, y: 510, left: 4200, right: 4480 },
+            // Mehr Gegner auf Plattformen (angepasste Positionen)
+            { x: 500, y: 285, left: 450, right: 570 },
+            { x: 1100, y: 245, left: 1050, right: 1180 },
+            { x: 2100, y: 185, left: 2050, right: 2200 },
+            { x: 2950, y: 215, left: 2900, right: 3050 },
+            { x: 3450, y: 365, left: 3400, right: 3520 }
         ],
         obstacles: [],
         boss: { x: 4400, y: 470, type: 'thunder_cloud' },
@@ -704,7 +724,13 @@ const LEVELS = [
             { x: 2400, y: 515, left: 2300, right: 2530 },
             { x: 3200, y: 515, left: 3100, right: 3380 },
             { x: 1700, y: 215, left: 1650, right: 1770 },
-            { x: 2930, y: 215, left: 2880, right: 3000 }
+            { x: 2930, y: 215, left: 2880, right: 3000 },
+            // Mehr Gegner auf Plattformen (angepasste Positionen)
+            { x: 850, y: 365, left: 750, right: 850 },
+            { x: 1250, y: 285, left: 1150, right: 1250 },
+            { x: 1950, y: 315, left: 1850, right: 2000 },
+            { x: 3200, y: 315, left: 3080, right: 3200 },
+            { x: 4400, y: 385, left: 4300, right: 4400 }
         ],
         obstacles: [
             { x: 500, y: 515, type: 'lava_rock' },
@@ -757,13 +783,20 @@ const LEVELS = [
             { x: 3300, y: 500 }, { x: 3600, y: 500 }
         ],
         enemies: [
-            { x: 200, y: 520, left: 50, right: 350 },
-            { x: 600, y: 520, left: 550, right: 800 },
-            { x: 1100, y: 520, left: 1000, right: 1400 },
-            { x: 1700, y: 520, left: 1600, right: 1900 },
-            { x: 2200, y: 520, left: 2100, right: 2500 },
-            { x: 2800, y: 520, left: 2700, right: 2950 },
-            { x: 3300, y: 520, left: 3150, right: 3600 }
+            { x: 250, y: 520, left: 50, right: 350 },
+            { x: 700, y: 520, left: 550, right: 800 },
+            { x: 1200, y: 520, left: 1000, right: 1400 },
+            { x: 1800, y: 520, left: 1600, right: 1900 },
+            { x: 2350, y: 520, left: 2100, right: 2500 },
+            { x: 2900, y: 520, left: 2700, right: 2950 },
+            { x: 3450, y: 520, left: 3150, right: 3600 },
+            // Gegner auf Plattformen
+            { x: 500, y: 345, left: 400, right: 520 },
+            { x: 780, y: 285, left: 700, right: 800 },
+            { x: 1380, y: 315, left: 1300, right: 1420 },
+            { x: 1980, y: 345, left: 1900, right: 2030 },
+            { x: 2580, y: 365, left: 2500, right: 2640 },
+            { x: 3280, y: 315, left: 3200, right: 3330 }
         ],
         obstacles: [],
         boss: { x: 3700, y: 420, type: 'octopus' },
@@ -815,14 +848,22 @@ const LEVELS = [
             { x: 3200, y: 500 }, { x: 3700, y: 500 }
         ],
         enemies: [
-            { x: 150, y: 525, left: 50, right: 300 },
-            { x: 550, y: 525, left: 500, right: 800 },
-            { x: 1050, y: 525, left: 1000, right: 1250 },
-            { x: 1550, y: 525, left: 1450, right: 1850 },
-            { x: 2150, y: 525, left: 2050, right: 2350 },
-            { x: 2650, y: 525, left: 2550, right: 2900 },
-            { x: 3200, y: 525, left: 3100, right: 3350 },
-            { x: 3700, y: 525, left: 3550, right: 3950 }
+            { x: 200, y: 525, left: 50, right: 300 },
+            { x: 650, y: 525, left: 500, right: 800 },
+            { x: 1150, y: 525, left: 1000, right: 1250 },
+            { x: 1700, y: 525, left: 1450, right: 1850 },
+            { x: 2250, y: 525, left: 2050, right: 2350 },
+            { x: 2750, y: 525, left: 2550, right: 2900 },
+            { x: 3300, y: 525, left: 3100, right: 3350 },
+            { x: 3800, y: 525, left: 3550, right: 3950 },
+            // Gegner auf Plattformen
+            { x: 420, y: 315, left: 350, right: 450 },
+            { x: 680, y: 245, left: 600, right: 730 },
+            { x: 1220, y: 265, left: 1150, right: 1270 },
+            { x: 1820, y: 285, left: 1750, right: 1850 },
+            { x: 2420, y: 345, left: 2350, right: 2470 },
+            { x: 3030, y: 365, left: 2950, right: 3090 },
+            { x: 3620, y: 215, left: 3550, right: 3650 }
         ],
         obstacles: [],
         boss: { x: 3950, y: 410, type: 'gorilla' },
@@ -875,15 +916,23 @@ const LEVELS = [
             { x: 3150, y: 500 }, { x: 3650, y: 500 }, { x: 4050, y: 500 }
         ],
         enemies: [
-            { x: 200, y: 505, left: 50, right: 350 },
-            { x: 600, y: 505, left: 550, right: 800 },
-            { x: 1100, y: 505, left: 1000, right: 1300 },
-            { x: 1600, y: 505, left: 1500, right: 1750 },
-            { x: 2100, y: 505, left: 1950, right: 2350 },
-            { x: 2650, y: 505, left: 2550, right: 2850 },
-            { x: 3150, y: 505, left: 3050, right: 3300 },
-            { x: 3650, y: 505, left: 3500, right: 3900 },
-            { x: 4050, y: 505, left: 3950, right: 4250 }
+            { x: 280, y: 505, left: 50, right: 350 },
+            { x: 700, y: 505, left: 550, right: 800 },
+            { x: 1200, y: 505, left: 1000, right: 1300 },
+            { x: 1700, y: 505, left: 1500, right: 1750 },
+            { x: 2200, y: 505, left: 1950, right: 2350 },
+            { x: 2750, y: 505, left: 2550, right: 2850 },
+            { x: 3250, y: 505, left: 3050, right: 3300 },
+            { x: 3750, y: 505, left: 3500, right: 3900 },
+            // Gegner auf Plattformen
+            { x: 500, y: 345, left: 400, right: 520 },
+            { x: 930, y: 285, left: 850, right: 970 },
+            { x: 1380, y: 215, left: 1300, right: 1420 },
+            { x: 1830, y: 295, left: 1750, right: 1870 },
+            { x: 2330, y: 365, left: 2250, right: 2370 },
+            { x: 2880, y: 285, left: 2800, right: 2920 },
+            { x: 3380, y: 215, left: 3300, right: 3420 },
+            { x: 4150, y: 505, left: 3950, right: 4250 }
         ],
         obstacles: [],
         boss: { x: 4150, y: 460, type: 'shark' },
@@ -938,15 +987,24 @@ const LEVELS = [
             { x: 3100, y: 500 }, { x: 3650, y: 500 }, { x: 4150, y: 500 }
         ],
         enemies: [
-            { x: 150, y: 510, left: 50, right: 300 },
-            { x: 550, y: 510, left: 500, right: 800 },
-            { x: 1050, y: 510, left: 1000, right: 1300 },
-            { x: 1550, y: 510, left: 1450, right: 1800 },
-            { x: 2100, y: 510, left: 2000, right: 2300 },
-            { x: 2600, y: 510, left: 2500, right: 2750 },
-            { x: 3100, y: 510, left: 2950, right: 3350 },
-            { x: 3650, y: 510, left: 3550, right: 3850 },
-            { x: 4150, y: 510, left: 4050, right: 4350 }
+            { x: 200, y: 510, left: 50, right: 300 },
+            { x: 650, y: 510, left: 500, right: 800 },
+            { x: 1150, y: 510, left: 1000, right: 1300 },
+            { x: 1700, y: 510, left: 1450, right: 1800 },
+            { x: 2200, y: 510, left: 2000, right: 2300 },
+            { x: 2700, y: 510, left: 2500, right: 2750 },
+            { x: 3200, y: 510, left: 2950, right: 3350 },
+            { x: 3750, y: 510, left: 3550, right: 3850 },
+            { x: 4250, y: 510, left: 4050, right: 4350 },
+            // Gegner auf Plattformen
+            { x: 480, y: 335, left: 400, right: 520 },
+            { x: 720, y: 255, left: 650, right: 750 },
+            { x: 1280, y: 285, left: 1200, right: 1320 },
+            { x: 1570, y: 215, left: 1500, right: 1600 },
+            { x: 2180, y: 265, left: 2100, right: 2220 },
+            { x: 2780, y: 285, left: 2700, right: 2830 },
+            { x: 3380, y: 345, left: 3300, right: 3400 },
+            { x: 3980, y: 365, left: 3900, right: 4020 }
         ],
         obstacles: [],
         boss: { x: 4350, y: 400, type: 'yeti' },
@@ -1005,18 +1063,34 @@ const LEVELS = [
             { x: 4200, y: 500 }
         ],
         enemies: [
-            { x: 100, y: 515, left: 50, right: 250 },
-            { x: 500, y: 515, left: 450, right: 700 },
-            { x: 950, y: 515, left: 900, right: 1100 },
-            { x: 1400, y: 515, left: 1300, right: 1600 },
-            { x: 1900, y: 515, left: 1800, right: 2050 },
-            { x: 2350, y: 515, left: 2250, right: 2450 },
-            { x: 2800, y: 515, left: 2650, right: 3000 },
-            { x: 3300, y: 515, left: 3200, right: 3450 },
-            { x: 3750, y: 515, left: 3650, right: 3850 },
-            { x: 4200, y: 515, left: 4050, right: 4450 }
+            { x: 180, y: 515, left: 50, right: 250 },
+            { x: 600, y: 515, left: 450, right: 700 },
+            { x: 1050, y: 515, left: 900, right: 1100 },
+            { x: 1500, y: 515, left: 1300, right: 1600 },
+            { x: 2000, y: 515, left: 1800, right: 2050 },
+            { x: 2450, y: 515, left: 2250, right: 2450 },
+            { x: 2900, y: 515, left: 2650, right: 3000 },
+            { x: 3400, y: 515, left: 3200, right: 3450 },
+            { x: 3850, y: 515, left: 3650, right: 3850 },
+            { x: 4300, y: 515, left: 4050, right: 4450 },
+            // Gegner auf Plattformen
+            { x: 420, y: 345, left: 350, right: 470 },
+            { x: 720, y: 265, left: 650, right: 770 },
+            { x: 1230, y: 285, left: 1150, right: 1270 },
+            { x: 1570, y: 215, left: 1500, right: 1620 },
+            { x: 1980, y: 345, left: 1900, right: 2020 },
+            { x: 2430, y: 265, left: 2350, right: 2470 },
+            { x: 2780, y: 215, left: 2700, right: 2820 },
+            { x: 3320, y: 345, left: 3250, right: 3350 },
+            { x: 3930, y: 365, left: 3850, right: 3970 }
         ],
         obstacles: [],
+        fadingPlatforms: [
+            { x: 550, y: 320, w: 100, h: 25, type: 'moss', visibleTime: 150, invisibleTime: 60 },
+            { x: 1350, y: 280, w: 100, h: 25, type: 'mud', visibleTime: 140, invisibleTime: 70 },
+            { x: 2100, y: 320, w: 100, h: 25, type: 'moss', visibleTime: 130, invisibleTime: 80 },
+            { x: 3000, y: 280, w: 100, h: 25, type: 'mud', visibleTime: 120, invisibleTime: 90 }
+        ],
         boss: { x: 4550, y: 430, type: 'swamp_monster' },
         goalX: 4700
     },
@@ -1073,18 +1147,36 @@ const LEVELS = [
             { x: 4600, y: 500 }
         ],
         enemies: [
-            { x: 200, y: 500, left: 50, right: 350 },
-            { x: 600, y: 500, left: 550, right: 800 },
-            { x: 1100, y: 500, left: 1000, right: 1300 },
-            { x: 1600, y: 500, left: 1500, right: 1750 },
-            { x: 2050, y: 500, left: 1950, right: 2300 },
-            { x: 2600, y: 500, left: 2500, right: 2800 },
-            { x: 3100, y: 500, left: 3000, right: 3300 },
-            { x: 3600, y: 500, left: 3450, right: 3850 },
-            { x: 4200, y: 500, left: 4050, right: 4500 },
-            { x: 4600, y: 500, left: 4500, right: 4800 }
+            { x: 280, y: 500, left: 50, right: 350 },
+            { x: 700, y: 500, left: 550, right: 800 },
+            { x: 1200, y: 500, left: 1000, right: 1300 },
+            { x: 1700, y: 500, left: 1500, right: 1750 },
+            { x: 2150, y: 500, left: 1950, right: 2300 },
+            { x: 2700, y: 500, left: 2500, right: 2800 },
+            { x: 3200, y: 500, left: 3000, right: 3300 },
+            { x: 3700, y: 500, left: 3450, right: 3850 },
+            { x: 4300, y: 500, left: 4050, right: 4500 },
+            { x: 4700, y: 500, left: 4500, right: 4800 },
+            // Gegner auf Plattformen
+            { x: 520, y: 335, left: 450, right: 570 },
+            { x: 820, y: 255, left: 750, right: 870 },
+            { x: 1370, y: 285, left: 1250, right: 1370 },
+            { x: 1680, y: 215, left: 1600, right: 1720 },
+            { x: 2080, y: 345, left: 2000, right: 2120 },
+            { x: 2480, y: 265, left: 2400, right: 2520 },
+            { x: 2930, y: 215, left: 2800, right: 2920 },
+            { x: 3420, y: 345, left: 3300, right: 3420 },
+            { x: 3780, y: 265, left: 3700, right: 3820 },
+            { x: 4230, y: 345, left: 4100, right: 4220 }
         ],
         obstacles: [],
+        fadingPlatforms: [
+            { x: 600, y: 320, w: 100, h: 25, type: 'sandstone', visibleTime: 140, invisibleTime: 70 },
+            { x: 1400, y: 280, w: 100, h: 25, type: 'gold', visibleTime: 130, invisibleTime: 80 },
+            { x: 2200, y: 320, w: 100, h: 25, type: 'sandstone', visibleTime: 120, invisibleTime: 90 },
+            { x: 3100, y: 280, w: 100, h: 25, type: 'gold', visibleTime: 110, invisibleTime: 100 },
+            { x: 3900, y: 320, w: 100, h: 25, type: 'sandstone', visibleTime: 100, invisibleTime: 100 }
+        ],
         boss: { x: 4750, y: 410, type: 'pharaoh' },
         goalX: 4900
     },
@@ -1143,18 +1235,37 @@ const LEVELS = [
             { x: 4650, y: 500 }
         ],
         enemies: [
-            { x: 150, y: 505, left: 50, right: 300 },
-            { x: 550, y: 505, left: 500, right: 800 },
-            { x: 1050, y: 505, left: 1000, right: 1300 },
-            { x: 1550, y: 505, left: 1450, right: 1800 },
-            { x: 2100, y: 505, left: 2000, right: 2300 },
-            { x: 2600, y: 505, left: 2500, right: 2750 },
-            { x: 3100, y: 505, left: 2950, right: 3350 },
-            { x: 3650, y: 505, left: 3550, right: 3850 },
-            { x: 4150, y: 505, left: 4050, right: 4300 },
-            { x: 4650, y: 505, left: 4500, right: 4900 }
+            { x: 200, y: 505, left: 50, right: 300 },
+            { x: 650, y: 505, left: 500, right: 800 },
+            { x: 1150, y: 505, left: 1000, right: 1300 },
+            { x: 1700, y: 505, left: 1450, right: 1800 },
+            { x: 2200, y: 505, left: 2000, right: 2300 },
+            { x: 2700, y: 505, left: 2500, right: 2750 },
+            { x: 3200, y: 505, left: 2950, right: 3350 },
+            { x: 3750, y: 505, left: 3550, right: 3850 },
+            { x: 4250, y: 505, left: 4050, right: 4300 },
+            { x: 4750, y: 505, left: 4500, right: 4900 },
+            // Gegner auf Plattformen
+            { x: 480, y: 335, left: 400, right: 520 },
+            { x: 730, y: 255, left: 650, right: 750 },
+            { x: 1280, y: 285, left: 1200, right: 1320 },
+            { x: 1580, y: 215, left: 1500, right: 1600 },
+            { x: 1880, y: 345, left: 1800, right: 1940 },
+            { x: 2180, y: 265, left: 2100, right: 2220 },
+            { x: 2780, y: 285, left: 2700, right: 2830 },
+            { x: 3080, y: 215, left: 3000, right: 3120 },
+            { x: 3680, y: 265, left: 3600, right: 3740 },
+            { x: 4280, y: 285, left: 4200, right: 4300 }
         ],
         obstacles: [],
+        fadingPlatforms: [
+            { x: 550, y: 320, w: 100, h: 25, type: 'metal', visibleTime: 130, invisibleTime: 80 },
+            { x: 1300, y: 280, w: 100, h: 25, type: 'conveyor', visibleTime: 120, invisibleTime: 90 },
+            { x: 2000, y: 320, w: 100, h: 25, type: 'metal', visibleTime: 110, invisibleTime: 100 },
+            { x: 2800, y: 280, w: 100, h: 25, type: 'conveyor', visibleTime: 100, invisibleTime: 100 },
+            { x: 3500, y: 320, w: 100, h: 25, type: 'metal', visibleTime: 90, invisibleTime: 110 },
+            { x: 4100, y: 280, w: 100, h: 25, type: 'conveyor', visibleTime: 80, invisibleTime: 120 }
+        ],
         boss: { x: 4950, y: 390, type: 'mega_robot' },
         goalX: 5100
     },
@@ -1213,19 +1324,40 @@ const LEVELS = [
             { x: 4700, y: 500 }, { x: 5100, y: 500 }
         ],
         enemies: [
-            { x: 200, y: 515, left: 50, right: 350 },
-            { x: 600, y: 515, left: 550, right: 800 },
-            { x: 1100, y: 515, left: 1000, right: 1300 },
-            { x: 1600, y: 515, left: 1500, right: 1750 },
-            { x: 2100, y: 515, left: 1950, right: 2350 },
-            { x: 2650, y: 515, left: 2550, right: 2850 },
-            { x: 3150, y: 515, left: 3050, right: 3300 },
-            { x: 3650, y: 515, left: 3500, right: 3900 },
-            { x: 4200, y: 515, left: 4100, right: 4400 },
-            { x: 4700, y: 515, left: 4600, right: 4950 },
-            { x: 5100, y: 515, left: 4950, right: 5250 }
+            { x: 280, y: 515, left: 50, right: 350 },
+            { x: 700, y: 515, left: 550, right: 800 },
+            { x: 1200, y: 515, left: 1000, right: 1300 },
+            { x: 1700, y: 515, left: 1500, right: 1750 },
+            { x: 2200, y: 515, left: 1950, right: 2350 },
+            { x: 2750, y: 515, left: 2550, right: 2850 },
+            { x: 3250, y: 515, left: 3050, right: 3300 },
+            { x: 3750, y: 515, left: 3500, right: 3900 },
+            { x: 4300, y: 515, left: 4100, right: 4400 },
+            { x: 4800, y: 515, left: 4600, right: 4950 },
+            { x: 5200, y: 515, left: 4950, right: 5250 },
+            // Gegner auf Plattformen
+            { x: 530, y: 335, left: 450, right: 570 },
+            { x: 780, y: 255, left: 700, right: 800 },
+            { x: 1380, y: 285, left: 1300, right: 1420 },
+            { x: 1680, y: 215, left: 1600, right: 1700 },
+            { x: 2030, y: 345, left: 1950, right: 2090 },
+            { x: 2330, y: 265, left: 2250, right: 2370 },
+            { x: 2930, y: 285, left: 2850, right: 2980 },
+            { x: 3230, y: 215, left: 3150, right: 3270 },
+            { x: 3580, y: 345, left: 3500, right: 3600 },
+            { x: 3880, y: 265, left: 3800, right: 3940 },
+            { x: 4530, y: 285, left: 4450, right: 4570 }
         ],
         obstacles: [],
+        fadingPlatforms: [
+            { x: 600, y: 320, w: 100, h: 25, type: 'dirt', visibleTime: 120, invisibleTime: 90 },
+            { x: 1400, y: 280, w: 100, h: 25, type: 'roots', visibleTime: 110, invisibleTime: 100 },
+            { x: 2100, y: 320, w: 100, h: 25, type: 'dirt', visibleTime: 100, invisibleTime: 100 },
+            { x: 2900, y: 280, w: 100, h: 25, type: 'roots', visibleTime: 90, invisibleTime: 110 },
+            { x: 3600, y: 320, w: 100, h: 25, type: 'dirt', visibleTime: 80, invisibleTime: 120 },
+            { x: 4300, y: 280, w: 100, h: 25, type: 'roots', visibleTime: 70, invisibleTime: 130 },
+            { x: 4900, y: 320, w: 100, h: 25, type: 'dirt', visibleTime: 60, invisibleTime: 140 }
+        ],
         boss: { x: 5150, y: 450, type: 'worm_king' },
         goalX: 5300
     },
@@ -1287,19 +1419,40 @@ const LEVELS = [
             { x: 4650, y: 500 }, { x: 5200, y: 500 }
         ],
         enemies: [
-            { x: 150, y: 510, left: 50, right: 300 },
-            { x: 550, y: 510, left: 500, right: 800 },
-            { x: 1050, y: 510, left: 1000, right: 1300 },
-            { x: 1550, y: 510, left: 1450, right: 1800 },
-            { x: 2100, y: 510, left: 2000, right: 2300 },
-            { x: 2600, y: 510, left: 2500, right: 2750 },
-            { x: 3100, y: 510, left: 2950, right: 3350 },
-            { x: 3650, y: 510, left: 3550, right: 3850 },
-            { x: 4150, y: 510, left: 4050, right: 4350 },
-            { x: 4650, y: 510, left: 4500, right: 4900 },
-            { x: 5200, y: 510, left: 5100, right: 5400 }
+            { x: 200, y: 510, left: 50, right: 300 },
+            { x: 650, y: 510, left: 500, right: 800 },
+            { x: 1150, y: 510, left: 1000, right: 1300 },
+            { x: 1700, y: 510, left: 1450, right: 1800 },
+            { x: 2200, y: 510, left: 2000, right: 2300 },
+            { x: 2700, y: 510, left: 2500, right: 2750 },
+            { x: 3200, y: 510, left: 2950, right: 3350 },
+            { x: 3750, y: 510, left: 3550, right: 3850 },
+            { x: 4250, y: 510, left: 4050, right: 4350 },
+            { x: 4750, y: 510, left: 4500, right: 4900 },
+            { x: 5300, y: 510, left: 5100, right: 5400 },
+            // Gegner auf Plattformen
+            { x: 480, y: 335, left: 400, right: 520 },
+            { x: 730, y: 255, left: 650, right: 750 },
+            { x: 1280, y: 285, left: 1200, right: 1320 },
+            { x: 1580, y: 215, left: 1500, right: 1600 },
+            { x: 1880, y: 345, left: 1800, right: 1940 },
+            { x: 2180, y: 265, left: 2100, right: 2220 },
+            { x: 2780, y: 285, left: 2700, right: 2830 },
+            { x: 3080, y: 215, left: 3000, right: 3120 },
+            { x: 3380, y: 345, left: 3300, right: 3400 },
+            { x: 3980, y: 365, left: 3900, right: 4020 },
+            { x: 4580, y: 365, left: 4500, right: 4630 }
         ],
         obstacles: [],
+        fadingPlatforms: [
+            { x: 550, y: 320, w: 100, h: 25, type: 'candy', visibleTime: 110, invisibleTime: 100 },
+            { x: 1300, y: 280, w: 100, h: 25, type: 'chocolate', visibleTime: 100, invisibleTime: 100 },
+            { x: 2000, y: 320, w: 100, h: 25, type: 'candy', visibleTime: 90, invisibleTime: 110 },
+            { x: 2700, y: 280, w: 100, h: 25, type: 'chocolate', visibleTime: 80, invisibleTime: 120 },
+            { x: 3400, y: 320, w: 100, h: 25, type: 'candy', visibleTime: 70, invisibleTime: 130 },
+            { x: 4100, y: 280, w: 100, h: 25, type: 'chocolate', visibleTime: 60, invisibleTime: 140 },
+            { x: 4800, y: 320, w: 100, h: 25, type: 'candy', visibleTime: 50, invisibleTime: 150 }
+        ],
         boss: { x: 5350, y: 410, type: 'candy_boss' },
         goalX: 5500
     },
@@ -1367,21 +1520,44 @@ const LEVELS = [
             { x: 5550, y: 500 }
         ],
         enemies: [
-            { x: 100, y: 505, left: 50, right: 250 },
-            { x: 500, y: 505, left: 450, right: 700 },
-            { x: 950, y: 505, left: 900, right: 1100 },
-            { x: 1400, y: 505, left: 1300, right: 1600 },
-            { x: 1900, y: 505, left: 1800, right: 2100 },
-            { x: 2350, y: 505, left: 2250, right: 2450 },
-            { x: 2800, y: 505, left: 2650, right: 3000 },
-            { x: 3300, y: 505, left: 3200, right: 3450 },
-            { x: 3750, y: 505, left: 3650, right: 3850 },
-            { x: 4200, y: 505, left: 4050, right: 4350 },
-            { x: 4650, y: 505, left: 4550, right: 4850 },
-            { x: 5100, y: 505, left: 5000, right: 5200 },
-            { x: 5550, y: 505, left: 5400, right: 5750 }
+            { x: 180, y: 505, left: 50, right: 250 },
+            { x: 600, y: 505, left: 450, right: 700 },
+            { x: 1050, y: 505, left: 900, right: 1100 },
+            { x: 1500, y: 505, left: 1300, right: 1600 },
+            { x: 2000, y: 505, left: 1800, right: 2100 },
+            { x: 2450, y: 505, left: 2250, right: 2450 },
+            { x: 2900, y: 505, left: 2650, right: 3000 },
+            { x: 3400, y: 505, left: 3200, right: 3450 },
+            { x: 3850, y: 505, left: 3650, right: 3850 },
+            { x: 4300, y: 505, left: 4050, right: 4350 },
+            { x: 4750, y: 505, left: 4550, right: 4850 },
+            { x: 5200, y: 505, left: 5000, right: 5200 },
+            { x: 5650, y: 505, left: 5400, right: 5750 },
+            // Gegner auf Plattformen
+            { x: 420, y: 335, left: 350, right: 470 },
+            { x: 680, y: 255, left: 600, right: 700 },
+            { x: 1230, y: 285, left: 1150, right: 1270 },
+            { x: 1530, y: 215, left: 1450, right: 1550 },
+            { x: 1830, y: 345, left: 1750, right: 1890 },
+            { x: 2130, y: 265, left: 2050, right: 2170 },
+            { x: 2730, y: 285, left: 2650, right: 2780 },
+            { x: 3030, y: 215, left: 2950, right: 3070 },
+            { x: 3330, y: 345, left: 3250, right: 3350 },
+            { x: 3630, y: 265, left: 3550, right: 3690 },
+            { x: 4230, y: 285, left: 4150, right: 4270 },
+            { x: 4830, y: 345, left: 4750, right: 4870 }
         ],
         obstacles: [],
+        fadingPlatforms: [
+            { x: 500, y: 320, w: 100, h: 25, type: 'energy', visibleTime: 100, invisibleTime: 100 },
+            { x: 1200, y: 280, w: 100, h: 25, type: 'asteroid', visibleTime: 90, invisibleTime: 110 },
+            { x: 1900, y: 320, w: 100, h: 25, type: 'energy', visibleTime: 80, invisibleTime: 120 },
+            { x: 2600, y: 280, w: 100, h: 25, type: 'asteroid', visibleTime: 70, invisibleTime: 130 },
+            { x: 3300, y: 320, w: 100, h: 25, type: 'energy', visibleTime: 60, invisibleTime: 140 },
+            { x: 4000, y: 280, w: 100, h: 25, type: 'asteroid', visibleTime: 50, invisibleTime: 150 },
+            { x: 4700, y: 320, w: 100, h: 25, type: 'energy', visibleTime: 40, invisibleTime: 160 },
+            { x: 5400, y: 280, w: 100, h: 25, type: 'asteroid', visibleTime: 30, invisibleTime: 170 }
+        ],
         boss: { x: 5750, y: 440, type: 'ufo' },
         goalX: 5900
     }
@@ -1400,6 +1576,7 @@ const game = {
     player: null,
     platforms: [],
     movingPlatforms: [],
+    fadingPlatforms: [],
     coins: [],
     enemies: [],
     obstacles: [],
@@ -1766,6 +1943,16 @@ class Player {
             }
         }
 
+        // Platform collision (fading) - only when solid
+        for (let platform of game.fadingPlatforms) {
+            if (platform.isSolid) {
+                const collision = this.checkCollision(platform);
+                if (collision) {
+                    this.handleCollision(collision, platform);
+                }
+            }
+        }
+
         // World bounds
         if (this.x < 0) this.x = 0;
         if (this.x + this.width > game.levelWidth) this.x = game.levelWidth - this.width;
@@ -1874,15 +2061,8 @@ class Player {
 
         // Goal collision - only if boss is defeated (or no boss exists)
         if (game.goal && this.intersects(game.goal)) {
-            if (!game.boss || game.bossDefeated) {
+            if (!game.boss || game.bossDefeated || !game.boss.alive) {
                 levelComplete();
-            } else if (game.boss && game.boss.alive) {
-                // Show hint that boss must be defeated first
-                if (!game.bossHintShown) {
-                    game.bossHintShown = true;
-                    // Create warning particles
-                    createParticles(game.goal.x + 25, game.goal.y + 50, 10, '#FF0000');
-                }
             }
         }
     }
@@ -2479,6 +2659,85 @@ class MovingPlatform extends Platform {
         ctx.fillRect(screenX - 3, this.y - 3, this.width + 6, this.height + 6);
 
         this.drawPlatform(ctx, screenX, game.theme);
+    }
+}
+
+// Fading Platform Class - becomes transparent and lets player fall through
+class FadingPlatform extends Platform {
+    constructor(x, y, width, height, type, fadeSpeed = 0.02, visibleTime = 120, invisibleTime = 80) {
+        super(x, y, width, height, type);
+        this.fadeSpeed = fadeSpeed;
+        this.visibleTime = visibleTime;
+        this.invisibleTime = invisibleTime;
+        this.alpha = 1;
+        this.timer = 0;
+        this.isSolid = true;
+        this.state = 'visible'; // 'visible', 'fading_out', 'invisible', 'fading_in'
+    }
+
+    update() {
+        this.timer++;
+
+        switch (this.state) {
+            case 'visible':
+                if (this.timer >= this.visibleTime) {
+                    this.state = 'fading_out';
+                    this.timer = 0;
+                }
+                break;
+            case 'fading_out':
+                this.alpha -= this.fadeSpeed;
+                if (this.alpha <= 0.2) {
+                    this.alpha = 0.2;
+                    this.isSolid = false;
+                    this.state = 'invisible';
+                    this.timer = 0;
+                }
+                break;
+            case 'invisible':
+                if (this.timer >= this.invisibleTime) {
+                    this.state = 'fading_in';
+                    this.timer = 0;
+                }
+                break;
+            case 'fading_in':
+                this.alpha += this.fadeSpeed;
+                if (this.alpha >= 1) {
+                    this.alpha = 1;
+                    this.isSolid = true;
+                    this.state = 'visible';
+                    this.timer = 0;
+                }
+                break;
+        }
+    }
+
+    draw(ctx) {
+        const screenX = this.x - game.cameraX;
+        if (screenX + this.width < 0 || screenX > CONFIG.WIDTH) return;
+
+        // Save context and apply alpha
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+
+        // Draw warning glow when about to fade
+        if (this.state === 'visible' && this.timer > this.visibleTime * 0.7) {
+            const pulseAlpha = Math.sin(this.timer * 0.3) * 0.3 + 0.3;
+            ctx.fillStyle = `rgba(255, 100, 100, ${pulseAlpha})`;
+            ctx.fillRect(screenX - 3, this.y - 3, this.width + 6, this.height + 6);
+        }
+
+        // Draw ghostly outline when invisible
+        if (!this.isSolid) {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(screenX, this.y, this.width, this.height);
+            ctx.setLineDash([]);
+        }
+
+        this.drawPlatform(ctx, screenX, game.theme);
+        ctx.restore();
     }
 }
 
@@ -4988,6 +5247,7 @@ function generateLevel(levelNum) {
 
     game.platforms = [];
     game.movingPlatforms = [];
+    game.fadingPlatforms = [];
     game.coins = [];
     game.enemies = [];
     game.obstacles = [];
@@ -5006,6 +5266,18 @@ function generateLevel(levelNum) {
     if (levelData.movingPlatforms) {
         for (let p of levelData.movingPlatforms) {
             game.movingPlatforms.push(new MovingPlatform(p.x, p.y + yOffset, p.w, p.h, p.type, p.moveX, p.moveY, p.speed));
+        }
+    }
+
+    // Create fading platforms
+    if (levelData.fadingPlatforms) {
+        for (let p of levelData.fadingPlatforms) {
+            game.fadingPlatforms.push(new FadingPlatform(
+                p.x, p.y + yOffset, p.w, p.h, p.type,
+                p.fadeSpeed || 0.02,
+                p.visibleTime || 120,
+                p.invisibleTime || 80
+            ));
         }
     }
 
@@ -5331,10 +5603,18 @@ function gameLoop() {
         platform.draw(ctx);
     }
 
-    // Update and draw goal
+    // Update and draw fading platforms
+    for (let platform of game.fadingPlatforms) {
+        platform.update();
+        platform.draw(ctx);
+    }
+
+    // Update and draw goal (only show if boss is defeated or no boss exists)
     if (game.goal) {
         game.goal.update();
-        game.goal.draw(ctx);
+        if (!game.boss || game.bossDefeated || !game.boss.alive) {
+            game.goal.draw(ctx);
+        }
     }
 
     // Update and draw coins
