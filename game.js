@@ -739,6 +739,11 @@ const LEVELS = [
             { x: 2900, y: 515, type: 'lava_rock' },
             { x: 3500, y: 515, type: 'lava_rock' }
         ],
+        fadingPlatforms: [
+            { x: 800, y: 350, w: 80, h: 25, type: 'lava', visibleTime: 180, invisibleTime: 50 },
+            { x: 2050, y: 300, w: 80, h: 25, type: 'lava', visibleTime: 170, invisibleTime: 55 },
+            { x: 3550, y: 280, w: 80, h: 25, type: 'lava', visibleTime: 160, invisibleTime: 60 }
+        ],
         boss: { x: 4900, y: 450, type: 'lava_dragon' },
         goalX: 5100
     },
@@ -799,6 +804,11 @@ const LEVELS = [
             { x: 3280, y: 315, left: 3200, right: 3330 }
         ],
         obstacles: [],
+        fadingPlatforms: [
+            { x: 550, y: 350, w: 80, h: 25, type: 'sand', visibleTime: 170, invisibleTime: 55 },
+            { x: 1150, y: 300, w: 80, h: 25, type: 'wood', visibleTime: 160, invisibleTime: 60 },
+            { x: 2650, y: 350, w: 80, h: 25, type: 'sand', visibleTime: 150, invisibleTime: 65 }
+        ],
         boss: { x: 3700, y: 420, type: 'octopus' },
         goalX: 3900
     },
@@ -866,6 +876,12 @@ const LEVELS = [
             { x: 3620, y: 215, left: 3550, right: 3650 }
         ],
         obstacles: [],
+        fadingPlatforms: [
+            { x: 280, y: 380, w: 80, h: 25, type: 'wood', visibleTime: 160, invisibleTime: 60 },
+            { x: 1050, y: 340, w: 80, h: 25, type: 'moss', visibleTime: 150, invisibleTime: 65 },
+            { x: 1950, y: 280, w: 80, h: 25, type: 'wood', visibleTime: 140, invisibleTime: 70 },
+            { x: 2850, y: 350, w: 80, h: 25, type: 'moss', visibleTime: 130, invisibleTime: 75 }
+        ],
         boss: { x: 3950, y: 410, type: 'gorilla' },
         goalX: 4100
     },
@@ -935,6 +951,12 @@ const LEVELS = [
             { x: 4150, y: 505, left: 3950, right: 4250 }
         ],
         obstacles: [],
+        fadingPlatforms: [
+            { x: 600, y: 350, w: 80, h: 25, type: 'coral', visibleTime: 150, invisibleTime: 65 },
+            { x: 1200, y: 280, w: 80, h: 25, type: 'seaweed', visibleTime: 140, invisibleTime: 70 },
+            { x: 2000, y: 340, w: 80, h: 25, type: 'coral', visibleTime: 130, invisibleTime: 75 },
+            { x: 3000, y: 280, w: 80, h: 25, type: 'seaweed', visibleTime: 120, invisibleTime: 80 }
+        ],
         boss: { x: 4150, y: 460, type: 'shark' },
         goalX: 4300
     },
@@ -1007,6 +1029,13 @@ const LEVELS = [
             { x: 3980, y: 365, left: 3900, right: 4020 }
         ],
         obstacles: [],
+        fadingPlatforms: [
+            { x: 550, y: 340, w: 80, h: 25, type: 'ice', visibleTime: 140, invisibleTime: 70 },
+            { x: 1350, y: 280, w: 80, h: 25, type: 'snow', visibleTime: 130, invisibleTime: 75 },
+            { x: 1950, y: 340, w: 80, h: 25, type: 'ice', visibleTime: 120, invisibleTime: 80 },
+            { x: 2850, y: 280, w: 80, h: 25, type: 'snow', visibleTime: 110, invisibleTime: 85 },
+            { x: 3750, y: 350, w: 80, h: 25, type: 'ice', visibleTime: 100, invisibleTime: 90 }
+        ],
         boss: { x: 4350, y: 400, type: 'yeti' },
         goalX: 4500
     },
@@ -2061,7 +2090,11 @@ class Player {
 
         // Goal collision - only if boss is defeated (or no boss exists)
         if (game.goal && this.intersects(game.goal)) {
-            if (!game.boss || game.bossDefeated || !game.boss.alive) {
+            const bossExists = game.boss !== null && game.boss !== undefined;
+            const bossIsDead = bossExists && (!game.boss.alive || game.bossDefeated);
+            const canFinish = !bossExists || bossIsDead;
+
+            if (canFinish) {
                 levelComplete();
             }
         }
@@ -5612,8 +5645,36 @@ function gameLoop() {
     // Update and draw goal (only show if boss is defeated or no boss exists)
     if (game.goal) {
         game.goal.update();
-        if (!game.boss || game.bossDefeated || !game.boss.alive) {
+        // Only show goal if boss is dead
+        const bossExists = game.boss !== null && game.boss !== undefined;
+        const bossIsDead = bossExists && (!game.boss.alive || game.bossDefeated);
+        const canShowGoal = !bossExists || bossIsDead;
+
+        if (canShowGoal) {
             game.goal.draw(ctx);
+        } else {
+            // Draw locked goal indicator
+            const screenX = game.goal.x - game.cameraX;
+            if (screenX + 50 > 0 && screenX < CONFIG.WIDTH) {
+                ctx.save();
+                ctx.globalAlpha = 0.3;
+                ctx.fillStyle = '#888';
+                ctx.fillRect(screenX + 5, game.goal.y, 8, 100);
+                ctx.fillStyle = '#666';
+                ctx.beginPath();
+                ctx.moveTo(screenX + 13, game.goal.y + 5);
+                ctx.lineTo(screenX + 55, game.goal.y + 25);
+                ctx.lineTo(screenX + 13, game.goal.y + 45);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+
+                // Draw lock icon
+                ctx.fillStyle = '#FF4444';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('🔒 Besiege den Boss!', screenX + 30, game.goal.y - 15);
+            }
         }
     }
 
