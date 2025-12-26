@@ -5691,6 +5691,45 @@ class Projectile {
             this.velY += 0.15;
         }
 
+        // Check collision with platforms (projectiles get blocked)
+        for (let platform of game.platforms) {
+            if (this.x + this.width > platform.x &&
+                this.x < platform.x + platform.width &&
+                this.y + this.height > platform.y &&
+                this.y < platform.y + platform.height) {
+                this.alive = false;
+                // Create small impact particles
+                for (let i = 0; i < 4; i++) {
+                    game.particles.push(new Particle(
+                        this.x + this.width / 2,
+                        this.y + this.height / 2,
+                        this.color
+                    ));
+                }
+                return;
+            }
+        }
+
+        // Check collision with moving platforms
+        if (game.movingPlatforms) {
+            for (let platform of game.movingPlatforms) {
+                if (this.x + this.width > platform.x &&
+                    this.x < platform.x + platform.width &&
+                    this.y + this.height > platform.y &&
+                    this.y < platform.y + platform.height) {
+                    this.alive = false;
+                    for (let i = 0; i < 4; i++) {
+                        game.particles.push(new Particle(
+                            this.x + this.width / 2,
+                            this.y + this.height / 2,
+                            this.color
+                        ));
+                    }
+                    return;
+                }
+            }
+        }
+
         // Remove if off screen
         if (this.x < game.cameraX - 100 || this.x > game.cameraX + CONFIG.WIDTH + 100 ||
             this.y < -100 || this.y > CONFIG.HEIGHT + 100) {
@@ -5878,16 +5917,16 @@ function getYOffset() {
 
 // Spawn power-ups based on level and rarity
 function spawnPowerUps(levelData, yOffset) {
-    // Power-up spawn chances (per potential spawn point)
+    // Power-up spawn chances - reduced for more challenge
     const spawnChances = {
-        extra_life: 0.03,    // 3% - Very rare
-        time_bonus: 0.08,    // 8% - Rare
-        speed_boost: 0.15,   // 15% - Common
-        triple_jump: 0.12    // 12% - Uncommon
+        extra_life: 0.008,   // 0.8% - Extremely rare
+        time_bonus: 0.03,    // 3% - Rare
+        speed_boost: 0.06,   // 6% - Uncommon
+        triple_jump: 0.04    // 4% - Rare
     };
 
     // Higher levels have slightly better spawn rates
-    const levelBonus = Math.min((game.level - 6) * 0.01, 0.05);
+    const levelBonus = Math.min((game.level - 6) * 0.005, 0.02);
 
     // Find suitable spawn locations (on platforms, not too close to start/end)
     const validPlatforms = levelData.platforms.filter(p =>
@@ -5896,8 +5935,8 @@ function spawnPowerUps(levelData, yOffset) {
 
     if (validPlatforms.length === 0) return;
 
-    // Determine how many power-ups to spawn (1-3 based on level size)
-    const maxPowerUps = Math.min(3, Math.floor(levelData.width / 1500));
+    // Determine how many power-ups to spawn (max 1-2 based on level size)
+    const maxPowerUps = Math.min(2, Math.floor(levelData.width / 2000));
     let spawnedCount = 0;
 
     // Shuffle platforms to randomize spawn locations
@@ -5906,22 +5945,21 @@ function spawnPowerUps(levelData, yOffset) {
     for (let platform of shuffled) {
         if (spawnedCount >= maxPowerUps) break;
 
-        // Random chance to spawn on this platform
-        if (Math.random() > 0.4) continue; // 60% chance to skip
+        // Random chance to spawn on this platform (80% chance to skip)
+        if (Math.random() > 0.20) continue;
 
         // Determine which power-up type to spawn
         const roll = Math.random();
         let type = null;
-        let cumulative = 0;
 
         // Roll for each type in order of rarity
-        if (roll < (spawnChances.extra_life + levelBonus)) {
+        if (roll < (spawnChances.extra_life + levelBonus * 0.5)) {
             type = 'extra_life';
-        } else if (roll < (spawnChances.extra_life + spawnChances.time_bonus + levelBonus * 2)) {
+        } else if (roll < (spawnChances.extra_life + spawnChances.time_bonus + levelBonus)) {
             type = 'time_bonus';
-        } else if (roll < (spawnChances.extra_life + spawnChances.time_bonus + spawnChances.triple_jump + levelBonus * 2)) {
+        } else if (roll < (spawnChances.extra_life + spawnChances.time_bonus + spawnChances.triple_jump + levelBonus)) {
             type = 'triple_jump';
-        } else if (roll < (spawnChances.extra_life + spawnChances.time_bonus + spawnChances.triple_jump + spawnChances.speed_boost + levelBonus * 2)) {
+        } else if (roll < (spawnChances.extra_life + spawnChances.time_bonus + spawnChances.triple_jump + spawnChances.speed_boost + levelBonus)) {
             type = 'speed_boost';
         }
 
@@ -5935,10 +5973,10 @@ function spawnPowerUps(levelData, yOffset) {
         }
     }
 
-    // Guarantee at least one power-up in levels 6+
-    if (spawnedCount === 0 && shuffled.length > 0) {
+    // 40% chance to spawn at least one common power-up if none spawned
+    if (spawnedCount === 0 && shuffled.length > 0 && Math.random() < 0.4) {
         const platform = shuffled[0];
-        const types = ['speed_boost', 'speed_boost', 'triple_jump', 'time_bonus']; // Weighted towards common
+        const types = ['speed_boost', 'speed_boost', 'triple_jump']; // Only common types
         const type = types[Math.floor(Math.random() * types.length)];
         const spawnX = platform.x + platform.w / 2 - 15;
         const spawnY = platform.y - 50 + yOffset;
@@ -6358,14 +6396,14 @@ function nextLevel() {
 }
 
 // Game Over
-function gameOver() {
+async function gameOver() {
     game.running = false;
-    saveHighscore();
+    await saveHighscore();
     updateCoinsDisplay();
     document.getElementById('final-score').textContent = game.score;
     hideAllScreens();
     document.getElementById('game-over').classList.remove('hidden');
-    loadGlobalHighscores();
+    await loadGlobalHighscores();
 }
 
 // Game Loop
