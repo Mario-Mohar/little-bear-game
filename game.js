@@ -106,21 +106,38 @@ const API = {
     },
 
     async saveHighscore(score, levelReached) {
-        if (this.isGuest || !this.token) return null;
+        if (this.isGuest || !this.token) {
+            console.log('saveHighscore skipped: guest or no token');
+            return null;
+        }
         try {
+            console.log('Saving highscore:', score, 'level:', levelReached);
             const response = await this.request('/highscores', {
                 method: 'POST',
                 body: JSON.stringify({ score, levelReached })
             });
-            if (response.ok) return await response.json();
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Highscore saved successfully:', result);
+                return result;
+            } else {
+                const error = await response.text();
+                console.error('Failed to save highscore, status:', response.status, 'error:', error);
+            }
         } catch (e) { console.error('Failed to save highscore:', e); }
         return null;
     },
 
     async getHighscores(limit = 10) {
         try {
-            const response = await this.request('/highscores?limit=' + limit);
-            if (response.ok) return await response.json();
+            // Add cache buster to prevent stale data
+            const cacheBuster = Date.now();
+            const response = await this.request('/highscores?limit=' + limit + '&_=' + cacheBuster);
+            if (response.ok) {
+                return await response.json();
+            } else {
+                console.error('Failed to get highscores, status:', response.status);
+            }
         } catch (e) { console.error('Failed to get highscores:', e); }
         return null;
     },
@@ -245,17 +262,22 @@ function updateUserInfoDisplay() {
 }
 
 async function loadGlobalHighscores() {
+    console.log('Loading global highscores...');
     const data = await API.getHighscores(10);
     if (data && data.highscores) {
+        console.log('Highscores loaded:', data.highscores.length, 'entries, top score:', data.highscores[0]?.score);
         displayHighscores(data.highscores, 'highscore-entries');
         displayHighscores(data.highscores, 'win-highscore-entries');
         displayHighscores(data.highscores, 'gameover-highscore-entries');
         displayHighscores(data.highscores, 'auth-highscore-entries');
+    } else {
+        console.error('Failed to load highscores - no data returned');
     }
 
     // Show user's rank
     if (!API.isGuest) {
         const rankData = await API.getMyRank();
+        console.log('User rank data:', rankData);
         if (rankData && rankData.rank) {
             const rankHtml = `Dein Rang: #${rankData.rank} (${rankData.bestScore} Punkte)`;
             ['my-rank', 'win-rank', 'gameover-rank'].forEach(id => {
@@ -1828,12 +1850,16 @@ async function saveHighscore() {
 
     // Save to server if logged in
     if (!API.isGuest) {
-        const result = await API.saveHighscore(game.score, game.level);
-        if (result) {
-            console.log('Highscore saved to server, rank:', result.rank);
+        try {
+            const result = await API.saveHighscore(game.score, game.level);
+            if (result) {
+                console.log('Highscore saved to server, rank:', result.rank);
+            } else {
+                console.error('Failed to save highscore - no result');
+            }
+        } catch (e) {
+            console.error('Error saving highscore:', e);
         }
-        // Refresh global highscores
-        loadGlobalHighscores();
     }
 
     updateHighscoreDisplays();
