@@ -1612,6 +1612,8 @@ const game = {
     boss: null,
     bossDefeated: false,
     bossHintShown: false,
+    projectiles: [],
+    powerups: [],
     particles: [],
     goal: null,
     cameraX: 0,
@@ -1894,24 +1896,54 @@ class Player {
         this.jumpCount = 0;
         this.maxJumps = 2; // Double jump
         this.canJump = true;
+        this.invulnerable = 0; // Invulnerability frames after being hit
+
+        // Power-up effects
+        this.hasSpeedBoost = false;
+        this.speedBoostTimer = 0;
+        this.hasTripleJump = false;
+        this.tripleJumpTimer = 0;
     }
 
     update() {
+        // Decrease invulnerability timer
+        if (this.invulnerable > 0) {
+            this.invulnerable--;
+        }
+
+        // Update power-up timers
+        if (this.speedBoostTimer > 0) {
+            this.speedBoostTimer--;
+            if (this.speedBoostTimer <= 0) {
+                this.hasSpeedBoost = false;
+            }
+        }
+        if (this.tripleJumpTimer > 0) {
+            this.tripleJumpTimer--;
+            if (this.tripleJumpTimer <= 0) {
+                this.hasTripleJump = false;
+                this.maxJumps = 2; // Reset to double jump
+            }
+        }
+
+        // Calculate speed (with speed boost)
+        const currentSpeed = this.hasSpeedBoost ? CONFIG.PLAYER.SPEED * 1.6 : CONFIG.PLAYER.SPEED;
+
         // Horizontal movement
         if (game.keys['ArrowLeft'] || game.keys['KeyA']) {
-            if (this.velX > -CONFIG.PLAYER.SPEED) {
-                this.velX--;
+            if (this.velX > -currentSpeed) {
+                this.velX -= this.hasSpeedBoost ? 1.5 : 1;
             }
             this.facingRight = false;
         }
         if (game.keys['ArrowRight'] || game.keys['KeyD']) {
-            if (this.velX < CONFIG.PLAYER.SPEED) {
-                this.velX++;
+            if (this.velX < currentSpeed) {
+                this.velX += this.hasSpeedBoost ? 1.5 : 1;
             }
             this.facingRight = true;
         }
 
-        // Jumping (with double jump)
+        // Jumping (with double/triple jump)
         const jumpKeyPressed = game.keys['Space'] || game.keys['ArrowUp'] || game.keys['KeyW'];
         if (jumpKeyPressed && this.canJump && this.jumpCount < this.maxJumps) {
             this.jumping = true;
@@ -1920,12 +1952,15 @@ class Player {
             this.jumpCount++;
             this.canJump = false;
 
-            // Different particle colors for double jump
+            // Different particle colors for each jump
             if (this.jumpCount === 1) {
                 createParticles(this.x + this.width / 2, this.y + this.height, 5, '#A0522D');
-            } else {
+            } else if (this.jumpCount === 2) {
                 // Double jump effect - sparkles!
                 createParticles(this.x + this.width / 2, this.y + this.height / 2, 8, '#FFD700');
+            } else if (this.jumpCount === 3) {
+                // Triple jump effect - purple sparkles!
+                createParticles(this.x + this.width / 2, this.y + this.height / 2, 10, '#9932CC');
             }
         }
         // Reset canJump when key is released (prevents holding jump)
@@ -2041,8 +2076,8 @@ class Player {
                     game.score += 50;
                     updateUI();
                     createParticles(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 10, '#FF6347');
-                } else {
-                    // Player touched enemy from side or below - Spieler verliert Leben
+                } else if (this.invulnerable <= 0) {
+                    // Player touched enemy from side or below - Spieler verliert Leben (only if not invulnerable)
                     this.die();
                 }
             }
@@ -2077,8 +2112,8 @@ class Player {
                 // Boss is invulnerable - just bounce player back without damage
                 this.velY = -8;
                 this.velX = this.x < game.boss.x ? -5 : 5;
-            } else {
-                // Player touched boss from side or below - take damage
+            } else if (this.invulnerable <= 0) {
+                // Player touched boss from side or below - take damage (only if not invulnerable)
                 this.die();
             }
         }
@@ -2173,13 +2208,22 @@ class Player {
         this.velX = 0;
         this.velY = 0;
         this.jumpCount = 0;
+        this.invulnerable = 120; // 2 seconds of invulnerability after respawn
         game.cameraX = 0;
+
+        // Reset maxJumps based on current power-up state
+        this.maxJumps = this.hasTripleJump ? 3 : 2;
 
         // Reset enemies and boss
         resetEnemies();
     }
 
     draw(ctx) {
+        // Blink when invulnerable
+        if (this.invulnerable > 0 && Math.floor(this.invulnerable / 5) % 2 === 0) {
+            return; // Skip drawing every other 5 frames for blink effect
+        }
+
         const screenX = this.x - game.cameraX;
         const skinColor = getCurrentSkinColor();
 
@@ -2822,6 +2866,171 @@ class Coin {
     }
 }
 
+// PowerUp Class - collectible bonuses (Level 6+)
+class PowerUp {
+    constructor(x, y, type) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.width = 30;
+        this.height = 30;
+        this.collected = false;
+        this.animFrame = 0;
+        this.floatOffset = Math.random() * Math.PI * 2;
+
+        // Configure based on type
+        switch(type) {
+            case 'extra_life':
+                this.color = '#FF69B4';
+                this.icon = '❤️';
+                this.glowColor = '#FF1493';
+                break;
+            case 'speed_boost':
+                this.color = '#00BFFF';
+                this.icon = '⚡';
+                this.glowColor = '#1E90FF';
+                this.duration = 300; // 5 seconds at 60fps
+                break;
+            case 'time_bonus':
+                this.color = '#FFD700';
+                this.icon = '⏱️';
+                this.glowColor = '#FFA500';
+                this.timeBonus = 15; // 15 seconds bonus
+                break;
+            case 'triple_jump':
+                this.color = '#9932CC';
+                this.icon = '🦘';
+                this.glowColor = '#8A2BE2';
+                this.duration = 600; // 10 seconds at 60fps
+                break;
+        }
+    }
+
+    update() {
+        this.animFrame += 0.1;
+        this.floatOffset += 0.05;
+    }
+
+    draw(ctx) {
+        if (this.collected) return;
+
+        const screenX = this.x - game.cameraX;
+        if (screenX + this.width < 0 || screenX > CONFIG.WIDTH) return;
+
+        const float = Math.sin(this.floatOffset) * 5;
+        const pulse = Math.sin(this.animFrame * 2) * 0.2 + 1;
+        const centerX = screenX + this.width / 2;
+        const centerY = this.y + this.height / 2 + float;
+
+        // Outer glow
+        ctx.save();
+        ctx.shadowColor = this.glowColor;
+        ctx.shadowBlur = 15 * pulse;
+
+        // Background circle
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = 0.8;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 18 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Inner circle
+        ctx.fillStyle = '#FFFFFF';
+        ctx.globalAlpha = 0.9;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        // Icon
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.icon, centerX, centerY);
+
+        // Sparkle effect
+        if (Math.random() < 0.1) {
+            const sparkleX = centerX + (Math.random() - 0.5) * 30;
+            const sparkleY = centerY + (Math.random() - 0.5) * 30;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.globalAlpha = 0.8;
+            ctx.beginPath();
+            ctx.arc(sparkleX, sparkleY, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    collidesWith(player) {
+        return !this.collected &&
+            this.x < player.x + player.width &&
+            this.x + this.width > player.x &&
+            this.y < player.y + player.height &&
+            this.y + this.height > player.y;
+    }
+
+    collect() {
+        if (this.collected) return;
+        this.collected = true;
+
+        switch(this.type) {
+            case 'extra_life':
+                game.lives++;
+                updateUI();
+                showPowerUpMessage('Extra Leben!', this.color);
+                break;
+
+            case 'speed_boost':
+                game.player.speedBoostTimer = this.duration;
+                game.player.hasSpeedBoost = true;
+                showPowerUpMessage('Geschwindigkeitsboost!', this.color);
+                break;
+
+            case 'time_bonus':
+                game.levelStartTime += this.timeBonus * 1000; // Add 15 seconds
+                showPowerUpMessage('+' + this.timeBonus + ' Sekunden!', this.color);
+                break;
+
+            case 'triple_jump':
+                game.player.tripleJumpTimer = this.duration;
+                game.player.hasTripleJump = true;
+                game.player.maxJumps = 3;
+                showPowerUpMessage('Dreifach-Sprung!', this.color);
+                break;
+        }
+
+        // Create collection particles
+        for (let i = 0; i < 12; i++) {
+            game.particles.push(new Particle(
+                this.x + this.width / 2,
+                this.y + this.height / 2,
+                this.color
+            ));
+        }
+    }
+}
+
+// Show power-up collection message
+function showPowerUpMessage(text, color) {
+    const msg = document.createElement('div');
+    msg.className = 'powerup-message';
+    msg.textContent = text;
+    msg.style.color = color;
+    msg.style.position = 'fixed';
+    msg.style.top = '30%';
+    msg.style.left = '50%';
+    msg.style.transform = 'translateX(-50%)';
+    msg.style.fontSize = '28px';
+    msg.style.fontWeight = 'bold';
+    msg.style.textShadow = '2px 2px 4px black';
+    msg.style.zIndex = '1000';
+    msg.style.pointerEvents = 'none';
+    msg.style.animation = 'powerupFade 1.5s ease-out forwards';
+    document.body.appendChild(msg);
+
+    setTimeout(() => msg.remove(), 1500);
+}
+
 // Enemy Class - now with different types per level
 class Enemy {
     constructor(x, y, patrolLeft, patrolRight, type = 'default') {
@@ -2829,10 +3038,19 @@ class Enemy {
         this.y = y;
         this.type = type;
         this.velX = 2;
+        this.baseVelX = 2;
         this.patrolLeft = patrolLeft;
         this.patrolRight = patrolRight;
         this.alive = true;
         this.animFrame = 0;
+
+        // Unpredictable behavior (activated for Level 10+)
+        this.unpredictable = false;
+        this.pauseTimer = 0;
+        this.isPaused = false;
+        this.speedBoostTimer = 0;
+        this.isSpeedBoosted = false;
+        this.reverseTimer = 0;
 
         // Set size based on type
         switch(type) {
@@ -2917,20 +3135,66 @@ class Enemy {
                 this.width = 35;
                 this.height = 35;
         }
+
+        // Store base velocity after type-specific adjustments
+        this.baseVelX = this.velX;
     }
 
     update() {
         if (!this.alive) return;
 
-        this.x += this.velX;
-        this.animFrame += 0.1;
+        // Unpredictable behavior for Level 10+
+        if (this.unpredictable) {
+            // Random pause behavior
+            if (!this.isPaused && this.pauseTimer <= 0 && Math.random() < 0.005) {
+                this.isPaused = true;
+                this.pauseTimer = 30 + Math.floor(Math.random() * 60); // Pause for 0.5-1.5 seconds
+            }
 
-        // Prüfe Patrouillengrenzen
-        if (this.x <= this.patrolLeft || this.x + this.width >= this.patrolRight) {
-            this.velX *= -1;
-            // Korrigiere Position um Feststecken zu vermeiden
-            if (this.x < this.patrolLeft) this.x = this.patrolLeft;
-            if (this.x + this.width > this.patrolRight) this.x = this.patrolRight - this.width;
+            if (this.isPaused) {
+                this.pauseTimer--;
+                if (this.pauseTimer <= 0) {
+                    this.isPaused = false;
+                    this.pauseTimer = 60 + Math.floor(Math.random() * 120); // Cooldown before next pause
+                }
+            }
+
+            // Random speed boost
+            if (!this.isSpeedBoosted && this.speedBoostTimer <= 0 && Math.random() < 0.003) {
+                this.isSpeedBoosted = true;
+                this.speedBoostTimer = 40 + Math.floor(Math.random() * 40); // Boost for 0.7-1.3 seconds
+            }
+
+            if (this.isSpeedBoosted) {
+                this.speedBoostTimer--;
+                if (this.speedBoostTimer <= 0) {
+                    this.isSpeedBoosted = false;
+                    this.speedBoostTimer = 90 + Math.floor(Math.random() * 90); // Cooldown
+                }
+            }
+
+            // Random sudden direction change
+            if (this.reverseTimer <= 0 && Math.random() < 0.002) {
+                this.velX *= -1;
+                this.reverseTimer = 60; // Can't reverse again for 1 second
+            }
+            if (this.reverseTimer > 0) this.reverseTimer--;
+
+            // Apply speed modifications
+            if (this.isPaused) {
+                // Don't move when paused
+                this.animFrame += 0.02; // Slow animation when paused
+            } else {
+                const speedMultiplier = this.isSpeedBoosted ? 2.0 : 1.0;
+                const currentSpeed = Math.abs(this.baseVelX) * speedMultiplier;
+                this.velX = this.velX > 0 ? currentSpeed : -currentSpeed;
+                this.x += this.velX;
+                this.animFrame += this.isSpeedBoosted ? 0.2 : 0.1;
+            }
+        } else {
+            // Normal behavior
+            this.x += this.velX;
+            this.animFrame += 0.1;
         }
 
         // Finde die Plattform unter dem Gegner
@@ -2956,20 +3220,32 @@ class Enemy {
             }
         }
 
-        // Wenn der Gegner auf einer Plattform steht, prüfe Kanten
+        // Berechne effektive Grenzen
+        let effectiveLeft = this.patrolLeft;
+        let effectiveRight = this.patrolRight;
+
+        // Wenn auf Plattform, beschränke auf Plattformgrenzen
         if (currentPlatform) {
-            // Berechne effektive Grenzen (das Minimum von Patrol und Plattform)
             const platformLeft = currentPlatform.x + 10;
             const platformRight = currentPlatform.x + currentPlatform.width - 10;
-            const effectiveLeft = Math.max(this.patrolLeft, platformLeft);
-            const effectiveRight = Math.min(this.patrolRight, platformRight);
+            effectiveLeft = Math.max(this.patrolLeft, platformLeft);
+            effectiveRight = Math.min(this.patrolRight, platformRight);
+        }
 
-            if (this.x <= effectiveLeft || this.x + this.width >= effectiveRight) {
-                this.velX *= -1;
-                // Korrigiere Position
-                if (this.x < effectiveLeft) this.x = effectiveLeft;
-                if (this.x + this.width > effectiveRight) this.x = effectiveRight - this.width;
-            }
+        // Stelle sicher, dass es genug Platz zum Bewegen gibt
+        if (effectiveRight - effectiveLeft < this.width + 20) {
+            // Nicht genug Platz - nutze nur Patrol-Grenzen
+            effectiveLeft = this.patrolLeft;
+            effectiveRight = this.patrolRight;
+        }
+
+        // Prüfe Grenzen und kehre um (nur einmal!)
+        if (this.x <= effectiveLeft) {
+            this.x = effectiveLeft;
+            if (this.velX < 0) this.velX *= -1;
+        } else if (this.x + this.width >= effectiveRight) {
+            this.x = effectiveRight - this.width;
+            if (this.velX > 0) this.velX *= -1;
         }
     }
 
@@ -3876,6 +4152,97 @@ class Boss {
 
         this.startX = x;
         this.direction = 1;
+
+        // Shooting properties (activated for Level 10+)
+        this.canShoot = false;
+        this.shootCooldown = 0;
+        this.shootPattern = 0;
+
+        // Set projectile type based on boss type
+        switch(type) {
+            case 'yeti':
+                this.projectileType = 'iceball';
+                this.shootInterval = 90; // 1.5 seconds
+                break;
+            case 'swamp_monster':
+                this.projectileType = 'slime';
+                this.shootInterval = 70;
+                break;
+            case 'pharaoh':
+                this.projectileType = 'rock';
+                this.shootInterval = 80;
+                break;
+            case 'mega_robot':
+                this.projectileType = 'laser';
+                this.shootInterval = 50;
+                break;
+            case 'worm_king':
+                this.projectileType = 'slime';
+                this.shootInterval = 60;
+                break;
+            case 'candy_boss':
+                this.projectileType = 'fireball';
+                this.shootInterval = 55;
+                break;
+            case 'ufo':
+                this.projectileType = 'laser';
+                this.shootInterval = 40;
+                break;
+            default:
+                this.projectileType = 'fireball';
+                this.shootInterval = 100;
+        }
+    }
+
+    shoot() {
+        if (!this.canShoot || this.shootCooldown > 0 || !game.player) return;
+
+        const playerX = game.player.x + game.player.width / 2;
+        const playerY = game.player.y + game.player.height / 2;
+        const bossX = this.x + this.width / 2;
+        const bossY = this.y + this.height / 2;
+
+        // Calculate direction to player
+        const dx = playerX - bossX;
+        const dy = playerY - bossY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Only shoot if player is within range
+        if (distance > 500) return;
+
+        let velX, velY;
+        const speed = 4;
+
+        // Different shooting patterns based on phase and type
+        if (this.phase === 2) {
+            // Phase 2: More aggressive shooting
+            this.shootPattern = (this.shootPattern + 1) % 3;
+
+            if (this.shootPattern === 0) {
+                // Aimed shot
+                velX = (dx / distance) * speed;
+                velY = (dy / distance) * speed;
+                game.projectiles.push(new Projectile(bossX, bossY, velX, velY, this.projectileType));
+            } else if (this.shootPattern === 1) {
+                // Spread shot (3 projectiles)
+                for (let angle = -0.3; angle <= 0.3; angle += 0.3) {
+                    const spreadX = (dx / distance) * Math.cos(angle) - (dy / distance) * Math.sin(angle);
+                    const spreadY = (dx / distance) * Math.sin(angle) + (dy / distance) * Math.cos(angle);
+                    game.projectiles.push(new Projectile(bossX, bossY, spreadX * speed, spreadY * speed, this.projectileType));
+                }
+            } else {
+                // Vertical barrage
+                game.projectiles.push(new Projectile(bossX - 30, bossY, 0, speed, this.projectileType));
+                game.projectiles.push(new Projectile(bossX + 30, bossY, 0, speed, this.projectileType));
+            }
+            this.shootCooldown = Math.floor(this.shootInterval * 0.6); // Faster shooting in phase 2
+        } else {
+            // Phase 1: Simple aimed shot
+            velX = (dx / distance) * speed;
+            velY = (dy / distance) * speed;
+            game.projectiles.push(new Projectile(bossX, bossY, velX, velY, this.projectileType));
+            this.shootCooldown = this.shootInterval;
+        }
     }
 
     update() {
@@ -3886,6 +4253,12 @@ class Boss {
         if (this.invulnerable > 0) {
             this.invulnerable--;
         }
+
+        // Shooting logic
+        if (this.shootCooldown > 0) {
+            this.shootCooldown--;
+        }
+        this.shoot();
 
         // Basic patrol movement
         this.x += this.velX * this.direction;
@@ -5263,6 +5636,170 @@ class Goal {
     }
 }
 
+// Projectile Class - Boss projectiles for defense
+class Projectile {
+    constructor(x, y, velX, velY, type = 'fireball') {
+        this.x = x;
+        this.y = y;
+        this.velX = velX;
+        this.velY = velY;
+        this.type = type;
+        this.alive = true;
+        this.animFrame = 0;
+
+        // Set size based on type
+        switch(type) {
+            case 'fireball':
+                this.width = 20;
+                this.height = 20;
+                this.color = '#FF4500';
+                break;
+            case 'iceball':
+                this.width = 18;
+                this.height = 18;
+                this.color = '#00BFFF';
+                break;
+            case 'laser':
+                this.width = 30;
+                this.height = 8;
+                this.color = '#FF0000';
+                break;
+            case 'slime':
+                this.width = 16;
+                this.height = 16;
+                this.color = '#32CD32';
+                break;
+            case 'rock':
+                this.width = 22;
+                this.height = 22;
+                this.color = '#808080';
+                break;
+            default:
+                this.width = 15;
+                this.height = 15;
+                this.color = '#FF4500';
+        }
+    }
+
+    update() {
+        this.x += this.velX;
+        this.y += this.velY;
+        this.animFrame += 0.2;
+
+        // Gravity for some projectiles
+        if (this.type === 'rock' || this.type === 'slime') {
+            this.velY += 0.15;
+        }
+
+        // Remove if off screen
+        if (this.x < game.cameraX - 100 || this.x > game.cameraX + CONFIG.WIDTH + 100 ||
+            this.y < -100 || this.y > CONFIG.HEIGHT + 100) {
+            this.alive = false;
+        }
+    }
+
+    draw(ctx) {
+        if (!this.alive) return;
+
+        const screenX = this.x - game.cameraX;
+
+        ctx.save();
+
+        switch(this.type) {
+            case 'fireball':
+                // Animated fireball
+                const fireGlow = ctx.createRadialGradient(
+                    screenX + this.width/2, this.y + this.height/2, 2,
+                    screenX + this.width/2, this.y + this.height/2, this.width/2 + 5
+                );
+                fireGlow.addColorStop(0, '#FFFF00');
+                fireGlow.addColorStop(0.5, '#FF4500');
+                fireGlow.addColorStop(1, 'rgba(255,0,0,0)');
+                ctx.fillStyle = fireGlow;
+                ctx.beginPath();
+                ctx.arc(screenX + this.width/2, this.y + this.height/2, this.width/2 + 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#FFFF00';
+                ctx.beginPath();
+                ctx.arc(screenX + this.width/2, this.y + this.height/2, this.width/3, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+
+            case 'iceball':
+                // Spinning ice crystal
+                ctx.translate(screenX + this.width/2, this.y + this.height/2);
+                ctx.rotate(this.animFrame);
+                ctx.fillStyle = '#00BFFF';
+                ctx.beginPath();
+                ctx.moveTo(0, -this.height/2);
+                ctx.lineTo(this.width/3, 0);
+                ctx.lineTo(0, this.height/2);
+                ctx.lineTo(-this.width/3, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+
+            case 'laser':
+                // Glowing laser beam
+                ctx.fillStyle = '#FF0000';
+                ctx.shadowColor = '#FF0000';
+                ctx.shadowBlur = 10;
+                ctx.fillRect(screenX, this.y, this.width, this.height);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(screenX + 2, this.y + 2, this.width - 4, this.height - 4);
+                break;
+
+            case 'slime':
+                // Bouncy slime ball
+                const squish = Math.sin(this.animFrame * 2) * 2;
+                ctx.fillStyle = '#32CD32';
+                ctx.beginPath();
+                ctx.ellipse(screenX + this.width/2, this.y + this.height/2,
+                    this.width/2 + squish, this.height/2 - squish, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.beginPath();
+                ctx.arc(screenX + this.width/3, this.y + this.height/3, 3, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+
+            case 'rock':
+                // Tumbling rock
+                ctx.translate(screenX + this.width/2, this.y + this.height/2);
+                ctx.rotate(this.animFrame);
+                ctx.fillStyle = '#696969';
+                ctx.beginPath();
+                ctx.moveTo(-this.width/2, -this.height/3);
+                ctx.lineTo(0, -this.height/2);
+                ctx.lineTo(this.width/2, -this.height/4);
+                ctx.lineTo(this.width/3, this.height/2);
+                ctx.lineTo(-this.width/3, this.height/2);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#808080';
+                ctx.beginPath();
+                ctx.arc(-3, -3, 4, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+        }
+
+        ctx.restore();
+    }
+
+    collidesWith(player) {
+        return this.alive &&
+            this.x < player.x + player.width &&
+            this.x + this.width > player.x &&
+            this.y < player.y + player.height &&
+            this.y + this.height > player.y;
+    }
+}
+
 // Particle Class
 class Particle {
     constructor(x, y, color) {
@@ -5310,14 +5847,26 @@ function resetEnemies() {
     game.enemies = [];
     const enemyType = levelData.enemyType || 'default';
     for (let e of levelData.enemies) {
-        game.enemies.push(new Enemy(e.x, e.y + yOffset, e.left, e.right, enemyType));
+        const enemy = new Enemy(e.x, e.y + yOffset, e.left, e.right, enemyType);
+        // Activate unpredictable behavior for Level 10+
+        if (game.level >= 10) {
+            enemy.unpredictable = true;
+        }
+        game.enemies.push(enemy);
     }
 
     // Reset boss
     if (levelData.boss) {
         game.boss = new Boss(levelData.boss.x, levelData.boss.y + yOffset, levelData.boss.type);
         game.bossDefeated = false;
+        // Activate shooting for Level 10+ bosses
+        if (game.level >= 10) {
+            game.boss.canShoot = true;
+        }
     }
+
+    // Reset projectiles
+    game.projectiles = [];
 }
 
 // Level Generation
@@ -5325,6 +5874,76 @@ const DESIGN_HEIGHT = 600; // Original design height
 
 function getYOffset() {
     return CONFIG.HEIGHT - DESIGN_HEIGHT;
+}
+
+// Spawn power-ups based on level and rarity
+function spawnPowerUps(levelData, yOffset) {
+    // Power-up spawn chances (per potential spawn point)
+    const spawnChances = {
+        extra_life: 0.03,    // 3% - Very rare
+        time_bonus: 0.08,    // 8% - Rare
+        speed_boost: 0.15,   // 15% - Common
+        triple_jump: 0.12    // 12% - Uncommon
+    };
+
+    // Higher levels have slightly better spawn rates
+    const levelBonus = Math.min((game.level - 6) * 0.01, 0.05);
+
+    // Find suitable spawn locations (on platforms, not too close to start/end)
+    const validPlatforms = levelData.platforms.filter(p =>
+        p.x > 400 && p.x < levelData.width - 500 && p.w >= 80
+    );
+
+    if (validPlatforms.length === 0) return;
+
+    // Determine how many power-ups to spawn (1-3 based on level size)
+    const maxPowerUps = Math.min(3, Math.floor(levelData.width / 1500));
+    let spawnedCount = 0;
+
+    // Shuffle platforms to randomize spawn locations
+    const shuffled = [...validPlatforms].sort(() => Math.random() - 0.5);
+
+    for (let platform of shuffled) {
+        if (spawnedCount >= maxPowerUps) break;
+
+        // Random chance to spawn on this platform
+        if (Math.random() > 0.4) continue; // 60% chance to skip
+
+        // Determine which power-up type to spawn
+        const roll = Math.random();
+        let type = null;
+        let cumulative = 0;
+
+        // Roll for each type in order of rarity
+        if (roll < (spawnChances.extra_life + levelBonus)) {
+            type = 'extra_life';
+        } else if (roll < (spawnChances.extra_life + spawnChances.time_bonus + levelBonus * 2)) {
+            type = 'time_bonus';
+        } else if (roll < (spawnChances.extra_life + spawnChances.time_bonus + spawnChances.triple_jump + levelBonus * 2)) {
+            type = 'triple_jump';
+        } else if (roll < (spawnChances.extra_life + spawnChances.time_bonus + spawnChances.triple_jump + spawnChances.speed_boost + levelBonus * 2)) {
+            type = 'speed_boost';
+        }
+
+        if (type) {
+            // Spawn slightly above the platform center
+            const spawnX = platform.x + platform.w / 2 - 15 + (Math.random() - 0.5) * 40;
+            const spawnY = platform.y - 50 + yOffset;
+
+            game.powerups.push(new PowerUp(spawnX, spawnY, type));
+            spawnedCount++;
+        }
+    }
+
+    // Guarantee at least one power-up in levels 6+
+    if (spawnedCount === 0 && shuffled.length > 0) {
+        const platform = shuffled[0];
+        const types = ['speed_boost', 'speed_boost', 'triple_jump', 'time_bonus']; // Weighted towards common
+        const type = types[Math.floor(Math.random() * types.length)];
+        const spawnX = platform.x + platform.w / 2 - 15;
+        const spawnY = platform.y - 50 + yOffset;
+        game.powerups.push(new PowerUp(spawnX, spawnY, type));
+    }
 }
 
 function generateLevel(levelNum) {
@@ -5376,7 +5995,12 @@ function generateLevel(levelNum) {
     // Create enemies with level-specific type
     const enemyType = levelData.enemyType || 'default';
     for (let e of levelData.enemies) {
-        game.enemies.push(new Enemy(e.x, e.y + yOffset, e.left, e.right, enemyType));
+        const enemy = new Enemy(e.x, e.y + yOffset, e.left, e.right, enemyType);
+        // Activate unpredictable behavior for Level 10+
+        if (game.level >= 10) {
+            enemy.unpredictable = true;
+        }
+        game.enemies.push(enemy);
     }
 
     // Create obstacles
@@ -5389,6 +6013,19 @@ function generateLevel(levelNum) {
     // Create boss
     if (levelData.boss) {
         game.boss = new Boss(levelData.boss.x, levelData.boss.y + yOffset, levelData.boss.type);
+        // Activate shooting for Level 10+ bosses
+        if (game.level >= 10) {
+            game.boss.canShoot = true;
+        }
+    }
+
+    // Initialize projectiles
+    game.projectiles = [];
+
+    // Spawn power-ups (Level 6+)
+    game.powerups = [];
+    if (game.level >= 6) {
+        spawnPowerUps(levelData, yOffset);
     }
 
     // Create goal (uses yOffset internally)
@@ -5554,8 +6191,72 @@ function updateTimer() {
     }
 }
 
+// Draw active power-up indicators
+function drawPowerUpIndicators(ctx) {
+    if (!game.player) return;
+
+    let yPos = 100;
+    const xPos = CONFIG.WIDTH - 150;
+
+    // Speed Boost indicator
+    if (game.player.hasSpeedBoost && game.player.speedBoostTimer > 0) {
+        const timeLeft = Math.ceil(game.player.speedBoostTimer / 60);
+        const progress = game.player.speedBoostTimer / 300; // 300 = max duration
+
+        drawPowerUpBar(ctx, xPos, yPos, '⚡ Speed', timeLeft, progress, '#00BFFF');
+        yPos += 35;
+    }
+
+    // Triple Jump indicator
+    if (game.player.hasTripleJump && game.player.tripleJumpTimer > 0) {
+        const timeLeft = Math.ceil(game.player.tripleJumpTimer / 60);
+        const progress = game.player.tripleJumpTimer / 600; // 600 = max duration
+
+        drawPowerUpBar(ctx, xPos, yPos, '🦘 3x Jump', timeLeft, progress, '#9932CC');
+
+        // Show remaining jumps
+        const jumpsLeft = game.player.maxJumps - game.player.jumpCount;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'right';
+        ctx.fillText(`(${jumpsLeft} übrig)`, xPos + 130, yPos + 12);
+        yPos += 35;
+    }
+}
+
+function drawPowerUpBar(ctx, x, y, label, timeLeft, progress, color) {
+    // Background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.beginPath();
+    ctx.roundRect(x, y, 140, 28, 5);
+    ctx.fill();
+
+    // Progress bar background
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.beginPath();
+    ctx.roundRect(x + 5, y + 18, 100, 6, 3);
+    ctx.fill();
+
+    // Progress bar fill
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.roundRect(x + 5, y + 18, 100 * progress, 6, 3);
+    ctx.fill();
+
+    // Label
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(label, x + 8, y + 13);
+
+    // Time
+    ctx.fillStyle = color;
+    ctx.textAlign = 'right';
+    ctx.fillText(timeLeft + 's', x + 130, y + 13);
+}
+
 // Level Complete
-function levelComplete() {
+async function levelComplete() {
     game.running = false;
 
     // Calculate time taken
@@ -5592,7 +6293,7 @@ function levelComplete() {
     if (game.level >= LEVELS.length) {
         // Game complete - save highscore only at the end
         const bonusCoins = addCoinsToProfile(50, game.level); // Bonus for completing the game
-        saveHighscore();
+        await saveHighscore();
         updateCoinsDisplay();
         document.getElementById('win-score').textContent = game.score;
 
@@ -5607,7 +6308,7 @@ function levelComplete() {
         }
 
         gameCompleteEl.classList.remove('hidden');
-        loadGlobalHighscores();
+        await loadGlobalHighscores();
     } else {
         document.getElementById('completed-level').textContent = game.level;
         document.getElementById('level-score').textContent = game.score;
@@ -5738,6 +6439,18 @@ function gameLoop() {
         coin.draw(ctx);
     }
 
+    // Update and draw power-ups
+    game.powerups = game.powerups.filter(p => !p.collected);
+    for (let powerup of game.powerups) {
+        powerup.update();
+        powerup.draw(ctx);
+
+        // Check collision with player
+        if (powerup.collidesWith(game.player)) {
+            powerup.collect();
+        }
+    }
+
     // Update and draw enemies
     game.enemies = game.enemies.filter(e => e.alive);
     for (let enemy of game.enemies) {
@@ -5756,6 +6469,36 @@ function gameLoop() {
         game.boss.draw(ctx);
     }
 
+    // Update and draw projectiles
+    game.projectiles = game.projectiles.filter(p => p.alive);
+    for (let projectile of game.projectiles) {
+        projectile.update();
+        projectile.draw(ctx);
+
+        // Check collision with player
+        if (projectile.collidesWith(game.player) && game.player.invulnerable <= 0) {
+            projectile.alive = false;
+            game.lives--;
+            game.player.invulnerable = 90; // 1.5 seconds invulnerability
+
+            // Create hit particles
+            for (let i = 0; i < 8; i++) {
+                game.particles.push(new Particle(
+                    game.player.x + game.player.width / 2,
+                    game.player.y + game.player.height / 2,
+                    projectile.color
+                ));
+            }
+
+            updateUI();
+
+            if (game.lives <= 0) {
+                gameOver();
+                return;
+            }
+        }
+    }
+
     // Update and draw player
     game.player.update();
     game.player.draw(ctx);
@@ -5772,6 +6515,9 @@ function gameLoop() {
 
     // Update timer display
     updateTimer();
+
+    // Draw power-up indicators
+    drawPowerUpIndicators(ctx);
 
     requestAnimationFrame(gameLoop);
 }
