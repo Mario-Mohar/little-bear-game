@@ -344,26 +344,56 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     };
 }
 
-// Mobile Detection
+// =============================================================================
+// CANVAS SCALING SYSTEM - Production-Ready Implementation
+// =============================================================================
+// Dieses System behandelt:
+// - Feste virtuelle Spielauflösung (1280x720)
+// - Automatische Skalierung mit Aspect-Ratio-Erhaltung
+// - Letterboxing für nicht-passende Bildschirme
+// - Touch-Controls am unteren Rand (Mobile)
+// - Orientierungswechsel (Portrait/Landscape)
+// - Der Boden des Spiels ist IMMER sichtbar
+// - Koordinaten-Transformation für Mouse/Touch-Events
+// =============================================================================
+
+// Mobile Detection - Erkennt Touch-Geräte zuverlässig
 function isMobileDevice() {
-    return (
-        'ontouchstart' in window ||
-        navigator.maxTouchPoints > 0 ||
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-    );
+    // Primäre Erkennung: Touch-Fähigkeit
+    const hasTouch = 'ontouchstart' in window ||
+                     navigator.maxTouchPoints > 0 ||
+                     window.matchMedia('(pointer: coarse)').matches;
+
+    // Sekundäre Erkennung: User Agent (Fallback)
+    const mobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(navigator.userAgent);
+
+    // iPad Detection (iPadOS 13+ meldet sich als Desktop)
+    const isIPad = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+
+    return hasTouch || mobileUA || isIPad;
+}
+
+// Prüft ob Gerät Touch UND Maus hat (z.B. Surface, Laptop mit Touchscreen)
+function hasMouseAndTouch() {
+    return window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+           ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 }
 
 const IS_MOBILE = isMobileDevice();
+const IS_HYBRID = hasMouseAndTouch(); // Geräte mit beidem
 
-// Fixed virtual game resolution - game is designed for this size
-const VIRTUAL_WIDTH = 1280;
-const VIRTUAL_HEIGHT = 720;
+// =============================================================================
+// VIRTUELLE SPIELAUFLÖSUNG - Das Spiel wird für diese Größe designt
+// =============================================================================
+const VIRTUAL_WIDTH = 1280;  // Breite der virtuellen Spielwelt
+const VIRTUAL_HEIGHT = 720;  // Höhe der virtuellen Spielwelt
+const ASPECT_RATIO = VIRTUAL_WIDTH / VIRTUAL_HEIGHT; // 16:9
 
-// Game Configuration - uses fixed virtual resolution
+// Game Configuration - verwendet feste virtuelle Auflösung
 const CONFIG = {
     WIDTH: VIRTUAL_WIDTH,
     HEIGHT: VIRTUAL_HEIGHT,
-    GAME_HEIGHT: VIRTUAL_HEIGHT, // No longer needed but kept for compatibility
+    GAME_HEIGHT: VIRTUAL_HEIGHT, // Für Kompatibilität beibehalten
     GRAVITY: 0.6,
     FRICTION: 0.8,
     PLAYER: {
@@ -375,66 +405,246 @@ const CONFIG = {
     }
 };
 
-// Scale factor for converting screen coordinates to game coordinates
-let gameScale = 1;
-let gameOffsetX = 0;
-let gameOffsetY = 0;
+// =============================================================================
+// SKALIERUNGSVARIABLEN - Global verfügbar für Koordinaten-Transformation
+// =============================================================================
+let gameScale = 1;           // Aktueller Skalierungsfaktor
+let gameOffsetX = 0;         // Horizontaler Offset (Letterboxing links)
+let gameOffsetY = 0;         // Vertikaler Offset (Letterboxing oben)
+let touchControlsHeight = 0; // Aktuelle Höhe der Touch-Controls
 
-// Get touch controls height based on current screen size (matches CSS)
+// =============================================================================
+// TOUCH-CONTROLS HÖHENBERECHNUNG
+// Synchronisiert mit CSS Media Queries für konsistente Berechnung
+// =============================================================================
 function getTouchControlsHeight() {
-    if (!IS_MOBILE) return 0;
+    // Desktop ohne Touch braucht keine Controls
+    if (!IS_MOBILE && !IS_HYBRID) return 0;
 
-    // Match CSS media queries
-    if (window.innerHeight <= 500 && window.matchMedia('(orientation: landscape)').matches) {
-        return 90;
-    } else if (window.innerWidth <= 480) {
-        return 130;
+    // Prüfe ob Touch-Controls überhaupt sichtbar sind
+    const touchControls = document.getElementById('touch-controls');
+    if (touchControls && touchControls.classList.contains('hidden')) return 0;
+
+    // Lese CSS-Variable falls verfügbar
+    const cssHeight = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--touch-controls-height');
+    if (cssHeight) {
+        const parsed = parseInt(cssHeight);
+        if (!isNaN(parsed)) return parsed;
     }
-    return 150;
+
+    // Fallback: Berechne basierend auf Media Queries (muss mit CSS synchron sein!)
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+
+    // Sehr flache Landscape-Displays
+    if (h <= 400 && isLandscape) return 70;
+
+    // Normale Landscape auf Mobile
+    if (h <= 500 && isLandscape) return 85;
+
+    // Sehr kleine Handys
+    if (w <= 360) return 110;
+
+    // Kleine Handys
+    if (w <= 480) return 120;
+
+    // Tablets und normale Handys
+    if (w <= 768) return 140;
+
+    // Große Tablets
+    if (w <= 1366) return 150;
+
+    // Desktop mit Touch (Surface etc.) - keine Controls nötig wenn Maus verfügbar
+    return 140;
 }
 
-// Handle window resize - calculates scale to fit game in screen
+// =============================================================================
+// CANVAS SKALIERUNG - Hauptfunktion für Resize-Events
+// =============================================================================
 function resizeCanvas() {
     if (!game.canvas) return;
 
-    // Get available screen space (account for touch controls on mobile)
-    const touchControlsHeight = getTouchControlsHeight();
-    const availableWidth = window.innerWidth;
-    const availableHeight = window.innerHeight - touchControlsHeight;
+    // Hole aktuelle Bildschirmgröße
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
 
-    // Calculate scale to fit while maintaining aspect ratio
+    // Berechne Touch-Controls-Höhe
+    touchControlsHeight = getTouchControlsHeight();
+
+    // Verfügbarer Platz für das Canvas (ohne Touch-Controls)
+    const availableWidth = screenWidth;
+    const availableHeight = screenHeight - touchControlsHeight;
+
+    // Sicherheitscheck: Mindestgröße
+    if (availableWidth < 200 || availableHeight < 150) {
+        console.warn('Bildschirm zu klein für Spiel');
+        return;
+    }
+
+    // Berechne Skalierungsfaktor um Aspect Ratio zu erhalten
     const scaleX = availableWidth / VIRTUAL_WIDTH;
     const scaleY = availableHeight / VIRTUAL_HEIGHT;
+
+    // Nimm den kleineren Wert um sicherzustellen dass alles sichtbar ist
     gameScale = Math.min(scaleX, scaleY);
 
-    // Calculate actual display size
-    const displayWidth = VIRTUAL_WIDTH * gameScale;
-    const displayHeight = VIRTUAL_HEIGHT * gameScale;
+    // Berechne tatsächliche Display-Größe
+    const displayWidth = Math.floor(VIRTUAL_WIDTH * gameScale);
+    const displayHeight = Math.floor(VIRTUAL_HEIGHT * gameScale);
 
-    // Center the game canvas horizontally, position at top
-    gameOffsetX = (availableWidth - displayWidth) / 2;
-    gameOffsetY = 0; // Always at top, touch controls at bottom
+    // ==========================================================================
+    // OFFSET-BERECHNUNG für Koordinaten-Transformation
+    // CSS Flexbox zentriert das Canvas, wir berechnen die resultierenden Offsets
+    // ==========================================================================
 
-    // Canvas internal resolution stays fixed
+    // Horizontale Zentrierung durch CSS Flexbox
+    gameOffsetX = Math.floor((availableWidth - displayWidth) / 2);
+
+    // Vertikale Zentrierung durch CSS Flexbox
+    gameOffsetY = Math.floor((availableHeight - displayHeight) / 2);
+
+    // ==========================================================================
+    // CANVAS KONFIGURATION
+    // ==========================================================================
+
+    // Interne Auflösung bleibt IMMER bei der virtuellen Größe
+    // Das sorgt für konsistente Spiellogik und Koordinaten
     game.canvas.width = VIRTUAL_WIDTH;
     game.canvas.height = VIRTUAL_HEIGHT;
 
-    // CSS scales the canvas to fit
+    // CSS skaliert die Anzeige auf die berechnete Größe
     game.canvas.style.width = displayWidth + 'px';
     game.canvas.style.height = displayHeight + 'px';
-    game.canvas.style.marginLeft = gameOffsetX + 'px';
-    game.canvas.style.marginTop = gameOffsetY + 'px';
 
-    console.log('Resize:', {
-        screen: `${window.innerWidth}x${window.innerHeight}`,
-        touchHeight: touchControlsHeight,
-        available: `${availableWidth}x${availableHeight}`,
-        scale: gameScale.toFixed(2),
-        display: `${displayWidth.toFixed(0)}x${displayHeight.toFixed(0)}`
-    });
+    // Canvas wird vom CSS Flexbox zentriert, keine manuelle Positionierung nötig
+    game.canvas.style.position = 'relative';
+    game.canvas.style.left = '';
+    game.canvas.style.top = '';
+
+    // ==========================================================================
+    // CSS-VARIABLE FÜR TOUCH-CONTROLS AKTUALISIEREN
+    // ==========================================================================
+    document.documentElement.style.setProperty(
+        '--touch-controls-height',
+        touchControlsHeight + 'px'
+    );
+
+    // Debug-Ausgabe (nur in Entwicklung)
+    if (typeof DEBUG !== 'undefined' && DEBUG) {
+        console.log('Canvas Resize:', {
+            screen: `${screenWidth}x${screenHeight}`,
+            touchHeight: touchControlsHeight,
+            available: `${availableWidth}x${availableHeight}`,
+            scale: gameScale.toFixed(3),
+            display: `${displayWidth}x${displayHeight}`,
+            offset: `(${gameOffsetX}, ${gameOffsetY})`,
+            aspectRatio: (displayWidth / displayHeight).toFixed(3)
+        });
+    }
 }
 
-window.addEventListener('resize', resizeCanvas);
+// =============================================================================
+// KOORDINATEN-TRANSFORMATION
+// Konvertiert Bildschirm-Koordinaten (Mouse/Touch) zu Spiel-Koordinaten
+// =============================================================================
+
+/**
+ * Wandelt Screen-Koordinaten (z.B. von MouseEvent) in Game-Koordinaten um
+ * @param {number} screenX - X-Position auf dem Bildschirm (z.B. event.clientX)
+ * @param {number} screenY - Y-Position auf dem Bildschirm (z.B. event.clientY)
+ * @returns {{x: number, y: number}} - Koordinaten in der virtuellen Spielwelt
+ */
+function screenToGame(screenX, screenY) {
+    // Subtrahiere den Offset des Canvas
+    const relativeX = screenX - gameOffsetX;
+    const relativeY = screenY - gameOffsetY;
+
+    // Dividiere durch Skalierungsfaktor um virtuelle Koordinaten zu erhalten
+    const gameX = relativeX / gameScale;
+    const gameY = relativeY / gameScale;
+
+    return { x: gameX, y: gameY };
+}
+
+/**
+ * Wandelt Game-Koordinaten in Screen-Koordinaten um
+ * @param {number} gameX - X-Position in der virtuellen Spielwelt
+ * @param {number} gameY - Y-Position in der virtuellen Spielwelt
+ * @returns {{x: number, y: number}} - Koordinaten auf dem Bildschirm
+ */
+function gameToScreen(gameX, gameY) {
+    const screenX = gameX * gameScale + gameOffsetX;
+    const screenY = gameY * gameScale + gameOffsetY;
+    return { x: screenX, y: screenY };
+}
+
+/**
+ * Prüft ob ein Punkt innerhalb des sichtbaren Spielbereichs liegt
+ * @param {number} screenX - X-Position auf dem Bildschirm
+ * @param {number} screenY - Y-Position auf dem Bildschirm
+ * @returns {boolean} - true wenn innerhalb des Canvas
+ */
+function isInsideCanvas(screenX, screenY) {
+    const displayWidth = VIRTUAL_WIDTH * gameScale;
+    const displayHeight = VIRTUAL_HEIGHT * gameScale;
+
+    return screenX >= gameOffsetX &&
+           screenX <= gameOffsetX + displayWidth &&
+           screenY >= gameOffsetY &&
+           screenY <= gameOffsetY + displayHeight;
+}
+
+/**
+ * Gibt die aktuellen Skalierungsinformationen zurück
+ * Nützlich für Debugging und externe Systeme
+ */
+function getScalingInfo() {
+    return {
+        virtualWidth: VIRTUAL_WIDTH,
+        virtualHeight: VIRTUAL_HEIGHT,
+        scale: gameScale,
+        offsetX: gameOffsetX,
+        offsetY: gameOffsetY,
+        displayWidth: VIRTUAL_WIDTH * gameScale,
+        displayHeight: VIRTUAL_HEIGHT * gameScale,
+        touchControlsHeight: touchControlsHeight,
+        isMobile: IS_MOBILE,
+        isHybrid: IS_HYBRID
+    };
+}
+
+// =============================================================================
+// EVENT LISTENERS FÜR RESIZE UND ORIENTIERUNG
+// =============================================================================
+
+// Debounce-Funktion um excessive Resize-Events zu vermeiden
+let resizeTimeout;
+function debouncedResize() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(resizeCanvas, 50);
+}
+
+// Standard Resize-Event
+window.addEventListener('resize', debouncedResize);
+
+// Orientierungswechsel auf Mobile
+window.addEventListener('orientationchange', () => {
+    // Warte bis der Browser die neuen Dimensionen berechnet hat
+    setTimeout(resizeCanvas, 100);
+    setTimeout(resizeCanvas, 300); // Nochmal zur Sicherheit
+});
+
+// Visual Viewport API für moderne Browser (reagiert auf Soft-Keyboard etc.)
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', debouncedResize);
+    window.visualViewport.addEventListener('scroll', debouncedResize);
+}
+
+// Fullscreen-Änderungen
+document.addEventListener('fullscreenchange', () => setTimeout(resizeCanvas, 100));
+document.addEventListener('webkitfullscreenchange', () => setTimeout(resizeCanvas, 100));
 
 // Theme configurations for different levels
 const THEMES = {
@@ -6829,19 +7039,23 @@ async function init() {
     game.canvas = document.getElementById('gameCanvas');
     game.ctx = game.canvas.getContext('2d');
 
-    // Set fixed virtual resolution and apply scaling
+    // Set fixed virtual resolution and apply initial scaling
     game.canvas.width = VIRTUAL_WIDTH;
     game.canvas.height = VIRTUAL_HEIGHT;
+
+    // Führe initiale Skalierung durch
     resizeCanvas();
 
-    // Listen for orientation changes on mobile
-    window.addEventListener('orientationchange', () => {
-        setTimeout(resizeCanvas, 100); // Delay to let browser update dimensions
+    // Nochmal nach kurzer Verzögerung für Edge-Cases (z.B. langsame Browser)
+    requestAnimationFrame(() => {
+        resizeCanvas();
     });
 
     console.log('Game initialized:', {
         virtual: `${VIRTUAL_WIDTH}x${VIRTUAL_HEIGHT}`,
-        isMobile: IS_MOBILE
+        isMobile: IS_MOBILE,
+        isHybrid: IS_HYBRID,
+        scalingInfo: getScalingInfo()
     });
 
     // Initialize API and check for existing session

@@ -2,13 +2,24 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Optimierter Viewport für Mobile: Verhindert Zoom, erlaubt Fullscreen -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- iOS Spezifisch: Fullscreen Web App Modus -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Android Chrome: Theme Color für Statusbar -->
+    <meta name="theme-color" content="#000000">
+    <!-- Prevent automatic phone number detection -->
+    <meta name="format-detection" content="telephone=no">
     <title>Little Bear - Platformer</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
+        <!-- Canvas Wrapper für bessere Positionierung -->
+        <div id="canvas-wrapper">
+            <canvas id="gameCanvas"></canvas>
+        </div>
 
         <!-- Mobile Touch Controls -->
         <div id="touch-controls" class="hidden">
