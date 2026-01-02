@@ -355,36 +355,15 @@ function isMobileDevice() {
 
 const IS_MOBILE = isMobileDevice();
 
-// Design height for level scaling
-const DESIGN_HEIGHT = 600;
+// Fixed virtual game resolution - game is designed for this size
+const VIRTUAL_WIDTH = 1280;
+const VIRTUAL_HEIGHT = 720;
 
-// Touch controls height - matches CSS values in style.css + safety buffer
-function getTouchControlsHeight() {
-    if (!IS_MOBILE) return 0;
-
-    // Must match CSS media queries in style.css for #touch-controls
-    // Default: height: 140px + 20px padding = 160px effective
-    // @media (max-width: 480px): height: 120px + 20px padding = 140px
-    // @media (max-height: 500px) and (orientation: landscape): height: 100px + 20px = 120px
-    // Add extra buffer for browser chrome (address bar, etc.)
-    const browserBuffer = 20;
-
-    if (window.innerHeight <= 500 && window.matchMedia('(orientation: landscape)').matches) {
-        return 100 + browserBuffer;
-    } else if (window.innerWidth <= 480) {
-        return 120 + browserBuffer;
-    }
-    return 140 + browserBuffer;
-}
-
-let TOUCH_CONTROLS_HEIGHT = getTouchControlsHeight();
-
-// Game Configuration
+// Game Configuration - uses fixed virtual resolution
 const CONFIG = {
-    WIDTH: window.innerWidth,
-    HEIGHT: window.innerHeight,
-    // Effective game height excludes touch controls area on mobile
-    GAME_HEIGHT: window.innerHeight - (IS_MOBILE ? 140 : 0),
+    WIDTH: VIRTUAL_WIDTH,
+    HEIGHT: VIRTUAL_HEIGHT,
+    GAME_HEIGHT: VIRTUAL_HEIGHT, // No longer needed but kept for compatibility
     GRAVITY: 0.6,
     FRICTION: 0.8,
     PLAYER: {
@@ -396,84 +375,63 @@ const CONFIG = {
     }
 };
 
-// Handle window resize
-let lastYOffset = null;
+// Scale factor for converting screen coordinates to game coordinates
+let gameScale = 1;
+let gameOffsetX = 0;
+let gameOffsetY = 0;
 
+// Get touch controls height based on current screen size (matches CSS)
+function getTouchControlsHeight() {
+    if (!IS_MOBILE) return 0;
+
+    // Match CSS media queries
+    if (window.innerHeight <= 500 && window.matchMedia('(orientation: landscape)').matches) {
+        return 90;
+    } else if (window.innerWidth <= 480) {
+        return 130;
+    }
+    return 150;
+}
+
+// Handle window resize - calculates scale to fit game in screen
 function resizeCanvas() {
-    const oldGameHeight = CONFIG.GAME_HEIGHT;
-    CONFIG.WIDTH = window.innerWidth;
-    CONFIG.HEIGHT = window.innerHeight;
-    // Recalculate touch controls height for orientation/size changes
-    TOUCH_CONTROLS_HEIGHT = getTouchControlsHeight();
-    CONFIG.GAME_HEIGHT = window.innerHeight - TOUCH_CONTROLS_HEIGHT;
+    if (!game.canvas) return;
 
-    if (game.canvas) {
-        game.canvas.width = CONFIG.WIDTH;
-        game.canvas.height = CONFIG.HEIGHT;
-    }
+    // Get available screen space (account for touch controls on mobile)
+    const touchControlsHeight = getTouchControlsHeight();
+    const availableWidth = window.innerWidth;
+    const availableHeight = window.innerHeight - touchControlsHeight;
 
-    // Reposition all game elements when game height changes
-    if (game.state === 'playing' && oldGameHeight !== CONFIG.GAME_HEIGHT) {
-        const oldYOffset = oldGameHeight - DESIGN_HEIGHT;
-        const newYOffset = CONFIG.GAME_HEIGHT - DESIGN_HEIGHT;
-        const deltaY = newYOffset - oldYOffset;
+    // Calculate scale to fit while maintaining aspect ratio
+    const scaleX = availableWidth / VIRTUAL_WIDTH;
+    const scaleY = availableHeight / VIRTUAL_HEIGHT;
+    gameScale = Math.min(scaleX, scaleY);
 
-        // Reposition player
-        if (game.player) {
-            game.player.y += deltaY;
-        }
+    // Calculate actual display size
+    const displayWidth = VIRTUAL_WIDTH * gameScale;
+    const displayHeight = VIRTUAL_HEIGHT * gameScale;
 
-        // Reposition static platforms
-        for (let p of game.platforms) {
-            p.y += deltaY;
-        }
+    // Center the game canvas horizontally, position at top
+    gameOffsetX = (availableWidth - displayWidth) / 2;
+    gameOffsetY = 0; // Always at top, touch controls at bottom
 
-        // Reposition moving platforms
-        for (let p of game.movingPlatforms) {
-            p.y += deltaY;
-            p.startY += deltaY;
-        }
+    // Canvas internal resolution stays fixed
+    game.canvas.width = VIRTUAL_WIDTH;
+    game.canvas.height = VIRTUAL_HEIGHT;
 
-        // Reposition fading platforms
-        for (let p of game.fadingPlatforms) {
-            p.y += deltaY;
-        }
+    // CSS scales the canvas to fit
+    game.canvas.style.width = displayWidth + 'px';
+    game.canvas.style.height = displayHeight + 'px';
+    game.canvas.style.marginLeft = gameOffsetX + 'px';
+    game.canvas.style.marginTop = gameOffsetY + 'px';
 
-        // Reposition coins
-        for (let c of game.coins) {
-            c.y += deltaY;
-        }
-
-        // Reposition enemies
-        for (let e of game.enemies) {
-            e.y += deltaY;
-        }
-
-        // Reposition obstacles
-        for (let o of game.obstacles) {
-            o.y += deltaY;
-        }
-
-        // Reposition boss
-        if (game.boss) {
-            game.boss.y += deltaY;
-        }
-
-        // Reposition goal
-        if (game.goal) {
-            game.goal.y += deltaY;
-        }
-
-        // Reposition powerups
-        for (let p of game.powerups) {
-            p.y += deltaY;
-        }
-
-        // Reposition projectiles
-        for (let p of game.projectiles) {
-            p.y += deltaY;
-        }
-    }
+    console.log('Resize:', {
+        screen: `${window.innerWidth}x${window.innerHeight}`,
+        touchHeight: touchControlsHeight,
+        available: `${availableWidth}x${availableHeight}`,
+        scale: gameScale.toFixed(2),
+        display: `${displayWidth.toFixed(0)}x${displayHeight.toFixed(0)}`
+    });
 }
 
 window.addEventListener('resize', resizeCanvas);
@@ -2155,8 +2113,8 @@ class Player {
         if (this.x < 0) this.x = 0;
         if (this.x + this.width > game.levelWidth) this.x = game.levelWidth - this.width;
 
-        // Fall off screen (use GAME_HEIGHT to account for touch controls)
-        if (this.y > CONFIG.GAME_HEIGHT + 100) {
+        // Fall off screen
+        if (this.y > VIRTUAL_HEIGHT + 100) {
             this.die();
         }
 
@@ -6039,9 +5997,10 @@ function resetEnemies() {
 }
 
 // Level Generation
+// Levels were designed for 600px height, we use 720px now
+const DESIGN_HEIGHT = 600;
 function getYOffset() {
-    // Use GAME_HEIGHT to position elements above touch controls on mobile
-    return CONFIG.GAME_HEIGHT - DESIGN_HEIGHT;
+    return VIRTUAL_HEIGHT - DESIGN_HEIGHT; // 720 - 600 = 120
 }
 
 // Spawn power-ups based on level and rarity
@@ -6867,19 +6826,23 @@ function hideTouchControls() {
 
 // Initialize Game
 async function init() {
-    // Recalculate touch controls height now that DOM is ready
-    TOUCH_CONTROLS_HEIGHT = getTouchControlsHeight();
-    CONFIG.GAME_HEIGHT = window.innerHeight - TOUCH_CONTROLS_HEIGHT;
-
-    console.log('Mobile detection:', IS_MOBILE);
-    console.log('Touch controls height:', TOUCH_CONTROLS_HEIGHT);
-    console.log('Window height:', window.innerHeight);
-    console.log('Game height:', CONFIG.GAME_HEIGHT);
-
     game.canvas = document.getElementById('gameCanvas');
     game.ctx = game.canvas.getContext('2d');
-    game.canvas.width = CONFIG.WIDTH;
-    game.canvas.height = CONFIG.HEIGHT;
+
+    // Set fixed virtual resolution and apply scaling
+    game.canvas.width = VIRTUAL_WIDTH;
+    game.canvas.height = VIRTUAL_HEIGHT;
+    resizeCanvas();
+
+    // Listen for orientation changes on mobile
+    window.addEventListener('orientationchange', () => {
+        setTimeout(resizeCanvas, 100); // Delay to let browser update dimensions
+    });
+
+    console.log('Game initialized:', {
+        virtual: `${VIRTUAL_WIDTH}x${VIRTUAL_HEIGHT}`,
+        isMobile: IS_MOBILE
+    });
 
     // Initialize API and check for existing session
     const hasSession = await API.init();
@@ -7115,11 +7078,8 @@ function startGame() {
     document.getElementById('ui').classList.remove('hidden');
     showTouchControls();
 
-    // Update touch controls height and game height before generating level
-    TOUCH_CONTROLS_HEIGHT = getTouchControlsHeight();
-    CONFIG.GAME_HEIGHT = window.innerHeight - TOUCH_CONTROLS_HEIGHT;
-
-    console.log('startGame - Touch height:', TOUCH_CONTROLS_HEIGHT, 'Game height:', CONFIG.GAME_HEIGHT, 'yOffset:', getYOffset());
+    // Ensure canvas is properly sized
+    resizeCanvas();
 
     game.score = 0;
     game.lives = 3 + game.userProfile.extraLives; // Apply extra lives from upgrades
