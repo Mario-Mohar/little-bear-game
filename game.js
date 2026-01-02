@@ -358,10 +358,27 @@ const IS_MOBILE = isMobileDevice();
 // Design height for level scaling
 const DESIGN_HEIGHT = 600;
 
+// Touch controls height (dynamically calculated based on CSS breakpoints)
+function getTouchControlsHeight() {
+    if (!IS_MOBILE) return 0;
+
+    // Match CSS media queries
+    if (window.innerHeight <= 500 && window.matchMedia('(orientation: landscape)').matches) {
+        return 100; // Landscape mode on small screens
+    } else if (window.innerWidth <= 480) {
+        return 120; // Small phones
+    }
+    return 140; // Default for tablets and larger phones
+}
+
+let TOUCH_CONTROLS_HEIGHT = getTouchControlsHeight();
+
 // Game Configuration
 const CONFIG = {
     WIDTH: window.innerWidth,
     HEIGHT: window.innerHeight,
+    // Effective game height excludes touch controls area on mobile
+    GAME_HEIGHT: window.innerHeight - (IS_MOBILE ? 140 : 0),
     GRAVITY: 0.6,
     FRICTION: 0.8,
     PLAYER: {
@@ -377,19 +394,22 @@ const CONFIG = {
 let lastYOffset = null;
 
 function resizeCanvas() {
-    const oldHeight = CONFIG.HEIGHT;
+    const oldGameHeight = CONFIG.GAME_HEIGHT;
     CONFIG.WIDTH = window.innerWidth;
     CONFIG.HEIGHT = window.innerHeight;
+    // Recalculate touch controls height for orientation/size changes
+    TOUCH_CONTROLS_HEIGHT = getTouchControlsHeight();
+    CONFIG.GAME_HEIGHT = window.innerHeight - TOUCH_CONTROLS_HEIGHT;
 
     if (game.canvas) {
         game.canvas.width = CONFIG.WIDTH;
         game.canvas.height = CONFIG.HEIGHT;
     }
 
-    // Reposition all game elements when height changes
-    if (game.state === 'playing' && oldHeight !== CONFIG.HEIGHT) {
-        const oldYOffset = oldHeight - DESIGN_HEIGHT;
-        const newYOffset = CONFIG.HEIGHT - DESIGN_HEIGHT;
+    // Reposition all game elements when game height changes
+    if (game.state === 'playing' && oldGameHeight !== CONFIG.GAME_HEIGHT) {
+        const oldYOffset = oldGameHeight - DESIGN_HEIGHT;
+        const newYOffset = CONFIG.GAME_HEIGHT - DESIGN_HEIGHT;
         const deltaY = newYOffset - oldYOffset;
 
         // Reposition player
@@ -2129,8 +2149,8 @@ class Player {
         if (this.x < 0) this.x = 0;
         if (this.x + this.width > game.levelWidth) this.x = game.levelWidth - this.width;
 
-        // Fall off screen
-        if (this.y > CONFIG.HEIGHT + 100) {
+        // Fall off screen (use GAME_HEIGHT to account for touch controls)
+        if (this.y > CONFIG.GAME_HEIGHT + 100) {
             this.die();
         }
 
@@ -6014,7 +6034,8 @@ function resetEnemies() {
 
 // Level Generation
 function getYOffset() {
-    return CONFIG.HEIGHT - DESIGN_HEIGHT;
+    // Use GAME_HEIGHT to position elements above touch controls on mobile
+    return CONFIG.GAME_HEIGHT - DESIGN_HEIGHT;
 }
 
 // Spawn power-ups based on level and rarity
