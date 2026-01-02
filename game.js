@@ -451,13 +451,13 @@ function getTouchControlsHeight() {
     if (w <= 480) return 120;
 
     // Tablets und normale Handys
-    if (w <= 768) return 140;
+    if (w <= 768) return 160;
 
     // Große Tablets
-    if (w <= 1366) return 150;
+    if (w <= 1366) return 170;
 
-    // Desktop mit Touch (Surface etc.) - keine Controls nötig wenn Maus verfügbar
-    return 140;
+    // Desktop mit Touch (Surface etc.)
+    return 160;
 }
 
 // =============================================================================

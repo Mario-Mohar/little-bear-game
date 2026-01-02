@@ -820,8 +820,9 @@ button:disabled {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
-    padding-bottom: max(10px, env(safe-area-inset-bottom)); /* iPhone X+ Safe Area */
+    padding: 15px 25px;
+    /* Mehr Abstand vom unteren Rand, um versehentliches Rausklicken zu verhindern */
+    padding-bottom: max(25px, env(safe-area-inset-bottom));
     pointer-events: none; /* Container fängt keine Events */
     z-index: 1000;
     background: linear-gradient(
@@ -905,7 +906,7 @@ button:disabled {
 /* TABLETS (Portrait) - 768px und kleiner */
 @media (max-width: 768px) {
     :root {
-        --touch-controls-height: 140px;
+        --touch-controls-height: 160px;
     }
 
     #ui {
@@ -1096,7 +1097,7 @@ button:disabled {
 /* GROSSE TABLETS (Landscape) - 1024px und größer */
 @media (min-width: 1024px) and (max-width: 1366px) {
     :root {
-        --touch-controls-height: 150px;
+        --touch-controls-height: 170px;
     }
 
     .touch-btn {
