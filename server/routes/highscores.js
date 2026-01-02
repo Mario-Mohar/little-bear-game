@@ -22,7 +22,7 @@ router.get('/user/:id', highscoreController.getUserHighscores);
 router.post('/',
     authenticateToken,
     body('score').isInt({ min: 0, max: 999999999 }),
-    body('levelReached').optional().isInt({ min: 1, max: 10 }),
+    body('levelReached').optional().isInt({ min: 1, max: 15 }),
     handleValidation,
     highscoreController.addHighscore
 );

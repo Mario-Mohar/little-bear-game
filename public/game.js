@@ -2083,19 +2083,15 @@ class Player {
         for (let enemy of game.enemies) {
             if (enemy.alive && this.intersects(enemy)) {
                 const playerBottom = this.y + this.height;
-                const playerTop = this.y;
                 const enemyTop = enemy.y;
-                const enemyBottom = enemy.y + enemy.height;
 
                 // Spieler besiegt Gegner wenn:
-                // - Spieler fällt nach unten (velY > 0) ODER hat gerade erst angefangen zu fallen
-                // - Spieler-Füße sind über der Mitte des Gegners
-                // - Spieler kam von oben (Spieler-Unterseite war über Gegner-Oberseite)
-                const isFalling = this.velY >= 0;
-                const feetAboveMiddle = playerBottom < enemyTop + enemy.height * 0.6;
-                const comingFromAbove = playerTop < enemyTop;
+                // - Spieler fällt aktiv nach unten (velY > 0)
+                // - Spieler-Füße sind in der oberen Hälfte des Gegners (nicht tiefer als 40%)
+                const isFalling = this.velY > 0;
+                const feetNearTop = playerBottom < enemyTop + enemy.height * 0.4;
 
-                if (isFalling && (feetAboveMiddle || comingFromAbove)) {
+                if (isFalling && feetNearTop) {
                     // Player jumped on enemy - Gegner besiegt
                     enemy.alive = false;
                     this.velY = -12;
@@ -2112,15 +2108,15 @@ class Player {
         // Boss collision
         if (game.boss && game.boss.alive && this.intersects(game.boss)) {
             const playerBottom = this.y + this.height;
-            const playerTop = this.y;
             const bossTop = game.boss.y;
 
-            // Gleiche großzügige Logik wie bei normalen Gegnern
-            const isFalling = this.velY >= 0;
-            const feetAboveMiddle = playerBottom < bossTop + game.boss.height * 0.6;
-            const comingFromAbove = playerTop < bossTop;
+            // Spieler besiegt Boss wenn:
+            // - Spieler fällt aktiv nach unten (velY > 0)
+            // - Spieler-Füße sind in der oberen Hälfte des Bosses (nicht tiefer als 40%)
+            const isFalling = this.velY > 0;
+            const feetNearTop = playerBottom < bossTop + game.boss.height * 0.4;
 
-            if (isFalling && (feetAboveMiddle || comingFromAbove)) {
+            if (isFalling && feetNearTop) {
                 // Player jumped on boss
                 const killed = game.boss.takeDamage();
                 this.velY = -14; // Bigger bounce

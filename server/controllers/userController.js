@@ -3,16 +3,16 @@ const { pool } = require('../config/db');
 // Shop items configuration (must match frontend)
 const SHOP_ITEMS = {
     skins: {
-        'brown': { price: 50, name: 'Brauner Bär' },
-        'polar': { price: 75, name: 'Eisbär' },
-        'panda': { price: 100, name: 'Panda' },
-        'red': { price: 100, name: 'Roter Panda' },
-        'koala': { price: 125, name: 'Koala' },
-        'golden': { price: 150, name: 'Goldener Bär' }
+        'default': { price: 0, name: 'Klassischer Bär' },
+        'polar': { price: 50, name: 'Eisbär' },
+        'panda': { price: 75, name: 'Pandabär' },
+        'golden': { price: 150, name: 'Goldener Bär' },
+        'pink': { price: 100, name: 'Rosa Bär' },
+        'blue': { price: 100, name: 'Blauer Bär' }
     },
     upgrades: {
-        'extra_life_1': { price: 100, name: 'Extra Leben I' },
-        'extra_life_2': { price: 250, name: 'Extra Leben II', requires: 'extra_life_1' },
+        'extra_life_1': { price: 100, name: '+1 Startleben' },
+        'extra_life_2': { price: 250, name: '+2 Startleben', requires: 'extra_life_1' },
         'coin_magnet': { price: 200, name: 'Münzmagnet' },
         'double_coins': { price: 300, name: 'Doppelte Münzen' }
     }
