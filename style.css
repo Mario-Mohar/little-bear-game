@@ -749,3 +749,164 @@ button:disabled {
     font-family: 'Segoe UI', Tahoma, sans-serif;
     letter-spacing: 1px;
 }
+
+/* ==================== MOBILE TOUCH CONTROLS ==================== */
+
+#touch-controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 140px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 15px 20px;
+    pointer-events: none;
+    z-index: 50;
+}
+
+#touch-controls.hidden {
+    display: none !important;
+}
+
+.touch-left, .touch-right {
+    display: flex;
+    gap: 10px;
+    pointer-events: auto;
+}
+
+.touch-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    transition: transform 0.1s, background 0.1s;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    margin: 0;
+    padding: 0;
+}
+
+.touch-btn:active, .touch-btn.pressed {
+    background: rgba(255, 215, 0, 0.5);
+    border-color: #FFD700;
+    transform: scale(0.95);
+}
+
+.touch-jump {
+    width: 90px;
+    height: 90px;
+    font-size: 32px;
+    background: rgba(255, 215, 0, 0.3);
+    border-color: rgba(255, 215, 0, 0.6);
+}
+
+.touch-jump:active, .touch-jump.pressed {
+    background: rgba(255, 215, 0, 0.6);
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+    #ui {
+        font-size: 14px;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    #ui > div {
+        background: rgba(255, 255, 255, 0.8);
+        padding: 3px 8px;
+        border-radius: 5px;
+    }
+
+    #start-screen h1,
+    #game-over h1,
+    #level-complete h1,
+    #game-complete h1,
+    #auth-screen h1 {
+        font-size: 32px;
+    }
+
+    #start-screen p,
+    #game-over p,
+    #level-complete p,
+    #game-complete p {
+        font-size: 14px;
+    }
+
+    button {
+        padding: 10px 25px;
+        font-size: 16px;
+    }
+
+    .shop-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .highscore-list {
+        min-width: 180px;
+        max-width: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    .touch-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    .touch-jump {
+        width: 80px;
+        height: 80px;
+        font-size: 28px;
+    }
+
+    #touch-controls {
+        height: 120px;
+        padding: 10px 15px;
+    }
+
+    #ui {
+        font-size: 12px;
+    }
+}
+
+/* Landscape mode on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    #touch-controls {
+        height: 100px;
+        padding: 10px;
+    }
+
+    .touch-btn {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+    }
+
+    .touch-jump {
+        width: 70px;
+        height: 70px;
+        font-size: 26px;
+    }
+
+    #ui {
+        font-size: 12px;
+        top: 5px;
+    }
+}

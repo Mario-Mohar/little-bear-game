@@ -9,6 +9,18 @@
 <body>
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
+
+        <!-- Mobile Touch Controls -->
+        <div id="touch-controls" class="hidden">
+            <div class="touch-left">
+                <button id="touch-left-btn" class="touch-btn">◀</button>
+                <button id="touch-right-btn" class="touch-btn">▶</button>
+            </div>
+            <div class="touch-right">
+                <button id="touch-jump-btn" class="touch-btn touch-jump">▲</button>
+            </div>
+        </div>
+
         <div id="ui" class="hidden">
             <div id="level">Level: <span id="level-value">1</span></div>
             <div id="score">Punkte: <span id="score-value">0</span></div>
@@ -81,8 +93,8 @@
                 <button id="logout-btn" class="small-btn">Abmelden</button>
             </div>
             <div class="user-coins">Deine Münzen: <span id="user-coins-display">0</span></div>
-            <p>Benutze Pfeiltasten oder WASD zum Bewegen</p>
-            <p>Drücke LEERTASTE oder W zum Springen (Doppelsprung!)</p>
+            <p id="controls-keyboard">Benutze Pfeiltasten oder WASD zum Bewegen<br>Drücke LEERTASTE oder W zum Springen (Doppelsprung!)</p>
+            <p id="controls-touch" class="hidden">Benutze die Buttons unten zum Steuern (Doppelsprung!)</p>
             <div class="name-input" id="guest-name-input">
                 <label for="player-name">Gib deinen Namen ein:</label>
                 <input type="text" id="player-name" maxlength="12" placeholder="Spieler">
