@@ -358,17 +358,23 @@ const IS_MOBILE = isMobileDevice();
 // Design height for level scaling
 const DESIGN_HEIGHT = 600;
 
-// Touch controls height (dynamically calculated based on CSS breakpoints)
+// Touch controls height - matches CSS values in style.css + safety buffer
 function getTouchControlsHeight() {
     if (!IS_MOBILE) return 0;
 
-    // Match CSS media queries
+    // Must match CSS media queries in style.css for #touch-controls
+    // Default: height: 140px + 20px padding = 160px effective
+    // @media (max-width: 480px): height: 120px + 20px padding = 140px
+    // @media (max-height: 500px) and (orientation: landscape): height: 100px + 20px = 120px
+    // Add extra buffer for browser chrome (address bar, etc.)
+    const browserBuffer = 20;
+
     if (window.innerHeight <= 500 && window.matchMedia('(orientation: landscape)').matches) {
-        return 100; // Landscape mode on small screens
+        return 100 + browserBuffer;
     } else if (window.innerWidth <= 480) {
-        return 120; // Small phones
+        return 120 + browserBuffer;
     }
-    return 140; // Default for tablets and larger phones
+    return 140 + browserBuffer;
 }
 
 let TOUCH_CONTROLS_HEIGHT = getTouchControlsHeight();
@@ -6861,6 +6867,15 @@ function hideTouchControls() {
 
 // Initialize Game
 async function init() {
+    // Recalculate touch controls height now that DOM is ready
+    TOUCH_CONTROLS_HEIGHT = getTouchControlsHeight();
+    CONFIG.GAME_HEIGHT = window.innerHeight - TOUCH_CONTROLS_HEIGHT;
+
+    console.log('Mobile detection:', IS_MOBILE);
+    console.log('Touch controls height:', TOUCH_CONTROLS_HEIGHT);
+    console.log('Window height:', window.innerHeight);
+    console.log('Game height:', CONFIG.GAME_HEIGHT);
+
     game.canvas = document.getElementById('gameCanvas');
     game.ctx = game.canvas.getContext('2d');
     game.canvas.width = CONFIG.WIDTH;
@@ -7099,6 +7114,12 @@ function startGame() {
     hideAllScreens();
     document.getElementById('ui').classList.remove('hidden');
     showTouchControls();
+
+    // Update touch controls height and game height before generating level
+    TOUCH_CONTROLS_HEIGHT = getTouchControlsHeight();
+    CONFIG.GAME_HEIGHT = window.innerHeight - TOUCH_CONTROLS_HEIGHT;
+
+    console.log('startGame - Touch height:', TOUCH_CONTROLS_HEIGHT, 'Game height:', CONFIG.GAME_HEIGHT, 'yOffset:', getYOffset());
 
     game.score = 0;
     game.lives = 3 + game.userProfile.extraLives; // Apply extra lives from upgrades
