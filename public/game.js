@@ -221,6 +221,7 @@ function hideAllScreens() {
 }
 
 function showStartScreen() {
+    hideTouchControls();
     hideAllScreens();
     document.getElementById('start-screen').classList.remove('hidden');
     updateUserInfoDisplay();
@@ -342,6 +343,17 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
         return this;
     };
 }
+
+// Mobile Detection
+function isMobileDevice() {
+    return (
+        'ontouchstart' in window ||
+        navigator.maxTouchPoints > 0 ||
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    );
+}
+
+const IS_MOBILE = isMobileDevice();
 
 // Game Configuration
 const CONFIG = {
@@ -6318,6 +6330,7 @@ function drawPowerUpBar(ctx, x, y, label, timeLeft, progress, color) {
 // Level Complete
 async function levelComplete() {
     game.running = false;
+    hideTouchControls();
 
     // Calculate time taken
     const timeTaken = Math.floor((Date.now() - game.levelStartTime) / 1000);
@@ -6402,6 +6415,7 @@ function formatTime(seconds) {
 function nextLevel() {
     hideAllScreens();
     document.getElementById('ui').classList.remove('hidden');
+    showTouchControls();
 
     game.level++;
     game.cameraX = 0;
@@ -6420,6 +6434,7 @@ function nextLevel() {
 // Game Over
 async function gameOver() {
     game.running = false;
+    hideTouchControls();
     await saveHighscore();
     updateCoinsDisplay();
     document.getElementById('final-score').textContent = game.score;
@@ -6692,6 +6707,69 @@ function closeShop() {
     updateCoinsDisplay();
 }
 
+// Mobile Touch Controls Setup
+function setupTouchControls() {
+    const leftBtn = document.getElementById('touch-left-btn');
+    const rightBtn = document.getElementById('touch-right-btn');
+    const jumpBtn = document.getElementById('touch-jump-btn');
+
+    // Helper to handle touch events
+    function addTouchHandlers(element, keyCode) {
+        // Touch start - button pressed
+        element.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            game.keys[keyCode] = true;
+            element.classList.add('pressed');
+        }, { passive: false });
+
+        // Touch end - button released
+        element.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            game.keys[keyCode] = false;
+            element.classList.remove('pressed');
+        }, { passive: false });
+
+        // Touch cancel - treat as release
+        element.addEventListener('touchcancel', (e) => {
+            game.keys[keyCode] = false;
+            element.classList.remove('pressed');
+        });
+
+        // Also support mouse for testing on desktop
+        element.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            game.keys[keyCode] = true;
+            element.classList.add('pressed');
+        });
+
+        element.addEventListener('mouseup', (e) => {
+            game.keys[keyCode] = false;
+            element.classList.remove('pressed');
+        });
+
+        element.addEventListener('mouseleave', (e) => {
+            game.keys[keyCode] = false;
+            element.classList.remove('pressed');
+        });
+    }
+
+    // Setup buttons
+    if (leftBtn) addTouchHandlers(leftBtn, 'ArrowLeft');
+    if (rightBtn) addTouchHandlers(rightBtn, 'ArrowRight');
+    if (jumpBtn) addTouchHandlers(jumpBtn, 'Space');
+}
+
+// Show/hide touch controls based on game state
+function showTouchControls() {
+    if (IS_MOBILE) {
+        document.getElementById('touch-controls')?.classList.remove('hidden');
+    }
+}
+
+function hideTouchControls() {
+    document.getElementById('touch-controls')?.classList.add('hidden');
+}
+
 // Initialize Game
 async function init() {
     game.canvas = document.getElementById('gameCanvas');
@@ -6737,6 +6815,16 @@ async function init() {
     document.addEventListener('keyup', (e) => {
         game.keys[e.code] = false;
     });
+
+    // Mobile Touch Controls
+    if (IS_MOBILE) {
+        // Show mobile controls hint, hide keyboard hint
+        document.getElementById('controls-keyboard')?.classList.add('hidden');
+        document.getElementById('controls-touch')?.classList.remove('hidden');
+
+        // Setup touch button handlers
+        setupTouchControls();
+    }
 
     // Game buttons
     document.getElementById('start-btn').addEventListener('click', startGame);
@@ -6921,6 +7009,7 @@ function startGame() {
 
     hideAllScreens();
     document.getElementById('ui').classList.remove('hidden');
+    showTouchControls();
 
     game.score = 0;
     game.lives = 3 + game.userProfile.extraLives; // Apply extra lives from upgrades
