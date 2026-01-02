@@ -355,6 +355,9 @@ function isMobileDevice() {
 
 const IS_MOBILE = isMobileDevice();
 
+// Design height for level scaling
+const DESIGN_HEIGHT = 600;
+
 // Game Configuration
 const CONFIG = {
     WIDTH: window.innerWidth,
@@ -371,12 +374,79 @@ const CONFIG = {
 };
 
 // Handle window resize
+let lastYOffset = null;
+
 function resizeCanvas() {
+    const oldHeight = CONFIG.HEIGHT;
     CONFIG.WIDTH = window.innerWidth;
     CONFIG.HEIGHT = window.innerHeight;
+
     if (game.canvas) {
         game.canvas.width = CONFIG.WIDTH;
         game.canvas.height = CONFIG.HEIGHT;
+    }
+
+    // Reposition all game elements when height changes
+    if (game.state === 'playing' && oldHeight !== CONFIG.HEIGHT) {
+        const oldYOffset = oldHeight - DESIGN_HEIGHT;
+        const newYOffset = CONFIG.HEIGHT - DESIGN_HEIGHT;
+        const deltaY = newYOffset - oldYOffset;
+
+        // Reposition player
+        if (game.player) {
+            game.player.y += deltaY;
+        }
+
+        // Reposition static platforms
+        for (let p of game.platforms) {
+            p.y += deltaY;
+        }
+
+        // Reposition moving platforms
+        for (let p of game.movingPlatforms) {
+            p.y += deltaY;
+            p.startY += deltaY;
+        }
+
+        // Reposition fading platforms
+        for (let p of game.fadingPlatforms) {
+            p.y += deltaY;
+        }
+
+        // Reposition coins
+        for (let c of game.coins) {
+            c.y += deltaY;
+        }
+
+        // Reposition enemies
+        for (let e of game.enemies) {
+            e.y += deltaY;
+        }
+
+        // Reposition obstacles
+        for (let o of game.obstacles) {
+            o.y += deltaY;
+        }
+
+        // Reposition boss
+        if (game.boss) {
+            game.boss.y += deltaY;
+        }
+
+        // Reposition goal
+        if (game.goal) {
+            game.goal.y += deltaY;
+        }
+
+        // Reposition powerups
+        for (let p of game.powerups) {
+            p.y += deltaY;
+        }
+
+        // Reposition projectiles
+        for (let p of game.projectiles) {
+            p.y += deltaY;
+        }
     }
 }
 
@@ -5943,8 +6013,6 @@ function resetEnemies() {
 }
 
 // Level Generation
-const DESIGN_HEIGHT = 600; // Original design height
-
 function getYOffset() {
     return CONFIG.HEIGHT - DESIGN_HEIGHT;
 }
