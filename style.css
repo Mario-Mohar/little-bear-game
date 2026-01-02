@@ -24,13 +24,18 @@ body {
     border-radius: 0;
     overflow: hidden;
     box-shadow: none;
+    background: #000; /* Black bars for letterboxing */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 #gameCanvas {
     display: block;
-    width: 100%;
-    height: 100%;
+    /* Size is set by JavaScript for proper scaling */
     background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
 }
 
 #ui {
@@ -757,13 +762,14 @@ button:disabled {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 140px;
+    height: 150px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
-    padding: 15px 20px;
+    align-items: center;
+    padding: 10px 20px;
     pointer-events: none;
     z-index: 50;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 70%, transparent 100%);
 }
 
 #touch-controls.hidden {
@@ -865,35 +871,6 @@ button:disabled {
 
 @media (max-width: 480px) {
     .touch-btn {
-        width: 60px;
-        height: 60px;
-        font-size: 24px;
-    }
-
-    .touch-jump {
-        width: 80px;
-        height: 80px;
-        font-size: 28px;
-    }
-
-    #touch-controls {
-        height: 120px;
-        padding: 10px 15px;
-    }
-
-    #ui {
-        font-size: 12px;
-    }
-}
-
-/* Landscape mode on mobile */
-@media (max-height: 500px) and (orientation: landscape) {
-    #touch-controls {
-        height: 100px;
-        padding: 10px;
-    }
-
-    .touch-btn {
         width: 55px;
         height: 55px;
         font-size: 22px;
@@ -905,8 +882,37 @@ button:disabled {
         font-size: 26px;
     }
 
+    #touch-controls {
+        height: 130px;
+        padding: 8px 12px;
+    }
+
     #ui {
         font-size: 12px;
+    }
+}
+
+/* Landscape mode on mobile - compact controls */
+@media (max-height: 500px) and (orientation: landscape) {
+    #touch-controls {
+        height: 90px;
+        padding: 5px 15px;
+    }
+
+    .touch-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    .touch-jump {
+        width: 65px;
+        height: 65px;
+        font-size: 24px;
+    }
+
+    #ui {
+        font-size: 11px;
         top: 5px;
     }
 }
