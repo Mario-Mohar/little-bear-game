@@ -816,13 +816,13 @@ button:disabled {
     left: 0;
     right: 0;
     /* Feste Höhe - wird von JavaScript berücksichtigt */
-    height: var(--touch-controls-height, 140px);
+    height: var(--touch-controls-height, 160px);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 25px;
+    padding: 20px 30px;
     /* Mehr Abstand vom unteren Rand, um versehentliches Rausklicken zu verhindern */
-    padding-bottom: max(25px, env(safe-area-inset-bottom));
+    padding-bottom: max(30px, env(safe-area-inset-bottom));
     pointer-events: none; /* Container fängt keine Events */
     z-index: 1000;
     background: linear-gradient(
@@ -842,22 +842,22 @@ button:disabled {
 
 .touch-left, .touch-right {
     display: flex;
-    gap: 15px;
+    gap: 20px;
     pointer-events: auto; /* Buttons fangen Events */
     align-items: center;
 }
 
 .touch-btn {
-    /* Basis-Größe - wird von Media Queries angepasst */
-    width: 65px;
-    height: 65px;
-    min-width: 50px;
-    min-height: 50px;
+    /* Größere Buttons für bessere Bedienbarkeit */
+    width: 80px;
+    height: 80px;
+    min-width: 60px;
+    min-height: 60px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    border: 3px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.3);
+    border: 4px solid rgba(255, 255, 255, 0.6);
     color: white;
-    font-size: 26px;
+    font-size: 32px;
     font-weight: bold;
     display: flex;
     align-items: center;
@@ -871,32 +871,33 @@ button:disabled {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     /* Schnelles visuelles Feedback */
-    transition: transform 0.08s ease-out, background 0.08s ease-out, border-color 0.08s ease-out;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    transition: transform 0.05s ease-out, background 0.05s ease-out, border-color 0.05s ease-out;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     margin: 0;
     padding: 0;
 }
 
 .touch-btn:active, .touch-btn.pressed {
-    background: rgba(255, 215, 0, 0.5);
+    background: rgba(255, 215, 0, 0.6);
     border-color: #FFD700;
-    transform: scale(0.92);
-    box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+    transform: scale(0.93);
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.6), 0 2px 10px rgba(255, 215, 0, 0.4);
 }
 
 /* Sprung-Button ist größer und hervorgehoben */
 .touch-jump {
-    width: 85px;
-    height: 85px;
-    font-size: 30px;
-    background: rgba(255, 215, 0, 0.25);
-    border-color: rgba(255, 215, 0, 0.5);
-    border-width: 4px;
+    width: 100px;
+    height: 100px;
+    font-size: 36px;
+    background: rgba(255, 215, 0, 0.35);
+    border-color: rgba(255, 215, 0, 0.7);
+    border-width: 5px;
 }
 
 .touch-jump:active, .touch-jump.pressed {
-    background: rgba(255, 215, 0, 0.6);
+    background: rgba(255, 215, 0, 0.7);
     border-color: #FFD700;
+    transform: scale(0.95);
 }
 
 /* =============================================================================
@@ -906,7 +907,7 @@ button:disabled {
 /* TABLETS (Portrait) - 768px und kleiner */
 @media (max-width: 768px) {
     :root {
-        --touch-controls-height: 160px;
+        --touch-controls-height: 180px;
     }
 
     #ui {
@@ -957,30 +958,30 @@ button:disabled {
 /* KLEINE HANDYS (Portrait) - 480px und kleiner */
 @media (max-width: 480px) {
     :root {
-        --touch-controls-height: 120px;
+        --touch-controls-height: 150px;
     }
 
     .touch-btn {
-        width: 55px;
-        height: 55px;
-        font-size: 22px;
-        border-width: 2px;
-    }
-
-    .touch-jump {
         width: 70px;
         height: 70px;
-        font-size: 26px;
+        font-size: 28px;
         border-width: 3px;
     }
 
+    .touch-jump {
+        width: 85px;
+        height: 85px;
+        font-size: 32px;
+        border-width: 4px;
+    }
+
     #touch-controls {
-        padding: 8px 12px;
-        gap: 8px;
+        padding: 10px 15px;
+        gap: 10px;
     }
 
     .touch-left, .touch-right {
-        gap: 10px;
+        gap: 12px;
     }
 
     #ui {
@@ -998,27 +999,29 @@ button:disabled {
 /* SEHR KLEINE HANDYS - 360px und kleiner */
 @media (max-width: 360px) {
     :root {
-        --touch-controls-height: 110px;
+        --touch-controls-height: 130px;
     }
 
     .touch-btn {
-        width: 48px;
-        height: 48px;
-        font-size: 18px;
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        border-width: 3px;
     }
 
     .touch-jump {
-        width: 60px;
-        height: 60px;
-        font-size: 22px;
+        width: 75px;
+        height: 75px;
+        font-size: 28px;
+        border-width: 3px;
     }
 
     #touch-controls {
-        padding: 5px 8px;
+        padding: 8px 10px;
     }
 
     .touch-left, .touch-right {
-        gap: 8px;
+        gap: 10px;
     }
 
     #ui {
@@ -1029,29 +1032,29 @@ button:disabled {
 /* LANDSCAPE MODUS AUF MOBILE - Kompakte Controls */
 @media (max-height: 500px) and (orientation: landscape) {
     :root {
-        --touch-controls-height: 85px;
+        --touch-controls-height: 100px;
     }
 
     #touch-controls {
-        padding: 5px 15px;
+        padding: 8px 20px;
     }
 
     .touch-btn {
-        width: 45px;
-        height: 45px;
-        font-size: 18px;
-        border-width: 2px;
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+        border-width: 3px;
     }
 
     .touch-jump {
-        width: 55px;
-        height: 55px;
-        font-size: 20px;
-        border-width: 2px;
+        width: 70px;
+        height: 70px;
+        font-size: 26px;
+        border-width: 3px;
     }
 
     .touch-left, .touch-right {
-        gap: 8px;
+        gap: 12px;
     }
 
     #ui {
@@ -1069,23 +1072,25 @@ button:disabled {
 /* SEHR FLACHE LANDSCHAFTS-DISPLAYS - z.B. breite Handys */
 @media (max-height: 400px) and (orientation: landscape) {
     :root {
-        --touch-controls-height: 70px;
+        --touch-controls-height: 85px;
     }
 
     .touch-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+        border-width: 2px;
     }
 
     .touch-jump {
-        width: 50px;
-        height: 50px;
-        font-size: 18px;
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        border-width: 2px;
     }
 
     #touch-controls {
-        padding: 3px 10px;
+        padding: 5px 15px;
     }
 
     #ui {

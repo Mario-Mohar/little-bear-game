@@ -6971,35 +6971,124 @@ function closeShop() {
     updateCoinsDisplay();
 }
 
-// Mobile Touch Controls Setup
+// Mobile Touch Controls Setup - Robustes Touch-Tracking
 function setupTouchControls() {
     const leftBtn = document.getElementById('touch-left-btn');
     const rightBtn = document.getElementById('touch-right-btn');
     const jumpBtn = document.getElementById('touch-jump-btn');
+    const touchControls = document.getElementById('touch-controls');
 
-    // Helper to handle touch events
-    function addTouchHandlers(element, keyCode) {
-        // Touch start - button pressed
-        element.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            game.keys[keyCode] = true;
-            element.classList.add('pressed');
-        }, { passive: false });
+    // Track welche Touch-IDs welche Buttons drücken
+    const activeTouches = new Map(); // touchId -> { element, keyCode }
 
-        // Touch end - button released
-        element.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            game.keys[keyCode] = false;
-            element.classList.remove('pressed');
-        }, { passive: false });
+    // Button-Konfiguration mit keyCode
+    const buttonConfig = new Map();
+    if (leftBtn) buttonConfig.set(leftBtn, 'ArrowLeft');
+    if (rightBtn) buttonConfig.set(rightBtn, 'ArrowRight');
+    if (jumpBtn) buttonConfig.set(jumpBtn, 'Space');
 
-        // Touch cancel - treat as release
-        element.addEventListener('touchcancel', (e) => {
-            game.keys[keyCode] = false;
-            element.classList.remove('pressed');
-        });
+    // Prüft ob ein Touch-Punkt innerhalb eines Buttons ist (mit erweiterter Hit-Area)
+    function getTouchedButton(touch) {
+        for (const [element, keyCode] of buttonConfig) {
+            const rect = element.getBoundingClientRect();
+            // Erweitere Hit-Area um 15px in alle Richtungen
+            const hitPadding = 15;
+            if (touch.clientX >= rect.left - hitPadding &&
+                touch.clientX <= rect.right + hitPadding &&
+                touch.clientY >= rect.top - hitPadding &&
+                touch.clientY <= rect.bottom + hitPadding) {
+                return { element, keyCode };
+            }
+        }
+        return null;
+    }
 
-        // Also support mouse for testing on desktop
+    // Aktiviert einen Button
+    function activateButton(element, keyCode, touchId) {
+        game.keys[keyCode] = true;
+        element.classList.add('pressed');
+        activeTouches.set(touchId, { element, keyCode });
+    }
+
+    // Deaktiviert einen Button
+    function deactivateButton(element, keyCode) {
+        game.keys[keyCode] = false;
+        element.classList.remove('pressed');
+    }
+
+    // Touch-Start Handler auf dem Container
+    touchControls.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        for (const touch of e.changedTouches) {
+            const button = getTouchedButton(touch);
+            if (button) {
+                activateButton(button.element, button.keyCode, touch.identifier);
+            }
+        }
+    }, { passive: false });
+
+    // Touch-Move Handler - prüft ob Finger noch auf Button ist
+    touchControls.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        for (const touch of e.changedTouches) {
+            const currentTouch = activeTouches.get(touch.identifier);
+            if (currentTouch) {
+                // Prüfe ob Finger noch auf dem GLEICHEN Button ist
+                const button = getTouchedButton(touch);
+                if (!button || button.element !== currentTouch.element) {
+                    // Finger hat den Button verlassen - NICHT deaktivieren!
+                    // Der Button bleibt aktiv solange der Finger irgendwo ist
+                    // Das verhindert das "Stehenbleiben"-Problem
+                }
+                // Wenn der Finger auf einen anderen Button wechselt
+                if (button && button.element !== currentTouch.element) {
+                    // Alten Button deaktivieren
+                    deactivateButton(currentTouch.element, currentTouch.keyCode);
+                    // Neuen Button aktivieren
+                    activateButton(button.element, button.keyCode, touch.identifier);
+                }
+            } else {
+                // Neuer Touch auf Button?
+                const button = getTouchedButton(touch);
+                if (button) {
+                    activateButton(button.element, button.keyCode, touch.identifier);
+                }
+            }
+        }
+    }, { passive: false });
+
+    // Touch-End Handler - global auf document für zuverlässiges Erkennen
+    document.addEventListener('touchend', (e) => {
+        for (const touch of e.changedTouches) {
+            const currentTouch = activeTouches.get(touch.identifier);
+            if (currentTouch) {
+                deactivateButton(currentTouch.element, currentTouch.keyCode);
+                activeTouches.delete(touch.identifier);
+            }
+        }
+    }, { passive: false });
+
+    // Touch-Cancel Handler
+    document.addEventListener('touchcancel', (e) => {
+        for (const touch of e.changedTouches) {
+            const currentTouch = activeTouches.get(touch.identifier);
+            if (currentTouch) {
+                deactivateButton(currentTouch.element, currentTouch.keyCode);
+                activeTouches.delete(touch.identifier);
+            }
+        }
+    }, { passive: false });
+
+    // Fallback: Alle Touches deaktivieren wenn Fenster Fokus verliert
+    window.addEventListener('blur', () => {
+        for (const [touchId, { element, keyCode }] of activeTouches) {
+            deactivateButton(element, keyCode);
+        }
+        activeTouches.clear();
+    });
+
+    // Mouse-Support für Desktop-Testing
+    for (const [element, keyCode] of buttonConfig) {
         element.addEventListener('mousedown', (e) => {
             e.preventDefault();
             game.keys[keyCode] = true;
@@ -7016,11 +7105,6 @@ function setupTouchControls() {
             element.classList.remove('pressed');
         });
     }
-
-    // Setup buttons
-    if (leftBtn) addTouchHandlers(leftBtn, 'ArrowLeft');
-    if (rightBtn) addTouchHandlers(rightBtn, 'ArrowRight');
-    if (jumpBtn) addTouchHandlers(jumpBtn, 'Space');
 }
 
 // Show/hide touch controls based on game state
