@@ -6,10 +6,14 @@ async function getHighscores(req, res) {
     const platform = req.query.platform; // 'pc', 'mobile', or undefined for all
 
     try {
-        // Build platform filter
-        const platformFilter = platform ? 'WHERE h.platform = $3' : '';
-        const platformFilterBest = platform ? 'AND b.platform = $3' : '';
-        const params = platform ? [limit, offset, platform] : [limit, offset];
+        // Build platform filter - treat NULL as 'pc' for old entries
+        let platformFilter = '';
+        if (platform === 'pc') {
+            platformFilter = "WHERE (h.platform = 'pc' OR h.platform IS NULL)";
+        } else if (platform === 'mobile') {
+            platformFilter = "WHERE h.platform = 'mobile'";
+        }
+        const params = [limit, offset];
 
         // Only show the highest score per player (filtered by platform if specified)
         const result = await pool.query(
@@ -29,10 +33,13 @@ async function getHighscores(req, res) {
         );
 
         // Get total count of unique players (filtered by platform if specified)
-        const countQuery = platform
-            ? 'SELECT COUNT(DISTINCT username) FROM highscores WHERE platform = $1'
-            : 'SELECT COUNT(DISTINCT username) FROM highscores';
-        const countResult = await pool.query(countQuery, platform ? [platform] : []);
+        let countQuery = 'SELECT COUNT(DISTINCT username) FROM highscores';
+        if (platform === 'pc') {
+            countQuery = "SELECT COUNT(DISTINCT username) FROM highscores WHERE (platform = 'pc' OR platform IS NULL)";
+        } else if (platform === 'mobile') {
+            countQuery = "SELECT COUNT(DISTINCT username) FROM highscores WHERE platform = 'mobile'";
+        }
+        const countResult = await pool.query(countQuery);
         const totalCount = parseInt(countResult.rows[0].count);
 
         res.json({
@@ -151,11 +158,14 @@ async function getMyRank(req, res) {
     const platform = req.query.platform; // 'pc', 'mobile', or undefined for all
 
     try {
-        // Get user's best score (optionally filtered by platform)
-        const bestQuery = platform
-            ? 'SELECT MAX(score) as best_score FROM highscores WHERE user_id = $1 AND platform = $2'
-            : 'SELECT MAX(score) as best_score FROM highscores WHERE user_id = $1';
-        const bestResult = await pool.query(bestQuery, platform ? [req.user.id, platform] : [req.user.id]);
+        // Get user's best score (optionally filtered by platform) - treat NULL as 'pc'
+        let bestQuery = 'SELECT MAX(score) as best_score FROM highscores WHERE user_id = $1';
+        if (platform === 'pc') {
+            bestQuery = "SELECT MAX(score) as best_score FROM highscores WHERE user_id = $1 AND (platform = 'pc' OR platform IS NULL)";
+        } else if (platform === 'mobile') {
+            bestQuery = "SELECT MAX(score) as best_score FROM highscores WHERE user_id = $1 AND platform = 'mobile'";
+        }
+        const bestResult = await pool.query(bestQuery, [req.user.id]);
 
         const bestScore = bestResult.rows[0].best_score;
 
@@ -163,21 +173,29 @@ async function getMyRank(req, res) {
             return res.json({ rank: null, bestScore: 0, platform: platform || 'all', message: 'Noch keine Punkte' });
         }
 
-        // Get rank based on unique players' best scores (optionally filtered by platform)
-        const rankQuery = platform
-            ? `SELECT COUNT(*) + 1 as rank FROM (
-                SELECT MAX(score) as best FROM highscores WHERE platform = $2 GROUP BY username
-               ) AS player_bests WHERE best > $1`
-            : `SELECT COUNT(*) + 1 as rank FROM (
-                SELECT MAX(score) as best FROM highscores GROUP BY username
+        // Get rank based on unique players' best scores (optionally filtered by platform) - treat NULL as 'pc'
+        let rankQuery = `SELECT COUNT(*) + 1 as rank FROM (
+            SELECT MAX(score) as best FROM highscores GROUP BY username
+           ) AS player_bests WHERE best > $1`;
+        if (platform === 'pc') {
+            rankQuery = `SELECT COUNT(*) + 1 as rank FROM (
+                SELECT MAX(score) as best FROM highscores WHERE (platform = 'pc' OR platform IS NULL) GROUP BY username
                ) AS player_bests WHERE best > $1`;
-        const rankResult = await pool.query(rankQuery, platform ? [bestScore, platform] : [bestScore]);
+        } else if (platform === 'mobile') {
+            rankQuery = `SELECT COUNT(*) + 1 as rank FROM (
+                SELECT MAX(score) as best FROM highscores WHERE platform = 'mobile' GROUP BY username
+               ) AS player_bests WHERE best > $1`;
+        }
+        const rankResult = await pool.query(rankQuery, [bestScore]);
 
-        // Get total players with scores (optionally filtered by platform)
-        const totalQuery = platform
-            ? 'SELECT COUNT(DISTINCT user_id) as total FROM highscores WHERE platform = $1'
-            : 'SELECT COUNT(DISTINCT user_id) as total FROM highscores';
-        const totalResult = await pool.query(totalQuery, platform ? [platform] : []);
+        // Get total players with scores (optionally filtered by platform) - treat NULL as 'pc'
+        let totalQuery = 'SELECT COUNT(DISTINCT user_id) as total FROM highscores';
+        if (platform === 'pc') {
+            totalQuery = "SELECT COUNT(DISTINCT user_id) as total FROM highscores WHERE (platform = 'pc' OR platform IS NULL)";
+        } else if (platform === 'mobile') {
+            totalQuery = "SELECT COUNT(DISTINCT user_id) as total FROM highscores WHERE platform = 'mobile'";
+        }
+        const totalResult = await pool.query(totalQuery);
 
         res.json({
             rank: parseInt(rankResult.rows[0].rank),
