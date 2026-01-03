@@ -91,9 +91,15 @@
                 <p class="guest-note">Gast-Punkte erscheinen nicht in der globalen Rangliste</p>
             </div>
 
-            <div id="auth-highscore-table" class="highscore-list">
-                <h3>Globale Top 10</h3>
-                <ol id="auth-highscore-entries"></ol>
+            <div class="highscore-container">
+                <div id="auth-highscore-table-pc" class="highscore-list">
+                    <h3>PC Top 10</h3>
+                    <ol id="auth-highscore-entries-pc"></ol>
+                </div>
+                <div id="auth-highscore-table-mobile" class="highscore-list">
+                    <h3>Mobile Top 10</h3>
+                    <ol id="auth-highscore-entries-mobile"></ol>
+                </div>
             </div>
 
             <div class="credits">
@@ -116,9 +122,15 @@
                 <label for="player-name">Gib deinen Namen ein:</label>
                 <input type="text" id="player-name" maxlength="12" placeholder="Spieler">
             </div>
-            <div id="highscore-table" class="highscore-list">
-                <h3>Globale Top 10</h3>
-                <ol id="highscore-entries"></ol>
+            <div class="highscore-container">
+                <div id="highscore-table-pc" class="highscore-list">
+                    <h3>PC Top 10</h3>
+                    <ol id="highscore-entries-pc"></ol>
+                </div>
+                <div id="highscore-table-mobile" class="highscore-list">
+                    <h3>Mobile Top 10</h3>
+                    <ol id="highscore-entries-mobile"></ol>
+                </div>
             </div>
             <div id="my-rank" class="my-rank"></div>
             <div class="start-buttons">
@@ -166,9 +178,15 @@
             <h1>Du hast gewonnen!</h1>
             <p>Alle Level abgeschlossen!</p>
             <p>Endpunktzahl: <span id="win-score">0</span></p>
-            <div class="highscore-list">
-                <h3>Globale Top 10</h3>
-                <ol id="win-highscore-entries"></ol>
+            <div class="highscore-container">
+                <div class="highscore-list">
+                    <h3>PC Top 10</h3>
+                    <ol id="win-highscore-entries-pc"></ol>
+                </div>
+                <div class="highscore-list">
+                    <h3>Mobile Top 10</h3>
+                    <ol id="win-highscore-entries-mobile"></ol>
+                </div>
             </div>
             <div id="win-rank" class="my-rank"></div>
             <button id="play-again-btn">Nochmal spielen</button>
@@ -176,9 +194,15 @@
         <div id="game-over" class="hidden">
             <h1>Spiel vorbei</h1>
             <p>Endpunktzahl: <span id="final-score">0</span></p>
-            <div class="highscore-list">
-                <h3>Globale Top 10</h3>
-                <ol id="gameover-highscore-entries"></ol>
+            <div class="highscore-container">
+                <div class="highscore-list">
+                    <h3>PC Top 10</h3>
+                    <ol id="gameover-highscore-entries-pc"></ol>
+                </div>
+                <div class="highscore-list">
+                    <h3>Mobile Top 10</h3>
+                    <ol id="gameover-highscore-entries-mobile"></ol>
+                </div>
             </div>
             <div id="gameover-rank" class="my-rank"></div>
             <button id="restart-btn">Nochmal spielen</button>

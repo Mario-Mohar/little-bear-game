@@ -111,10 +111,12 @@ const API = {
             return null;
         }
         try {
-            console.log('Saving highscore:', score, 'level:', levelReached);
+            // Determine platform: mobile or pc
+            const platform = IS_MOBILE ? 'mobile' : 'pc';
+            console.log('Saving highscore:', score, 'level:', levelReached, 'platform:', platform);
             const response = await this.request('/highscores', {
                 method: 'POST',
-                body: JSON.stringify({ score, levelReached })
+                body: JSON.stringify({ score, levelReached, platform })
             });
             if (response.ok) {
                 const result = await response.json();
@@ -128,11 +130,15 @@ const API = {
         return null;
     },
 
-    async getHighscores(limit = 10) {
+    async getHighscores(limit = 10, platform = null) {
         try {
             // Add cache buster to prevent stale data
             const cacheBuster = Date.now();
-            const response = await this.request('/highscores?limit=' + limit + '&_=' + cacheBuster);
+            let url = '/highscores?limit=' + limit + '&_=' + cacheBuster;
+            if (platform) {
+                url += '&platform=' + platform;
+            }
+            const response = await this.request(url);
             if (response.ok) {
                 return await response.json();
             } else {
@@ -142,10 +148,14 @@ const API = {
         return null;
     },
 
-    async getMyRank() {
+    async getMyRank(platform = null) {
         if (this.isGuest || !this.token) return null;
         try {
-            const response = await this.request('/highscores/me');
+            let url = '/highscores/me';
+            if (platform) {
+                url += '?platform=' + platform;
+            }
+            const response = await this.request(url);
             if (response.ok) return await response.json();
         } catch (e) { console.error('Failed to get rank:', e); }
         return null;
@@ -264,23 +274,39 @@ function updateUserInfoDisplay() {
 
 async function loadGlobalHighscores() {
     console.log('Loading global highscores...');
-    const data = await API.getHighscores(10);
-    if (data && data.highscores) {
-        console.log('Highscores loaded:', data.highscores.length, 'entries, top score:', data.highscores[0]?.score);
-        displayHighscores(data.highscores, 'highscore-entries');
-        displayHighscores(data.highscores, 'win-highscore-entries');
-        displayHighscores(data.highscores, 'gameover-highscore-entries');
-        displayHighscores(data.highscores, 'auth-highscore-entries');
-    } else {
-        console.error('Failed to load highscores - no data returned');
+
+    // Load both PC and Mobile highscores in parallel
+    const [pcData, mobileData] = await Promise.all([
+        API.getHighscores(10, 'pc'),
+        API.getHighscores(10, 'mobile')
+    ]);
+
+    // Display PC highscores
+    if (pcData && pcData.highscores) {
+        console.log('PC Highscores loaded:', pcData.highscores.length, 'entries');
+        displayHighscores(pcData.highscores, 'highscore-entries-pc');
+        displayHighscores(pcData.highscores, 'win-highscore-entries-pc');
+        displayHighscores(pcData.highscores, 'gameover-highscore-entries-pc');
+        displayHighscores(pcData.highscores, 'auth-highscore-entries-pc');
     }
 
-    // Show user's rank
+    // Display Mobile highscores
+    if (mobileData && mobileData.highscores) {
+        console.log('Mobile Highscores loaded:', mobileData.highscores.length, 'entries');
+        displayHighscores(mobileData.highscores, 'highscore-entries-mobile');
+        displayHighscores(mobileData.highscores, 'win-highscore-entries-mobile');
+        displayHighscores(mobileData.highscores, 'gameover-highscore-entries-mobile');
+        displayHighscores(mobileData.highscores, 'auth-highscore-entries-mobile');
+    }
+
+    // Show user's rank for current platform
     if (!API.isGuest) {
-        const rankData = await API.getMyRank();
+        const currentPlatform = IS_MOBILE ? 'mobile' : 'pc';
+        const rankData = await API.getMyRank(currentPlatform);
         console.log('User rank data:', rankData);
         if (rankData && rankData.rank) {
-            const rankHtml = `Dein Rang: #${rankData.rank} (${rankData.bestScore} Punkte)`;
+            const platformLabel = currentPlatform === 'mobile' ? 'Mobile' : 'PC';
+            const rankHtml = `Dein ${platformLabel}-Rang: #${rankData.rank} (${rankData.bestScore} Punkte)`;
             ['my-rank', 'win-rank', 'gameover-rank'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.innerHTML = rankHtml;

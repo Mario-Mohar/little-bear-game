@@ -378,14 +378,24 @@ button:active {
     color: #888;
 }
 
+/* Highscore container - two lists side by side */
+.highscore-container {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 8px 0;
+}
+
 /* Highscore list */
 .highscore-list {
     margin: 8px 0;
     padding: 10px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 10px;
-    min-width: 220px;
-    max-width: 300px;
+    min-width: 180px;
+    max-width: 250px;
+    flex: 1;
 }
 
 .highscore-list h3 {
@@ -950,8 +960,12 @@ button:disabled {
     }
 
     .highscore-list {
-        min-width: 180px;
-        max-width: 280px;
+        min-width: 140px;
+        max-width: 200px;
+    }
+
+    .highscore-container {
+        gap: 10px;
     }
 }
 
@@ -993,6 +1007,17 @@ button:disabled {
 
     #ui > div {
         padding: 2px 6px;
+    }
+
+    .highscore-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .highscore-list {
+        min-width: 200px;
+        max-width: 280px;
     }
 }
 
