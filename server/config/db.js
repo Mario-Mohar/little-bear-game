@@ -44,13 +44,30 @@ async function initDatabase() {
                 username VARCHAR(50) NOT NULL,
                 score INTEGER NOT NULL,
                 level_reached INTEGER DEFAULT 1,
+                platform VARCHAR(10) DEFAULT 'pc',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
+        `);
+
+        // Add platform column if it doesn't exist (for existing databases)
+        await client.query(`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                               WHERE table_name = 'highscores' AND column_name = 'platform') THEN
+                    ALTER TABLE highscores ADD COLUMN platform VARCHAR(10) DEFAULT 'pc';
+                END IF;
+            END $$;
         `);
 
         // Create index for faster highscore queries
         await client.query(`
             CREATE INDEX IF NOT EXISTS idx_highscores_score ON highscores(score DESC)
+        `);
+
+        // Create index for platform-filtered queries
+        await client.query(`
+            CREATE INDEX IF NOT EXISTS idx_highscores_platform_score ON highscores(platform, score DESC)
         `);
 
         // Create game_sessions table for statistics

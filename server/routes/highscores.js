@@ -23,6 +23,7 @@ router.post('/',
     authenticateToken,
     body('score').isInt({ min: 0, max: 999999999 }),
     body('levelReached').optional().isInt({ min: 1, max: 15 }),
+    body('platform').optional().isIn(['pc', 'mobile']),
     handleValidation,
     highscoreController.addHighscore
 );

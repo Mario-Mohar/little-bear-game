@@ -3,26 +3,36 @@ const { pool } = require('../config/db');
 async function getHighscores(req, res) {
     const limit = Math.min(parseInt(req.query.limit) || 100, 100);
     const offset = parseInt(req.query.offset) || 0;
+    const platform = req.query.platform; // 'pc', 'mobile', or undefined for all
 
     try {
-        // Only show the highest score per player
+        // Build platform filter
+        const platformFilter = platform ? 'WHERE h.platform = $3' : '';
+        const platformFilterBest = platform ? 'AND b.platform = $3' : '';
+        const params = platform ? [limit, offset, platform] : [limit, offset];
+
+        // Only show the highest score per player (filtered by platform if specified)
         const result = await pool.query(
             `WITH best_scores AS (
-                SELECT h.id, h.username, h.score, h.level_reached, h.created_at, h.user_id,
+                SELECT h.id, h.username, h.score, h.level_reached, h.created_at, h.user_id, h.platform,
                        ROW_NUMBER() OVER (PARTITION BY h.username ORDER BY h.score DESC) as rn
                 FROM highscores h
+                ${platformFilter}
             )
-            SELECT b.id, b.username, b.score, b.level_reached, b.created_at, u.selected_skin
+            SELECT b.id, b.username, b.score, b.level_reached, b.created_at, b.platform, u.selected_skin
             FROM best_scores b
             LEFT JOIN users u ON b.user_id = u.id
             WHERE b.rn = 1
             ORDER BY b.score DESC
             LIMIT $1 OFFSET $2`,
-            [limit, offset]
+            params
         );
 
-        // Get total count of unique players
-        const countResult = await pool.query('SELECT COUNT(DISTINCT username) FROM highscores');
+        // Get total count of unique players (filtered by platform if specified)
+        const countQuery = platform
+            ? 'SELECT COUNT(DISTINCT username) FROM highscores WHERE platform = $1'
+            : 'SELECT COUNT(DISTINCT username) FROM highscores';
+        const countResult = await pool.query(countQuery, platform ? [platform] : []);
         const totalCount = parseInt(countResult.rows[0].count);
 
         res.json({
@@ -32,11 +42,13 @@ async function getHighscores(req, res) {
                 score: row.score,
                 levelReached: row.level_reached,
                 skin: row.selected_skin || 'default',
+                platform: row.platform || 'pc',
                 date: row.created_at
             })),
             total: totalCount,
             limit,
-            offset
+            offset,
+            platform: platform || 'all'
         });
     } catch (error) {
         console.error('Get highscores error:', error);
@@ -80,7 +92,8 @@ async function getUserHighscores(req, res) {
 }
 
 async function addHighscore(req, res) {
-    const { score, levelReached } = req.body;
+    const { score, levelReached, platform } = req.body;
+    const validPlatform = (platform === 'mobile' || platform === 'pc') ? platform : 'pc';
 
     try {
         // Get username
@@ -95,26 +108,26 @@ async function addHighscore(req, res) {
 
         const username = userResult.rows[0].username;
 
-        // Insert highscore
+        // Insert highscore with platform
         const result = await pool.query(
-            `INSERT INTO highscores (user_id, username, score, level_reached)
-             VALUES ($1, $2, $3, $4)
+            `INSERT INTO highscores (user_id, username, score, level_reached, platform)
+             VALUES ($1, $2, $3, $4, $5)
              RETURNING id`,
-            [req.user.id, username, score, levelReached || 1]
+            [req.user.id, username, score, levelReached || 1, validPlatform]
         );
 
-        // Get new rank
+        // Get new rank for this platform
         const rankResult = await pool.query(
             `SELECT COUNT(*) + 1 as rank
              FROM highscores
-             WHERE score > $1`,
-            [score]
+             WHERE score > $1 AND platform = $2`,
+            [score, validPlatform]
         );
 
-        // Check if this is user's new best
+        // Check if this is user's new best on this platform
         const bestResult = await pool.query(
-            `SELECT MAX(score) as best FROM highscores WHERE user_id = $1 AND id != $2`,
-            [req.user.id, result.rows[0].id]
+            `SELECT MAX(score) as best FROM highscores WHERE user_id = $1 AND platform = $2 AND id != $3`,
+            [req.user.id, validPlatform, result.rows[0].id]
         );
 
         const previousBest = bestResult.rows[0].best || 0;
@@ -124,6 +137,7 @@ async function addHighscore(req, res) {
             message: 'Highscore gespeichert',
             id: result.rows[0].id,
             rank: parseInt(rankResult.rows[0].rank),
+            platform: validPlatform,
             isNewBest,
             previousBest
         });
@@ -134,36 +148,42 @@ async function addHighscore(req, res) {
 }
 
 async function getMyRank(req, res) {
+    const platform = req.query.platform; // 'pc', 'mobile', or undefined for all
+
     try {
-        // Get user's best score
-        const bestResult = await pool.query(
-            'SELECT MAX(score) as best_score FROM highscores WHERE user_id = $1',
-            [req.user.id]
-        );
+        // Get user's best score (optionally filtered by platform)
+        const bestQuery = platform
+            ? 'SELECT MAX(score) as best_score FROM highscores WHERE user_id = $1 AND platform = $2'
+            : 'SELECT MAX(score) as best_score FROM highscores WHERE user_id = $1';
+        const bestResult = await pool.query(bestQuery, platform ? [req.user.id, platform] : [req.user.id]);
 
         const bestScore = bestResult.rows[0].best_score;
 
         if (!bestScore) {
-            return res.json({ rank: null, bestScore: 0, message: 'Noch keine Punkte' });
+            return res.json({ rank: null, bestScore: 0, platform: platform || 'all', message: 'Noch keine Punkte' });
         }
 
-        // Get rank based on unique players' best scores
-        const rankResult = await pool.query(
-            `SELECT COUNT(*) + 1 as rank FROM (
+        // Get rank based on unique players' best scores (optionally filtered by platform)
+        const rankQuery = platform
+            ? `SELECT COUNT(*) + 1 as rank FROM (
+                SELECT MAX(score) as best FROM highscores WHERE platform = $2 GROUP BY username
+               ) AS player_bests WHERE best > $1`
+            : `SELECT COUNT(*) + 1 as rank FROM (
                 SELECT MAX(score) as best FROM highscores GROUP BY username
-            ) AS player_bests WHERE best > $1`,
-            [bestScore]
-        );
+               ) AS player_bests WHERE best > $1`;
+        const rankResult = await pool.query(rankQuery, platform ? [bestScore, platform] : [bestScore]);
 
-        // Get total players with scores
-        const totalResult = await pool.query(
-            'SELECT COUNT(DISTINCT user_id) as total FROM highscores'
-        );
+        // Get total players with scores (optionally filtered by platform)
+        const totalQuery = platform
+            ? 'SELECT COUNT(DISTINCT user_id) as total FROM highscores WHERE platform = $1'
+            : 'SELECT COUNT(DISTINCT user_id) as total FROM highscores';
+        const totalResult = await pool.query(totalQuery, platform ? [platform] : []);
 
         res.json({
             rank: parseInt(rankResult.rows[0].rank),
             bestScore,
-            totalPlayers: parseInt(totalResult.rows[0].total)
+            totalPlayers: parseInt(totalResult.rows[0].total),
+            platform: platform || 'all'
         });
     } catch (error) {
         console.error('Get my rank error:', error);
