@@ -462,12 +462,40 @@
 
             <div class="shop-tabs">
                 <button class="shop-tab active" data-tab="skins">Skins</button>
+                <button class="shop-tab" data-tab="accessories">Accessoires</button>
                 <button class="shop-tab" data-tab="upgrades">Verbesserungen</button>
             </div>
 
             <div class="shop-content">
                 <div id="skins-tab" class="tab-content active">
                     <div id="skins-grid" class="shop-grid"></div>
+                </div>
+                <div id="accessories-tab" class="tab-content">
+                    <div class="accessories-filters">
+                        <button class="acc-filter active" data-type="all">Alle</button>
+                        <button class="acc-filter" data-type="hat">Hüte</button>
+                        <button class="acc-filter" data-type="glasses">Brillen</button>
+                        <button class="acc-filter" data-type="cape">Capes</button>
+                        <button class="acc-filter" data-type="special">Spezial</button>
+                    </div>
+                    <div class="equipped-accessories">
+                        <h3>Ausgerüstet</h3>
+                        <div class="equipped-slots">
+                            <div class="equipped-slot" data-slot="hat">
+                                <span class="slot-label">Hut</span>
+                                <span class="slot-item" id="equipped-hat">-</span>
+                            </div>
+                            <div class="equipped-slot" data-slot="glasses">
+                                <span class="slot-label">Brille</span>
+                                <span class="slot-item" id="equipped-glasses">-</span>
+                            </div>
+                            <div class="equipped-slot" data-slot="cape">
+                                <span class="slot-label">Cape</span>
+                                <span class="slot-item" id="equipped-cape">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="accessories-grid" class="shop-grid accessories-grid"></div>
                 </div>
                 <div id="upgrades-tab" class="tab-content">
                     <div id="upgrades-grid" class="shop-grid"></div>
