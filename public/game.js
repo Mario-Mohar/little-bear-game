@@ -2203,6 +2203,38 @@ const SHOP = {
         { id: 'extra_life_2', name: '+2 Startleben', price: 250, type: 'extraLife', value: 2, maxOwned: 1, requires: 'extra_life_1' },
         { id: 'coin_magnet', name: 'Münzmagnet', price: 200, type: 'coinMagnet', description: 'Münzen werden angezogen' },
         { id: 'double_coins', name: 'Doppelte Münzen', price: 300, type: 'doubleCoins', description: '2x Münzen aus Leveln' }
+    ],
+    accessories: [
+        // Hüte
+        { id: 'hat_crown', name: 'Krone', price: 200, type: 'hat', icon: '👑', description: 'Fühle dich wie ein König!' },
+        { id: 'hat_wizard', name: 'Zauberhut', price: 150, type: 'hat', icon: '🎩', description: 'Magische Kräfte!' },
+        { id: 'hat_party', name: 'Partyhut', price: 75, type: 'hat', icon: '🎉', description: 'Party-Time!' },
+        { id: 'hat_cap', name: 'Baseball-Cap', price: 50, type: 'hat', icon: '🧢', description: 'Cool und lässig' },
+        { id: 'hat_cowboy', name: 'Cowboyhut', price: 125, type: 'hat', icon: '🤠', description: 'Yeehaw!' },
+        { id: 'hat_pirate', name: 'Piratenhut', price: 175, type: 'hat', icon: '🏴‍☠️', description: 'Arrr, Matrose!' },
+        { id: 'hat_chef', name: 'Kochmütze', price: 100, type: 'hat', icon: '👨‍🍳', description: 'Meisterkoch' },
+        { id: 'hat_viking', name: 'Wikingerhelm', price: 200, type: 'hat', icon: '⚔️', description: 'Für Valhalla!' },
+        // Brillen
+        { id: 'glasses_cool', name: 'Sonnenbrille', price: 80, type: 'glasses', icon: '😎', description: 'Super cool!' },
+        { id: 'glasses_nerd', name: 'Nerd-Brille', price: 60, type: 'glasses', icon: '🤓', description: 'Intelligent aussehen' },
+        { id: 'glasses_star', name: 'Star-Brille', price: 120, type: 'glasses', icon: '⭐', description: 'Superstar!' },
+        { id: 'glasses_heart', name: 'Herz-Brille', price: 90, type: 'glasses', icon: '💕', description: 'Voller Liebe' },
+        { id: 'glasses_3d', name: '3D-Brille', price: 70, type: 'glasses', icon: '🎬', description: 'Kino-Feeling' },
+        { id: 'glasses_monocle', name: 'Monokel', price: 150, type: 'glasses', icon: '🧐', description: 'Sehr distinguiert' },
+        // Capes
+        { id: 'cape_hero', name: 'Helden-Cape', price: 175, type: 'cape', icon: '🦸', description: 'Superhelden-Power!' },
+        { id: 'cape_royal', name: 'Königsmantel', price: 250, type: 'cape', icon: '👑', description: 'Majestätisch!' },
+        { id: 'cape_wizard', name: 'Zauberumhang', price: 200, type: 'cape', icon: '✨', description: 'Mystische Kräfte' },
+        { id: 'cape_rainbow', name: 'Regenbogen-Cape', price: 150, type: 'cape', icon: '🌈', description: 'Farbenfroh!' },
+        { id: 'cape_fire', name: 'Feuer-Cape', price: 225, type: 'cape', icon: '🔥', description: 'Heiß, heiß, heiß!' },
+        { id: 'cape_ice', name: 'Eis-Cape', price: 225, type: 'cape', icon: '❄️', description: 'Eiskalt!' },
+        { id: 'cape_invisible', name: 'Unsichtbarkeits-Umhang', price: 300, type: 'cape', icon: '👻', description: 'Fast unsichtbar...' },
+        // Spezial
+        { id: 'acc_wings', name: 'Engelsflügel', price: 350, type: 'special', icon: '👼', description: 'Himmlisch!' },
+        { id: 'acc_halo', name: 'Heiligenschein', price: 200, type: 'special', icon: '😇', description: 'Heilig!' },
+        { id: 'acc_devil_horns', name: 'Teufelshörner', price: 175, type: 'special', icon: '😈', description: 'Ein kleiner Teufel' },
+        { id: 'acc_bow', name: 'Schleife', price: 75, type: 'special', icon: '🎀', description: 'Süß und niedlich' },
+        { id: 'acc_scarf', name: 'Schal', price: 100, type: 'special', icon: '🧣', description: 'Warm und gemütlich' }
     ]
 };
 
@@ -2226,7 +2258,11 @@ function loadUserProfile(playerName) {
             totalCoins: 0,
             ownedSkins: ['default'],
             ownedUpgrades: [],
+            ownedAccessories: [],
             selectedSkin: 'default',
+            selectedHat: null,
+            selectedGlasses: null,
+            selectedCape: null,
             extraLives: 0
         };
 
@@ -2235,6 +2271,12 @@ function loadUserProfile(playerName) {
             game.userProfile.totalCoins = 7000;
         }
     }
+
+    // Ensure accessory arrays exist for old profiles
+    if (!game.userProfile.ownedAccessories) game.userProfile.ownedAccessories = [];
+    if (game.userProfile.selectedHat === undefined) game.userProfile.selectedHat = null;
+    if (game.userProfile.selectedGlasses === undefined) game.userProfile.selectedGlasses = null;
+    if (game.userProfile.selectedCape === undefined) game.userProfile.selectedCape = null;
 
     game.userProfile.name = playerName || 'Player';
     game.playerName = game.userProfile.name;
@@ -2278,7 +2320,12 @@ function addCoinsToProfile(amount, level) {
 
 // Buy item from shop
 async function buyShopItem(type, itemId) {
-    const items = type === 'skins' ? SHOP.skins : SHOP.upgrades;
+    let items;
+    if (type === 'skins') items = SHOP.skins;
+    else if (type === 'upgrades') items = SHOP.upgrades;
+    else if (type === 'accessories') items = SHOP.accessories;
+    else return { success: false, message: 'Ungültiger Typ' };
+
     const item = items.find(i => i.id === itemId);
 
     if (!item) return { success: false, message: 'Artikel nicht gefunden' };
@@ -2288,6 +2335,9 @@ async function buyShopItem(type, itemId) {
         return { success: false, message: 'Bereits gekauft' };
     }
     if (type === 'upgrades' && game.userProfile.ownedUpgrades.includes(itemId)) {
+        return { success: false, message: 'Bereits gekauft' };
+    }
+    if (type === 'accessories' && game.userProfile.ownedAccessories.includes(itemId)) {
         return { success: false, message: 'Bereits gekauft' };
     }
 
@@ -2309,6 +2359,7 @@ async function buyShopItem(type, itemId) {
             game.userProfile.totalCoins = result.data.totalCoins;
             game.userProfile.ownedSkins = ['default', ...(result.data.purchasedSkins || [])];
             game.userProfile.ownedUpgrades = result.data.purchasedUpgrades || [];
+            game.userProfile.ownedAccessories = result.data.purchasedAccessories || [];
             game.userProfile.extraLives = calculateExtraLives(game.userProfile.ownedUpgrades);
             return { success: true, message: 'Kauf erfolgreich!' };
         } else {
@@ -2321,12 +2372,14 @@ async function buyShopItem(type, itemId) {
 
     if (type === 'skins') {
         game.userProfile.ownedSkins.push(itemId);
-    } else {
+    } else if (type === 'upgrades') {
         game.userProfile.ownedUpgrades.push(itemId);
         // Apply upgrade effects
         if (item.type === 'extraLife') {
             game.userProfile.extraLives += item.value;
         }
+    } else if (type === 'accessories') {
+        game.userProfile.ownedAccessories.push(itemId);
     }
 
     saveUserProfile();
@@ -2851,6 +2904,438 @@ class Player {
         ctx.fillStyle = faceColor;
         ctx.beginPath();
         ctx.ellipse(screenX + this.width / 2, this.y + this.height - 15, 10, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw accessories
+        this.drawAccessories(ctx, screenX);
+    }
+
+    drawAccessories(ctx, screenX) {
+        const profile = game.userProfile;
+
+        // Cape (draw behind the bear, so drawn first but will appear behind)
+        if (profile.selectedCape) {
+            this.drawCape(ctx, screenX, profile.selectedCape);
+        }
+
+        // Hat
+        if (profile.selectedHat) {
+            this.drawHat(ctx, screenX, profile.selectedHat);
+        }
+
+        // Glasses
+        if (profile.selectedGlasses) {
+            this.drawGlasses(ctx, screenX, profile.selectedGlasses);
+        }
+    }
+
+    drawHat(ctx, screenX, hatId) {
+        const centerX = screenX + this.width / 2;
+        const topY = this.y - 5;
+
+        ctx.save();
+        switch(hatId) {
+            case 'hat_crown':
+                // Krone
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.moveTo(centerX - 15, topY + 5);
+                ctx.lineTo(centerX - 12, topY - 8);
+                ctx.lineTo(centerX - 6, topY);
+                ctx.lineTo(centerX, topY - 12);
+                ctx.lineTo(centerX + 6, topY);
+                ctx.lineTo(centerX + 12, topY - 8);
+                ctx.lineTo(centerX + 15, topY + 5);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#FF0000';
+                ctx.beginPath();
+                ctx.arc(centerX, topY - 6, 3, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+
+            case 'hat_wizard':
+                // Zauberhut
+                ctx.fillStyle = '#4B0082';
+                ctx.beginPath();
+                ctx.moveTo(centerX, topY - 25);
+                ctx.lineTo(centerX - 18, topY + 5);
+                ctx.lineTo(centerX + 18, topY + 5);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(centerX - 5, topY - 10, 3, 0, Math.PI * 2);
+                ctx.arc(centerX + 7, topY - 5, 2, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+
+            case 'hat_party':
+                // Partyhut
+                ctx.fillStyle = '#FF1493';
+                ctx.beginPath();
+                ctx.moveTo(centerX, topY - 20);
+                ctx.lineTo(centerX - 12, topY + 5);
+                ctx.lineTo(centerX + 12, topY + 5);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(centerX, topY - 20, 4, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+
+            case 'hat_cap':
+                // Baseball-Cap
+                ctx.fillStyle = '#E74C3C';
+                ctx.beginPath();
+                ctx.arc(centerX, topY + 3, 14, Math.PI, 0);
+                ctx.fill();
+                ctx.fillStyle = '#C0392B';
+                ctx.fillRect(centerX - 5, topY - 8, 10, 10);
+                // Schirm
+                const schirmDir = this.facingRight ? 1 : -1;
+                ctx.fillStyle = '#E74C3C';
+                ctx.beginPath();
+                ctx.ellipse(centerX + (12 * schirmDir), topY + 5, 12, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+
+            case 'hat_cowboy':
+                // Cowboyhut
+                ctx.fillStyle = '#8B4513';
+                ctx.beginPath();
+                ctx.ellipse(centerX, topY + 5, 22, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#A0522D';
+                ctx.beginPath();
+                ctx.arc(centerX, topY, 12, Math.PI, 0);
+                ctx.fill();
+                ctx.fillRect(centerX - 10, topY - 8, 20, 8);
+                break;
+
+            case 'hat_pirate':
+                // Piratenhut
+                ctx.fillStyle = '#1a1a1a';
+                ctx.beginPath();
+                ctx.moveTo(centerX - 18, topY + 5);
+                ctx.quadraticCurveTo(centerX - 20, topY - 10, centerX, topY - 15);
+                ctx.quadraticCurveTo(centerX + 20, topY - 10, centerX + 18, topY + 5);
+                ctx.closePath();
+                ctx.fill();
+                // Totenkopf
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(centerX, topY - 5, 5, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+
+            case 'hat_chef':
+                // Kochmütze
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(centerX - 8, topY - 8, 10, 0, Math.PI * 2);
+                ctx.arc(centerX + 8, topY - 8, 10, 0, Math.PI * 2);
+                ctx.arc(centerX, topY - 12, 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillRect(centerX - 12, topY - 2, 24, 8);
+                break;
+
+            case 'hat_viking':
+                // Wikingerhelm
+                ctx.fillStyle = '#808080';
+                ctx.beginPath();
+                ctx.arc(centerX, topY + 2, 14, Math.PI, 0);
+                ctx.fill();
+                // Hörner
+                ctx.fillStyle = '#F5DEB3';
+                ctx.beginPath();
+                ctx.moveTo(centerX - 14, topY);
+                ctx.quadraticCurveTo(centerX - 25, topY - 15, centerX - 20, topY - 25);
+                ctx.lineTo(centerX - 16, topY - 20);
+                ctx.quadraticCurveTo(centerX - 18, topY - 10, centerX - 12, topY);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(centerX + 14, topY);
+                ctx.quadraticCurveTo(centerX + 25, topY - 15, centerX + 20, topY - 25);
+                ctx.lineTo(centerX + 16, topY - 20);
+                ctx.quadraticCurveTo(centerX + 18, topY - 10, centerX + 12, topY);
+                ctx.fill();
+                break;
+
+            // Spezial-Accessoires die als "Hut" getragen werden
+            case 'acc_halo':
+                // Heiligenschein
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.ellipse(centerX, topY - 10, 15, 5, 0, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.strokeStyle = '#FFF8DC';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                break;
+
+            case 'acc_devil_horns':
+                // Teufelshörner
+                ctx.fillStyle = '#8B0000';
+                ctx.beginPath();
+                ctx.moveTo(centerX - 12, topY + 5);
+                ctx.quadraticCurveTo(centerX - 18, topY - 15, centerX - 8, topY - 12);
+                ctx.lineTo(centerX - 10, topY + 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(centerX + 12, topY + 5);
+                ctx.quadraticCurveTo(centerX + 18, topY - 15, centerX + 8, topY - 12);
+                ctx.lineTo(centerX + 10, topY + 2);
+                ctx.fill();
+                break;
+
+            case 'acc_bow':
+                // Schleife
+                ctx.fillStyle = '#FF69B4';
+                ctx.beginPath();
+                ctx.ellipse(centerX - 8, topY, 8, 5, -0.3, 0, Math.PI * 2);
+                ctx.ellipse(centerX + 8, topY, 8, 5, 0.3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#FF1493';
+                ctx.beginPath();
+                ctx.arc(centerX, topY, 4, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+        }
+        ctx.restore();
+    }
+
+    drawGlasses(ctx, screenX, glassesId) {
+        const centerX = screenX + this.width / 2;
+        const eyeY = this.y + 18;
+        const eyeOffsetX = this.facingRight ? 2 : -2;
+
+        ctx.save();
+        switch(glassesId) {
+            case 'glasses_cool':
+                // Sonnenbrille
+                ctx.fillStyle = '#1a1a1a';
+                ctx.fillRect(centerX - 18 + eyeOffsetX, eyeY - 5, 14, 10);
+                ctx.fillRect(centerX + 4 + eyeOffsetX, eyeY - 5, 14, 10);
+                ctx.strokeStyle = '#1a1a1a';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(centerX - 4 + eyeOffsetX, eyeY);
+                ctx.lineTo(centerX + 4 + eyeOffsetX, eyeY);
+                ctx.stroke();
+                break;
+
+            case 'glasses_nerd':
+                // Nerd-Brille
+                ctx.strokeStyle = '#1a1a1a';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(centerX - 10 + eyeOffsetX, eyeY, 8, 0, Math.PI * 2);
+                ctx.arc(centerX + 10 + eyeOffsetX, eyeY, 8, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(centerX - 2 + eyeOffsetX, eyeY);
+                ctx.lineTo(centerX + 2 + eyeOffsetX, eyeY);
+                ctx.stroke();
+                break;
+
+            case 'glasses_star':
+                // Star-Brille
+                ctx.fillStyle = '#FFD700';
+                this.drawStar(ctx, centerX - 10 + eyeOffsetX, eyeY, 8, 5);
+                this.drawStar(ctx, centerX + 10 + eyeOffsetX, eyeY, 8, 5);
+                break;
+
+            case 'glasses_heart':
+                // Herz-Brille
+                ctx.fillStyle = '#FF69B4';
+                this.drawHeart(ctx, centerX - 10 + eyeOffsetX, eyeY, 10);
+                this.drawHeart(ctx, centerX + 10 + eyeOffsetX, eyeY, 10);
+                break;
+
+            case 'glasses_3d':
+                // 3D-Brille
+                ctx.fillStyle = '#FF0000';
+                ctx.fillRect(centerX - 18 + eyeOffsetX, eyeY - 5, 12, 10);
+                ctx.fillStyle = '#00BFFF';
+                ctx.fillRect(centerX + 6 + eyeOffsetX, eyeY - 5, 12, 10);
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(centerX - 18 + eyeOffsetX, eyeY - 5, 12, 10);
+                ctx.strokeRect(centerX + 6 + eyeOffsetX, eyeY - 5, 12, 10);
+                break;
+
+            case 'glasses_monocle':
+                // Monokel
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 2;
+                const monocleX = this.facingRight ? centerX + 10 : centerX - 10;
+                ctx.beginPath();
+                ctx.arc(monocleX + eyeOffsetX, eyeY, 8, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(monocleX + eyeOffsetX, eyeY + 8);
+                ctx.lineTo(monocleX + eyeOffsetX - 5, this.y + 45);
+                ctx.stroke();
+                break;
+        }
+        ctx.restore();
+    }
+
+    drawCape(ctx, screenX, capeId) {
+        const capeX = this.facingRight ? screenX - 5 : screenX + this.width - 15;
+        const capeY = this.y + 15;
+        const waveOffset = Math.sin(Date.now() / 200) * 3;
+
+        ctx.save();
+        let colors;
+        switch(capeId) {
+            case 'cape_hero':
+                colors = ['#E74C3C', '#C0392B'];
+                break;
+            case 'cape_royal':
+                colors = ['#9B59B6', '#8E44AD'];
+                break;
+            case 'cape_wizard':
+                colors = ['#3498DB', '#2980B9'];
+                break;
+            case 'cape_rainbow':
+                colors = ['#E74C3C', '#F39C12', '#2ECC71', '#3498DB', '#9B59B6'];
+                break;
+            case 'cape_fire':
+                colors = ['#E74C3C', '#F39C12', '#F1C40F'];
+                break;
+            case 'cape_ice':
+                colors = ['#3498DB', '#5DADE2', '#AED6F1'];
+                break;
+            case 'cape_invisible':
+                ctx.globalAlpha = 0.3;
+                colors = ['#ECF0F1', '#BDC3C7'];
+                break;
+            case 'acc_wings':
+                // Engelsflügel - spezielle Zeichnung
+                this.drawWings(ctx, screenX);
+                ctx.restore();
+                return;
+            case 'acc_scarf':
+                // Schal
+                this.drawScarf(ctx, screenX);
+                ctx.restore();
+                return;
+            default:
+                colors = ['#E74C3C', '#C0392B'];
+        }
+
+        // Cape zeichnen
+        const gradient = ctx.createLinearGradient(capeX, capeY, capeX, capeY + 35);
+        if (colors.length > 2) {
+            colors.forEach((color, i) => {
+                gradient.addColorStop(i / (colors.length - 1), color);
+            });
+        } else {
+            gradient.addColorStop(0, colors[0]);
+            gradient.addColorStop(1, colors[1]);
+        }
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        if (this.facingRight) {
+            ctx.moveTo(capeX + 20, capeY);
+            ctx.quadraticCurveTo(capeX + 5 + waveOffset, capeY + 20, capeX + waveOffset, capeY + 35);
+            ctx.lineTo(capeX + 15 + waveOffset, capeY + 35);
+            ctx.quadraticCurveTo(capeX + 15, capeY + 15, capeX + 20, capeY);
+        } else {
+            ctx.moveTo(capeX, capeY);
+            ctx.quadraticCurveTo(capeX + 15 - waveOffset, capeY + 20, capeX + 20 - waveOffset, capeY + 35);
+            ctx.lineTo(capeX + 5 - waveOffset, capeY + 35);
+            ctx.quadraticCurveTo(capeX + 5, capeY + 15, capeX, capeY);
+        }
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    drawWings(ctx, screenX) {
+        const centerX = screenX + this.width / 2;
+        const wingY = this.y + 20;
+        const flapOffset = Math.sin(Date.now() / 150) * 5;
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.globalAlpha = 0.9;
+
+        // Linker Flügel
+        ctx.beginPath();
+        ctx.moveTo(centerX - 5, wingY);
+        ctx.quadraticCurveTo(centerX - 30 - flapOffset, wingY - 15, centerX - 35 - flapOffset, wingY + 5);
+        ctx.quadraticCurveTo(centerX - 25, wingY + 20, centerX - 5, wingY + 15);
+        ctx.closePath();
+        ctx.fill();
+
+        // Rechter Flügel
+        ctx.beginPath();
+        ctx.moveTo(centerX + 5 + this.width - 20, wingY);
+        ctx.quadraticCurveTo(centerX + 30 + flapOffset + this.width - 20, wingY - 15, centerX + 35 + flapOffset + this.width - 20, wingY + 5);
+        ctx.quadraticCurveTo(centerX + 25 + this.width - 20, wingY + 20, centerX + 5 + this.width - 20, wingY + 15);
+        ctx.closePath();
+        ctx.fill();
+
+        // Federn Details
+        ctx.strokeStyle = '#E8E8E8';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+
+    drawScarf(ctx, screenX) {
+        const centerX = screenX + this.width / 2;
+        const scarfY = this.y + 35;
+        const waveOffset = Math.sin(Date.now() / 300) * 2;
+
+        ctx.fillStyle = '#E74C3C';
+        // Schal um den Hals
+        ctx.beginPath();
+        ctx.ellipse(centerX, scarfY, 15, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hängendes Ende
+        ctx.fillStyle = '#C0392B';
+        ctx.beginPath();
+        ctx.moveTo(centerX + 8, scarfY + 3);
+        ctx.quadraticCurveTo(centerX + 15 + waveOffset, scarfY + 15, centerX + 10 + waveOffset, scarfY + 25);
+        ctx.lineTo(centerX + 5 + waveOffset, scarfY + 25);
+        ctx.quadraticCurveTo(centerX + 10, scarfY + 12, centerX + 5, scarfY + 3);
+        ctx.closePath();
+        ctx.fill();
+
+        // Streifen
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(centerX + 6 + waveOffset * 0.5, scarfY + 10, 6, 3);
+        ctx.fillRect(centerX + 5 + waveOffset * 0.8, scarfY + 18, 6, 3);
+    }
+
+    drawStar(ctx, x, y, radius, points) {
+        ctx.beginPath();
+        for (let i = 0; i < points * 2; i++) {
+            const r = i % 2 === 0 ? radius : radius / 2;
+            const angle = (i * Math.PI) / points - Math.PI / 2;
+            const px = x + r * Math.cos(angle);
+            const py = y + r * Math.sin(angle);
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    drawHeart(ctx, x, y, size) {
+        ctx.beginPath();
+        ctx.moveTo(x, y + size / 4);
+        ctx.bezierCurveTo(x, y, x - size / 2, y, x - size / 2, y + size / 4);
+        ctx.bezierCurveTo(x - size / 2, y + size / 2, x, y + size * 0.7, x, y + size * 0.7);
+        ctx.bezierCurveTo(x, y + size * 0.7, x + size / 2, y + size / 2, x + size / 2, y + size / 4);
+        ctx.bezierCurveTo(x + size / 2, y, x, y, x, y + size / 4);
         ctx.fill();
     }
 }
@@ -7348,6 +7833,8 @@ function gameLoop(timestamp) {
 function renderShop() {
     renderSkinsShop();
     renderUpgradesShop();
+    renderAccessoriesShop();
+    updateEquippedAccessories();
     updateCoinsDisplay();
 }
 
@@ -7435,6 +7922,178 @@ function renderUpgradesShop() {
             });
         }
     });
+}
+
+// Aktueller Filter für Accessoires
+let currentAccessoryFilter = 'all';
+
+function renderAccessoriesShop(filterType = currentAccessoryFilter) {
+    currentAccessoryFilter = filterType;
+    const grid = document.getElementById('accessories-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    // Filtere Accessoires nach Typ
+    let accessories = SHOP.accessories;
+    if (filterType !== 'all') {
+        accessories = accessories.filter(acc => acc.type === filterType);
+    }
+
+    accessories.forEach(acc => {
+        const owned = game.userProfile.ownedAccessories.includes(acc.id);
+        const equipped = isAccessoryEquipped(acc.id, acc.type);
+
+        const item = document.createElement('div');
+        item.className = `accessory-item ${owned ? 'owned' : ''} ${equipped ? 'equipped' : ''}`;
+
+        const typeLabels = { hat: 'Hut', glasses: 'Brille', cape: 'Cape', special: 'Spezial' };
+
+        item.innerHTML = `
+            <span class="accessory-icon">${acc.icon}</span>
+            <div class="accessory-name">${acc.name}</div>
+            <div class="accessory-type">${typeLabels[acc.type] || acc.type}</div>
+            <div class="accessory-description">${acc.description}</div>
+            <div class="accessory-price">${owned ? (equipped ? 'Ausgerüstet' : 'Gekauft') : acc.price + ' Münzen'}</div>
+            ${owned
+                ? `<button class="equip-btn ${equipped ? 'equipped' : ''}" data-id="${acc.id}" data-type="${acc.type}">${equipped ? 'Ablegen' : 'Ausrüsten'}</button>`
+                : `<button class="buy-btn" data-type="accessories" data-id="${acc.id}" ${game.userProfile.totalCoins < acc.price ? 'disabled' : ''}>Kaufen</button>`
+            }
+        `;
+
+        grid.appendChild(item);
+    });
+
+    // Event Listener für Ausrüsten-Buttons
+    grid.querySelectorAll('.equip-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const accId = btn.dataset.id;
+            const accType = btn.dataset.type;
+            const isEquipped = isAccessoryEquipped(accId, accType);
+
+            if (isEquipped) {
+                await unequipAccessory(accType);
+            } else {
+                await equipAccessory(accId, accType);
+            }
+            renderAccessoriesShop();
+            updateEquippedAccessories();
+        });
+    });
+
+    // Event Listener für Kauf-Buttons
+    grid.querySelectorAll('.buy-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const result = await buyShopItem(btn.dataset.type, btn.dataset.id);
+            if (result.success) {
+                // Automatisch ausrüsten nach Kauf
+                const acc = SHOP.accessories.find(a => a.id === btn.dataset.id);
+                if (acc) {
+                    await equipAccessory(acc.id, acc.type);
+                }
+                updateCoinsDisplay();
+                renderAccessoriesShop();
+                updateEquippedAccessories();
+            } else {
+                alert(result.message);
+            }
+        });
+    });
+
+    // Filter-Buttons aktivieren
+    document.querySelectorAll('.acc-filter').forEach(filterBtn => {
+        filterBtn.classList.toggle('active', filterBtn.dataset.type === filterType);
+    });
+}
+
+function isAccessoryEquipped(accId, accType) {
+    if (accType === 'hat' || accType === 'special') {
+        return game.userProfile.selectedHat === accId;
+    } else if (accType === 'glasses') {
+        return game.userProfile.selectedGlasses === accId;
+    } else if (accType === 'cape') {
+        return game.userProfile.selectedCape === accId;
+    }
+    return false;
+}
+
+async function equipAccessory(accId, accType) {
+    // Lokal setzen
+    if (accType === 'hat' || accType === 'special') {
+        game.userProfile.selectedHat = accId;
+    } else if (accType === 'glasses') {
+        game.userProfile.selectedGlasses = accId;
+    } else if (accType === 'cape') {
+        game.userProfile.selectedCape = accId;
+    }
+    saveUserProfile();
+
+    // Zum Server senden wenn eingeloggt
+    if (!API.isGuest && API.token) {
+        try {
+            await fetch('/api/users/equip-accessory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API.token}`
+                },
+                body: JSON.stringify({ accessoryId: accId, slot: accType })
+            });
+        } catch (e) {
+            console.error('Error equipping accessory:', e);
+        }
+    }
+}
+
+async function unequipAccessory(accType) {
+    // Lokal entfernen
+    if (accType === 'hat' || accType === 'special') {
+        game.userProfile.selectedHat = null;
+    } else if (accType === 'glasses') {
+        game.userProfile.selectedGlasses = null;
+    } else if (accType === 'cape') {
+        game.userProfile.selectedCape = null;
+    }
+    saveUserProfile();
+
+    // Zum Server senden wenn eingeloggt
+    if (!API.isGuest && API.token) {
+        try {
+            await fetch('/api/users/equip-accessory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API.token}`
+                },
+                body: JSON.stringify({ accessoryId: null, slot: accType })
+            });
+        } catch (e) {
+            console.error('Error unequipping accessory:', e);
+        }
+    }
+}
+
+function updateEquippedAccessories() {
+    const hatSlot = document.getElementById('equipped-hat');
+    const glassesSlot = document.getElementById('equipped-glasses');
+    const capeSlot = document.getElementById('equipped-cape');
+
+    if (hatSlot) {
+        const hat = SHOP.accessories.find(a => a.id === game.userProfile.selectedHat);
+        hatSlot.textContent = hat ? hat.icon : '-';
+        hatSlot.parentElement.classList.toggle('has-item', !!hat);
+    }
+
+    if (glassesSlot) {
+        const glasses = SHOP.accessories.find(a => a.id === game.userProfile.selectedGlasses);
+        glassesSlot.textContent = glasses ? glasses.icon : '-';
+        glassesSlot.parentElement.classList.toggle('has-item', !!glasses);
+    }
+
+    if (capeSlot) {
+        const cape = SHOP.accessories.find(a => a.id === game.userProfile.selectedCape);
+        capeSlot.textContent = cape ? cape.icon : '-';
+        capeSlot.parentElement.classList.toggle('has-item', !!cape);
+    }
 }
 
 function updateCoinsDisplay() {
@@ -9237,6 +9896,25 @@ async function init() {
             document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
         });
     });
+
+    // Accessory filter buttons
+    document.querySelectorAll('.acc-filter').forEach(filter => {
+        filter.addEventListener('click', () => {
+            renderAccessoriesShop(filter.dataset.type);
+        });
+    });
+
+    // Equipped slot click to unequip
+    document.querySelectorAll('.equipped-slot').forEach(slot => {
+        slot.addEventListener('click', async () => {
+            const slotType = slot.dataset.slot;
+            if (slotType) {
+                await unequipAccessory(slotType);
+                renderAccessoriesShop();
+                updateEquippedAccessories();
+            }
+        });
+    });
 }
 
 function calculateExtraLives(upgrades) {
@@ -9265,7 +9943,11 @@ function setupAuthHandlers() {
                 totalCoins: result.data.user.totalCoins,
                 ownedSkins: ['default', ...(result.data.user.purchasedSkins || [])],
                 ownedUpgrades: result.data.user.purchasedUpgrades || [],
+                ownedAccessories: result.data.user.purchasedAccessories || [],
                 selectedSkin: result.data.user.selectedSkin || 'default',
+                selectedHat: result.data.user.selectedHat || null,
+                selectedGlasses: result.data.user.selectedGlasses || null,
+                selectedCape: result.data.user.selectedCape || null,
                 extraLives: calculateExtraLives(result.data.user.purchasedUpgrades || [])
             };
             game.playerName = result.data.user.username;
@@ -9304,7 +9986,11 @@ function setupAuthHandlers() {
                 totalCoins: result.data.user.totalCoins,
                 ownedSkins: ['default'],
                 ownedUpgrades: [],
+                ownedAccessories: [],
                 selectedSkin: 'default',
+                selectedHat: null,
+                selectedGlasses: null,
+                selectedCape: null,
                 extraLives: 0
             };
             game.playerName = result.data.user.username;

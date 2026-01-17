@@ -195,6 +195,22 @@ async function initDatabase() {
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'privacy_allow_requests') THEN
                     ALTER TABLE users ADD COLUMN privacy_allow_requests BOOLEAN DEFAULT TRUE;
                 END IF;
+                -- Accessories: Purchased accessories array
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'purchased_accessories') THEN
+                    ALTER TABLE users ADD COLUMN purchased_accessories TEXT[] DEFAULT '{}';
+                END IF;
+                -- Accessories: Selected hat
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'selected_hat') THEN
+                    ALTER TABLE users ADD COLUMN selected_hat VARCHAR(50) DEFAULT NULL;
+                END IF;
+                -- Accessories: Selected glasses
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'selected_glasses') THEN
+                    ALTER TABLE users ADD COLUMN selected_glasses VARCHAR(50) DEFAULT NULL;
+                END IF;
+                -- Accessories: Selected cape
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'selected_cape') THEN
+                    ALTER TABLE users ADD COLUMN selected_cape VARCHAR(50) DEFAULT NULL;
+                END IF;
             END $$;
         `);
 

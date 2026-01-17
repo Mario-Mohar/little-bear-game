@@ -53,13 +53,22 @@ router.post('/coins',
 
 router.post('/purchase',
     authenticateToken,
-    body('itemType').isIn(['skins', 'upgrades']),
+    body('itemType').isIn(['skins', 'upgrades', 'accessories']),
     body('itemId').isString().trim(),
     handleValidation,
     userController.purchase
 );
 
 router.get('/inventory', authenticateToken, userController.getInventory);
+
+// Accessoire ausrüsten/ablegen
+router.post('/equip-accessory',
+    authenticateToken,
+    body('slot').isIn(['hat', 'glasses', 'cape', 'special']),
+    body('accessoryId').optional({ nullable: true }),
+    handleValidation,
+    userController.equipAccessory
+);
 
 router.post('/sync',
     authenticateToken,

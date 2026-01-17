@@ -49,6 +49,38 @@ const SHOP_ITEMS = {
         'extra_life_2': { price: 250, name: '+2 Startleben', requires: 'extra_life_1' },
         'coin_magnet': { price: 200, name: 'Münzmagnet' },
         'double_coins': { price: 300, name: 'Doppelte Münzen' }
+    },
+    accessories: {
+        // Hüte
+        'hat_crown': { price: 200, name: 'Krone', type: 'hat', icon: '👑', description: 'Fühle dich wie ein König!' },
+        'hat_wizard': { price: 150, name: 'Zauberhut', type: 'hat', icon: '🎩', description: 'Magische Kräfte!' },
+        'hat_party': { price: 75, name: 'Partyhut', type: 'hat', icon: '🎉', description: 'Party-Time!' },
+        'hat_cap': { price: 50, name: 'Baseball-Cap', type: 'hat', icon: '🧢', description: 'Cool und lässig' },
+        'hat_cowboy': { price: 125, name: 'Cowboyhut', type: 'hat', icon: '🤠', description: 'Yeehaw!' },
+        'hat_pirate': { price: 175, name: 'Piratenhut', type: 'hat', icon: '🏴‍☠️', description: 'Arrr, Matrose!' },
+        'hat_chef': { price: 100, name: 'Kochmütze', type: 'hat', icon: '👨‍🍳', description: 'Meisterkoch' },
+        'hat_viking': { price: 200, name: 'Wikingerhelm', type: 'hat', icon: '⚔️', description: 'Für Valhalla!' },
+        // Brillen
+        'glasses_cool': { price: 80, name: 'Sonnenbrille', type: 'glasses', icon: '😎', description: 'Super cool!' },
+        'glasses_nerd': { price: 60, name: 'Nerd-Brille', type: 'glasses', icon: '🤓', description: 'Intelligent aussehen' },
+        'glasses_star': { price: 120, name: 'Star-Brille', type: 'glasses', icon: '⭐', description: 'Superstar!' },
+        'glasses_heart': { price: 90, name: 'Herz-Brille', type: 'glasses', icon: '💕', description: 'Voller Liebe' },
+        'glasses_3d': { price: 70, name: '3D-Brille', type: 'glasses', icon: '🎬', description: 'Kino-Feeling' },
+        'glasses_monocle': { price: 150, name: 'Monokel', type: 'glasses', icon: '🧐', description: 'Sehr distinguiert' },
+        // Capes
+        'cape_hero': { price: 175, name: 'Helden-Cape', type: 'cape', icon: '🦸', description: 'Superhelden-Power!' },
+        'cape_royal': { price: 250, name: 'Königsmantel', type: 'cape', icon: '👑', description: 'Majestätisch!' },
+        'cape_wizard': { price: 200, name: 'Zauberumhang', type: 'cape', icon: '✨', description: 'Mystische Kräfte' },
+        'cape_rainbow': { price: 150, name: 'Regenbogen-Cape', type: 'cape', icon: '🌈', description: 'Farbenfroh!' },
+        'cape_fire': { price: 225, name: 'Feuer-Cape', type: 'cape', icon: '🔥', description: 'Heiß, heiß, heiß!' },
+        'cape_ice': { price: 225, name: 'Eis-Cape', type: 'cape', icon: '❄️', description: 'Eiskalt!' },
+        'cape_invisible': { price: 300, name: 'Unsichtbarkeits-Umhang', type: 'cape', icon: '👻', description: 'Fast unsichtbar...' },
+        // Weitere Accessoires
+        'acc_wings': { price: 350, name: 'Engelsflügel', type: 'special', icon: '👼', description: 'Himmlisch!' },
+        'acc_halo': { price: 200, name: 'Heiligenschein', type: 'special', icon: '😇', description: 'Heilig!' },
+        'acc_devil_horns': { price: 175, name: 'Teufelshörner', type: 'special', icon: '😈', description: 'Ein kleiner Teufel' },
+        'acc_bow': { price: 75, name: 'Schleife', type: 'special', icon: '🎀', description: 'Süß und niedlich' },
+        'acc_scarf': { price: 100, name: 'Schal', type: 'special', icon: '🧣', description: 'Warm und gemütlich' }
     }
 };
 
@@ -56,7 +88,9 @@ async function getProfile(req, res) {
     try {
         const result = await pool.query(
             `SELECT id, username, email, email_verified, total_coins,
-                    purchased_skins, purchased_upgrades, selected_skin, created_at
+                    purchased_skins, purchased_upgrades, selected_skin,
+                    purchased_accessories, selected_hat, selected_glasses, selected_cape,
+                    created_at
              FROM users WHERE id = $1`,
             [req.user.id]
         );
@@ -81,7 +115,11 @@ async function getProfile(req, res) {
             totalCoins: user.total_coins,
             purchasedSkins: user.purchased_skins || [],
             purchasedUpgrades: user.purchased_upgrades || [],
+            purchasedAccessories: user.purchased_accessories || [],
             selectedSkin: user.selected_skin,
+            selectedHat: user.selected_hat,
+            selectedGlasses: user.selected_glasses,
+            selectedCape: user.selected_cape,
             bestScore: scoreResult.rows[0]?.best_score || 0,
             createdAt: user.created_at
         });
@@ -177,7 +215,7 @@ async function purchase(req, res) {
     const { itemType, itemId } = req.body;
 
     try {
-        if (!['skins', 'upgrades'].includes(itemType)) {
+        if (!['skins', 'upgrades', 'accessories'].includes(itemType)) {
             return res.status(400).json({ error: 'Ungültiger Artikeltyp' });
         }
 
@@ -187,12 +225,15 @@ async function purchase(req, res) {
         }
 
         const userResult = await pool.query(
-            'SELECT total_coins, purchased_skins, purchased_upgrades FROM users WHERE id = $1',
+            'SELECT total_coins, purchased_skins, purchased_upgrades, purchased_accessories FROM users WHERE id = $1',
             [req.user.id]
         );
 
         const user = userResult.rows[0];
-        const purchasedList = itemType === 'skins' ? user.purchased_skins : user.purchased_upgrades;
+        let purchasedList;
+        if (itemType === 'skins') purchasedList = user.purchased_skins;
+        else if (itemType === 'upgrades') purchasedList = user.purchased_upgrades;
+        else purchasedList = user.purchased_accessories;
 
         // Check if already purchased
         if (purchasedList && purchasedList.includes(itemId)) {
@@ -212,7 +253,11 @@ async function purchase(req, res) {
         }
 
         // Perform purchase
-        const columnName = itemType === 'skins' ? 'purchased_skins' : 'purchased_upgrades';
+        let columnName;
+        if (itemType === 'skins') columnName = 'purchased_skins';
+        else if (itemType === 'upgrades') columnName = 'purchased_upgrades';
+        else columnName = 'purchased_accessories';
+
         await pool.query(
             `UPDATE users
              SET total_coins = total_coins - $1,
@@ -223,7 +268,7 @@ async function purchase(req, res) {
 
         // Get updated user data
         const updatedUser = await pool.query(
-            'SELECT total_coins, purchased_skins, purchased_upgrades FROM users WHERE id = $1',
+            'SELECT total_coins, purchased_skins, purchased_upgrades, purchased_accessories FROM users WHERE id = $1',
             [req.user.id]
         );
 
@@ -232,7 +277,8 @@ async function purchase(req, res) {
             item: { type: itemType, id: itemId, name: item.name },
             totalCoins: updatedUser.rows[0].total_coins,
             purchasedSkins: updatedUser.rows[0].purchased_skins,
-            purchasedUpgrades: updatedUser.rows[0].purchased_upgrades
+            purchasedUpgrades: updatedUser.rows[0].purchased_upgrades,
+            purchasedAccessories: updatedUser.rows[0].purchased_accessories
         });
     } catch (error) {
         console.error('Purchase error:', error);
@@ -243,7 +289,9 @@ async function purchase(req, res) {
 async function getInventory(req, res) {
     try {
         const result = await pool.query(
-            'SELECT total_coins, purchased_skins, purchased_upgrades, selected_skin FROM users WHERE id = $1',
+            `SELECT total_coins, purchased_skins, purchased_upgrades, purchased_accessories,
+                    selected_skin, selected_hat, selected_glasses, selected_cape
+             FROM users WHERE id = $1`,
             [req.user.id]
         );
 
@@ -257,12 +305,72 @@ async function getInventory(req, res) {
             totalCoins: user.total_coins,
             purchasedSkins: user.purchased_skins || [],
             purchasedUpgrades: user.purchased_upgrades || [],
+            purchasedAccessories: user.purchased_accessories || [],
             selectedSkin: user.selected_skin,
+            selectedHat: user.selected_hat,
+            selectedGlasses: user.selected_glasses,
+            selectedCape: user.selected_cape,
             shopItems: SHOP_ITEMS
         });
     } catch (error) {
         console.error('Get inventory error:', error);
         res.status(500).json({ error: 'Inventar konnte nicht geladen werden' });
+    }
+}
+
+// Accessoire ausrüsten/ablegen
+async function equipAccessory(req, res) {
+    const { accessoryId, slot } = req.body; // slot: 'hat', 'glasses', 'cape', or 'special'
+
+    try {
+        if (!['hat', 'glasses', 'cape', 'special'].includes(slot)) {
+            return res.status(400).json({ error: 'Ungültiger Slot' });
+        }
+
+        // Wenn accessoryId null ist, wird das Accessoire abgelegt
+        if (accessoryId !== null) {
+            // Prüfen ob das Accessoire existiert und dem richtigen Typ entspricht
+            const accessory = SHOP_ITEMS.accessories[accessoryId];
+            if (!accessory) {
+                return res.status(400).json({ error: 'Accessoire nicht gefunden' });
+            }
+
+            // Prüfen ob der Typ zum Slot passt
+            if (accessory.type !== slot) {
+                return res.status(400).json({ error: 'Accessoire passt nicht in diesen Slot' });
+            }
+
+            // Prüfen ob gekauft
+            const userResult = await pool.query(
+                'SELECT purchased_accessories FROM users WHERE id = $1',
+                [req.user.id]
+            );
+
+            const purchased = userResult.rows[0]?.purchased_accessories || [];
+            if (!purchased.includes(accessoryId)) {
+                return res.status(400).json({ error: 'Accessoire nicht gekauft' });
+            }
+        }
+
+        // Slot-Spalte bestimmen (special Accessoires gehen in selected_hat als Fallback)
+        let columnName;
+        if (slot === 'hat' || slot === 'special') columnName = 'selected_hat';
+        else if (slot === 'glasses') columnName = 'selected_glasses';
+        else columnName = 'selected_cape';
+
+        await pool.query(
+            `UPDATE users SET ${columnName} = $1 WHERE id = $2`,
+            [accessoryId, req.user.id]
+        );
+
+        res.json({
+            message: accessoryId ? 'Accessoire ausgerüstet' : 'Accessoire abgelegt',
+            slot,
+            accessoryId
+        });
+    } catch (error) {
+        console.error('Equip accessory error:', error);
+        res.status(500).json({ error: 'Accessoire konnte nicht ausgerüstet werden' });
     }
 }
 
@@ -852,6 +960,8 @@ module.exports = {
     updateExtendedProfile,
     getActivityFeed,
     compareProfiles,
+    equipAccessory,
     TITLES,
-    BANNERS
+    BANNERS,
+    SHOP_ITEMS
 };
