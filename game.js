@@ -2841,6 +2841,7 @@ class Player {
 
         const screenX = this.x - game.cameraX;
         const skinColor = getCurrentSkinColor();
+        const profile = game.userProfile;
 
         // Determine secondary colors based on skin
         let earColor, faceColor;
@@ -2862,6 +2863,11 @@ class Player {
         } else { // Default brown
             earColor = '#A0522D';
             faceColor = '#DEB887';
+        }
+
+        // Draw cape FIRST (behind the bear)
+        if (profile && profile.selectedCape) {
+            this.drawCape(ctx, screenX, profile.selectedCape);
         }
 
         // Body
@@ -2910,19 +2916,15 @@ class Player {
         ctx.ellipse(screenX + this.width / 2, this.y + this.height - 15, 10, 12, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Draw accessories
+        // Draw accessories (hat, glasses) AFTER body
         this.drawAccessories(ctx, screenX);
     }
 
     drawAccessories(ctx, screenX) {
         const profile = game.userProfile;
+        if (!profile) return;
 
-        // Cape (draw behind the bear, so drawn first but will appear behind)
-        if (profile.selectedCape) {
-            this.drawCape(ctx, screenX, profile.selectedCape);
-        }
-
-        // Hat
+        // Hat (Special items like halo, devil horns, bow are drawn via selectedHat)
         if (profile.selectedHat) {
             this.drawHat(ctx, screenX, profile.selectedHat);
         }
@@ -2935,7 +2937,7 @@ class Player {
 
     drawHat(ctx, screenX, hatId) {
         const centerX = screenX + this.width / 2;
-        const topY = this.y - 5;
+        const topY = this.y + 8; // Auf Höhe der Ohren, nicht darüber
 
         ctx.save();
         switch(hatId) {
@@ -3113,7 +3115,7 @@ class Player {
 
     drawGlasses(ctx, screenX, glassesId) {
         const centerX = screenX + this.width / 2;
-        const eyeY = this.y + 18;
+        const eyeY = this.y + 20; // Etwas tiefer, auf Augenhöhe
         const eyeOffsetX = this.facingRight ? 2 : -2;
 
         ctx.save();
@@ -3189,9 +3191,11 @@ class Player {
     }
 
     drawCape(ctx, screenX, capeId) {
-        const capeX = this.facingRight ? screenX - 5 : screenX + this.width - 15;
-        const capeY = this.y + 15;
-        const waveOffset = Math.sin(Date.now() / 200) * 3;
+        const centerX = screenX + this.width / 2;
+        const capeY = this.y + 12; // Startet am Nacken
+        const waveOffset = Math.sin(Date.now() / 200) * 4;
+        const capeWidth = 28;
+        const capeHeight = 38;
 
         ctx.save();
         let colors;
@@ -3232,8 +3236,8 @@ class Player {
                 colors = ['#E74C3C', '#C0392B'];
         }
 
-        // Cape zeichnen
-        const gradient = ctx.createLinearGradient(capeX, capeY, capeX, capeY + 35);
+        // Cape zeichnen - hängt hinter dem Bären herunter
+        const gradient = ctx.createLinearGradient(centerX, capeY, centerX, capeY + capeHeight);
         if (colors.length > 2) {
             colors.forEach((color, i) => {
                 gradient.addColorStop(i / (colors.length - 1), color);
@@ -3245,17 +3249,30 @@ class Player {
 
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        if (this.facingRight) {
-            ctx.moveTo(capeX + 20, capeY);
-            ctx.quadraticCurveTo(capeX + 5 + waveOffset, capeY + 20, capeX + waveOffset, capeY + 35);
-            ctx.lineTo(capeX + 15 + waveOffset, capeY + 35);
-            ctx.quadraticCurveTo(capeX + 15, capeY + 15, capeX + 20, capeY);
-        } else {
-            ctx.moveTo(capeX, capeY);
-            ctx.quadraticCurveTo(capeX + 15 - waveOffset, capeY + 20, capeX + 20 - waveOffset, capeY + 35);
-            ctx.lineTo(capeX + 5 - waveOffset, capeY + 35);
-            ctx.quadraticCurveTo(capeX + 5, capeY + 15, capeX, capeY);
-        }
+        // Cape fällt von den Schultern nach unten
+        ctx.moveTo(centerX - capeWidth / 2, capeY);
+        ctx.lineTo(centerX + capeWidth / 2, capeY);
+        // Rechte Seite mit Welle
+        ctx.quadraticCurveTo(
+            centerX + capeWidth / 2 + waveOffset,
+            capeY + capeHeight / 2,
+            centerX + capeWidth / 2 - 2 + waveOffset,
+            capeY + capeHeight
+        );
+        // Untere Kante mit Welle
+        ctx.quadraticCurveTo(
+            centerX + waveOffset / 2,
+            capeY + capeHeight + 3,
+            centerX - capeWidth / 2 + 2 + waveOffset,
+            capeY + capeHeight
+        );
+        // Linke Seite
+        ctx.quadraticCurveTo(
+            centerX - capeWidth / 2 + waveOffset,
+            capeY + capeHeight / 2,
+            centerX - capeWidth / 2,
+            capeY
+        );
         ctx.closePath();
         ctx.fill();
 
@@ -3264,7 +3281,7 @@ class Player {
 
     drawWings(ctx, screenX) {
         const centerX = screenX + this.width / 2;
-        const wingY = this.y + 20;
+        const wingY = this.y + 22;
         const flapOffset = Math.sin(Date.now() / 150) * 5;
 
         ctx.fillStyle = '#FFFFFF';
@@ -3272,24 +3289,24 @@ class Player {
 
         // Linker Flügel
         ctx.beginPath();
-        ctx.moveTo(centerX - 5, wingY);
-        ctx.quadraticCurveTo(centerX - 30 - flapOffset, wingY - 15, centerX - 35 - flapOffset, wingY + 5);
-        ctx.quadraticCurveTo(centerX - 25, wingY + 20, centerX - 5, wingY + 15);
+        ctx.moveTo(centerX - 8, wingY);
+        ctx.quadraticCurveTo(centerX - 28 - flapOffset, wingY - 10, centerX - 32 - flapOffset, wingY + 5);
+        ctx.quadraticCurveTo(centerX - 20, wingY + 18, centerX - 8, wingY + 12);
         ctx.closePath();
         ctx.fill();
 
         // Rechter Flügel
         ctx.beginPath();
-        ctx.moveTo(centerX + 5 + this.width - 20, wingY);
-        ctx.quadraticCurveTo(centerX + 30 + flapOffset + this.width - 20, wingY - 15, centerX + 35 + flapOffset + this.width - 20, wingY + 5);
-        ctx.quadraticCurveTo(centerX + 25 + this.width - 20, wingY + 20, centerX + 5 + this.width - 20, wingY + 15);
+        ctx.moveTo(centerX + 8, wingY);
+        ctx.quadraticCurveTo(centerX + 28 + flapOffset, wingY - 10, centerX + 32 + flapOffset, wingY + 5);
+        ctx.quadraticCurveTo(centerX + 20, wingY + 18, centerX + 8, wingY + 12);
         ctx.closePath();
         ctx.fill();
 
         // Federn Details
         ctx.strokeStyle = '#E8E8E8';
         ctx.lineWidth = 1;
-        ctx.stroke();
+        ctx.globalAlpha = 1;
     }
 
     drawScarf(ctx, screenX) {
@@ -7934,13 +7951,7 @@ let currentAccessoryFilter = 'all';
 function renderAccessoriesShop(filterType = currentAccessoryFilter) {
     currentAccessoryFilter = filterType;
     const grid = document.getElementById('accessories-grid');
-
-    console.log('renderAccessoriesShop called, grid:', grid, 'SHOP.accessories:', SHOP.accessories?.length);
-
-    if (!grid) {
-        console.error('accessories-grid not found!');
-        return;
-    }
+    if (!grid) return;
     grid.innerHTML = '';
 
     // Stelle sicher, dass ownedAccessories existiert
@@ -7950,8 +7961,6 @@ function renderAccessoriesShop(filterType = currentAccessoryFilter) {
 
     // Filtere Accessoires nach Typ
     let accessories = SHOP.accessories || [];
-    console.log('Accessories to render:', accessories.length);
-
     if (filterType !== 'all') {
         accessories = accessories.filter(acc => acc.type === filterType);
     }
@@ -9789,7 +9798,11 @@ async function init() {
             totalCoins: API.user.totalCoins,
             ownedSkins: ['default', ...(API.user.purchasedSkins || [])],
             ownedUpgrades: API.user.purchasedUpgrades || [],
+            ownedAccessories: API.user.purchasedAccessories || [],
             selectedSkin: API.user.selectedSkin || 'default',
+            selectedHat: API.user.selectedHat || null,
+            selectedGlasses: API.user.selectedGlasses || null,
+            selectedCape: API.user.selectedCape || null,
             extraLives: calculateExtraLives(API.user.purchasedUpgrades || [])
         };
         game.playerName = API.user.username;
@@ -9895,6 +9908,14 @@ async function init() {
     document.getElementById('logout-btn')?.addEventListener('click', () => {
         API.logout();
         showAuthScreen();
+    });
+
+    // Cache refresh button for tablet/mobile users who can't do Ctrl+Shift+R
+    document.getElementById('refresh-cache-btn')?.addEventListener('click', () => {
+        if (confirm('Spiel neu laden? Dies aktualisiert alle Daten.')) {
+            // Force reload without cache
+            window.location.reload(true);
+        }
     });
 
     // Update coins display when player name changes (for guests)
