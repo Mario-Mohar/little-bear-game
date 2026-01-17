@@ -34,53 +34,61 @@ const BANNERS = {
     'champion': { name: 'Champion', colors: ['#ffd700', '#ff8c00', '#ff4500'], requirement: 'rank:1' }
 };
 
-// Shop items configuration (must match frontend)
+// Shop items configuration (must match frontend) - PREISE ERHÖHT!
 const SHOP_ITEMS = {
     skins: {
         'default': { price: 0, name: 'Klassischer Bär' },
-        'polar': { price: 50, name: 'Eisbär' },
-        'panda': { price: 75, name: 'Pandabär' },
-        'golden': { price: 150, name: 'Goldener Bär' },
-        'pink': { price: 100, name: 'Rosa Bär' },
-        'blue': { price: 100, name: 'Blauer Bär' }
+        'polar': { price: 500, name: 'Eisbär' },
+        'panda': { price: 750, name: 'Pandabär' },
+        'golden': { price: 2500, name: 'Goldener Bär' },
+        'pink': { price: 800, name: 'Rosa Bär' },
+        'blue': { price: 800, name: 'Blauer Bär' },
+        'rainbow': { price: 5000, name: 'Regenbogen-Bär' },
+        'galaxy': { price: 7500, name: 'Galaxie-Bär' },
+        'diamond': { price: 15000, name: 'Diamant-Bär' }
     },
     upgrades: {
-        'extra_life_1': { price: 100, name: '+1 Startleben' },
-        'extra_life_2': { price: 250, name: '+2 Startleben', requires: 'extra_life_1' },
-        'coin_magnet': { price: 200, name: 'Münzmagnet' },
-        'double_coins': { price: 300, name: 'Doppelte Münzen' }
+        'extra_life_1': { price: 1000, name: '+1 Startleben' },
+        'extra_life_2': { price: 3000, name: '+2 Startleben', requires: 'extra_life_1' },
+        'extra_life_3': { price: 8000, name: '+3 Startleben', requires: 'extra_life_2' },
+        'coin_magnet': { price: 2000, name: 'Münzmagnet' },
+        'double_coins': { price: 5000, name: 'Doppelte Münzen' },
+        'triple_coins': { price: 15000, name: 'Dreifache Münzen', requires: 'double_coins' },
+        'shield_respawn': { price: 4000, name: 'Schutzschild' },
+        'speed_boost': { price: 3500, name: 'Schnelle Füße' },
+        'super_jump': { price: 6000, name: 'Super-Sprung' }
     },
     accessories: {
-        // Hüte
-        'hat_crown': { price: 200, name: 'Krone', type: 'hat', icon: '👑', description: 'Fühle dich wie ein König!' },
-        'hat_wizard': { price: 150, name: 'Zauberhut', type: 'hat', icon: '🎩', description: 'Magische Kräfte!' },
-        'hat_party': { price: 75, name: 'Partyhut', type: 'hat', icon: '🎉', description: 'Party-Time!' },
-        'hat_cap': { price: 50, name: 'Baseball-Cap', type: 'hat', icon: '🧢', description: 'Cool und lässig' },
-        'hat_cowboy': { price: 125, name: 'Cowboyhut', type: 'hat', icon: '🤠', description: 'Yeehaw!' },
-        'hat_pirate': { price: 175, name: 'Piratenhut', type: 'hat', icon: '🏴‍☠️', description: 'Arrr, Matrose!' },
-        'hat_chef': { price: 100, name: 'Kochmütze', type: 'hat', icon: '👨‍🍳', description: 'Meisterkoch' },
-        'hat_viking': { price: 200, name: 'Wikingerhelm', type: 'hat', icon: '⚔️', description: 'Für Valhalla!' },
-        // Brillen
-        'glasses_cool': { price: 80, name: 'Sonnenbrille', type: 'glasses', icon: '😎', description: 'Super cool!' },
-        'glasses_nerd': { price: 60, name: 'Nerd-Brille', type: 'glasses', icon: '🤓', description: 'Intelligent aussehen' },
-        'glasses_star': { price: 120, name: 'Star-Brille', type: 'glasses', icon: '⭐', description: 'Superstar!' },
-        'glasses_heart': { price: 90, name: 'Herz-Brille', type: 'glasses', icon: '💕', description: 'Voller Liebe' },
-        'glasses_3d': { price: 70, name: '3D-Brille', type: 'glasses', icon: '🎬', description: 'Kino-Feeling' },
-        'glasses_monocle': { price: 150, name: 'Monokel', type: 'glasses', icon: '🧐', description: 'Sehr distinguiert' },
-        // Capes
-        'cape_hero': { price: 175, name: 'Helden-Cape', type: 'cape', icon: '🦸', description: 'Superhelden-Power!' },
-        'cape_royal': { price: 250, name: 'Königsmantel', type: 'cape', icon: '👑', description: 'Majestätisch!' },
-        'cape_wizard': { price: 200, name: 'Zauberumhang', type: 'cape', icon: '✨', description: 'Mystische Kräfte' },
-        'cape_rainbow': { price: 150, name: 'Regenbogen-Cape', type: 'cape', icon: '🌈', description: 'Farbenfroh!' },
-        'cape_fire': { price: 225, name: 'Feuer-Cape', type: 'cape', icon: '🔥', description: 'Heiß, heiß, heiß!' },
-        'cape_ice': { price: 225, name: 'Eis-Cape', type: 'cape', icon: '❄️', description: 'Eiskalt!' },
-        'cape_invisible': { price: 300, name: 'Unsichtbarkeits-Umhang', type: 'cape', icon: '👻', description: 'Fast unsichtbar...' },
-        // Weitere Accessoires
-        'acc_wings': { price: 350, name: 'Engelsflügel', type: 'special', icon: '👼', description: 'Himmlisch!' },
-        'acc_halo': { price: 200, name: 'Heiligenschein', type: 'special', icon: '😇', description: 'Heilig!' },
-        'acc_devil_horns': { price: 175, name: 'Teufelshörner', type: 'special', icon: '😈', description: 'Ein kleiner Teufel' },
-        'acc_bow': { price: 75, name: 'Schleife', type: 'special', icon: '🎀', description: 'Süß und niedlich' },
-        'acc_scarf': { price: 100, name: 'Schal', type: 'special', icon: '🧣', description: 'Warm und gemütlich' }
+        // Hüte - Preise erhöht
+        'hat_crown': { price: 3000, name: 'Krone', type: 'hat', icon: '👑', description: 'Fühle dich wie ein König!' },
+        'hat_wizard': { price: 2000, name: 'Zauberhut', type: 'hat', icon: '🎩', description: 'Magische Kräfte!' },
+        'hat_party': { price: 800, name: 'Partyhut', type: 'hat', icon: '🎉', description: 'Party-Time!' },
+        'hat_cap': { price: 500, name: 'Baseball-Cap', type: 'hat', icon: '🧢', description: 'Cool und lässig' },
+        'hat_cowboy': { price: 1500, name: 'Cowboyhut', type: 'hat', icon: '🤠', description: 'Yeehaw!' },
+        'hat_pirate': { price: 2500, name: 'Piratenhut', type: 'hat', icon: '🏴‍☠️', description: 'Arrr, Matrose!' },
+        'hat_chef': { price: 1200, name: 'Kochmütze', type: 'hat', icon: '👨‍🍳', description: 'Meisterkoch' },
+        'hat_viking': { price: 3500, name: 'Wikingerhelm', type: 'hat', icon: '⚔️', description: 'Für Valhalla!' },
+        // Brillen - Preise erhöht
+        'glasses_cool': { price: 1000, name: 'Sonnenbrille', type: 'glasses', icon: '😎', description: 'Super cool!' },
+        'glasses_nerd': { price: 600, name: 'Nerd-Brille', type: 'glasses', icon: '🤓', description: 'Intelligent aussehen' },
+        'glasses_star': { price: 1800, name: 'Star-Brille', type: 'glasses', icon: '⭐', description: 'Superstar!' },
+        'glasses_heart': { price: 1200, name: 'Herz-Brille', type: 'glasses', icon: '💕', description: 'Voller Liebe' },
+        'glasses_3d': { price: 900, name: '3D-Brille', type: 'glasses', icon: '🎬', description: 'Kino-Feeling' },
+        'glasses_monocle': { price: 2500, name: 'Monokel', type: 'glasses', icon: '🧐', description: 'Sehr distinguiert' },
+        // Capes - Preise erhöht
+        'cape_hero': { price: 2500, name: 'Helden-Cape', type: 'cape', icon: '🦸', description: 'Superhelden-Power!' },
+        'cape_royal': { price: 4000, name: 'Königsmantel', type: 'cape', icon: '👑', description: 'Majestätisch!' },
+        'cape_wizard': { price: 3000, name: 'Zauberumhang', type: 'cape', icon: '✨', description: 'Mystische Kräfte' },
+        'cape_rainbow': { price: 2000, name: 'Regenbogen-Cape', type: 'cape', icon: '🌈', description: 'Farbenfroh!' },
+        'cape_fire': { price: 3500, name: 'Feuer-Cape', type: 'cape', icon: '🔥', description: 'Heiß, heiß, heiß!' },
+        'cape_ice': { price: 3500, name: 'Eis-Cape', type: 'cape', icon: '❄️', description: 'Eiskalt!' },
+        'cape_invisible': { price: 5000, name: 'Unsichtbarkeits-Umhang', type: 'cape', icon: '👻', description: 'Fast unsichtbar...' },
+        // Spezial - Preise erhöht
+        'acc_wings': { price: 8000, name: 'Engelsflügel', type: 'special', icon: '👼', description: 'Himmlisch!' },
+        'acc_halo': { price: 4000, name: 'Heiligenschein', type: 'special', icon: '😇', description: 'Heilig!' },
+        'acc_devil_horns': { price: 3000, name: 'Teufelshörner', type: 'special', icon: '😈', description: 'Ein kleiner Teufel' },
+        'acc_bow': { price: 1000, name: 'Schleife', type: 'special', icon: '🎀', description: 'Süß und niedlich' },
+        'acc_scarf': { price: 1500, name: 'Schal', type: 'special', icon: '🧣', description: 'Warm und gemütlich' }
     }
 };
 
