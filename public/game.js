@@ -8021,9 +8021,9 @@ function renderAccessoriesShop(filterType = currentAccessoryFilter) {
         grid.appendChild(item);
     });
 
-    // Event Listener für Ausrüsten-Buttons
+    // Event Listener für Ausrüsten-Buttons - mit Tablet Touch Support
     grid.querySelectorAll('.equip-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        addTapListener(btn, async () => {
             const accId = btn.dataset.id;
             const accType = btn.dataset.type;
             const isEquipped = isAccessoryEquipped(accId, accType);
@@ -8038,9 +8038,9 @@ function renderAccessoriesShop(filterType = currentAccessoryFilter) {
         });
     });
 
-    // Event Listener für Kauf-Buttons
+    // Event Listener für Kauf-Buttons - mit Tablet Touch Support
     grid.querySelectorAll('.buy-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        addTapListener(btn, async () => {
             const result = await buyShopItem(btn.dataset.type, btn.dataset.id);
             if (result.success) {
                 // Automatisch ausrüsten nach Kauf
@@ -9793,6 +9793,21 @@ function hideTouchControls() {
     document.getElementById('touch-controls')?.classList.add('hidden');
 }
 
+// Helper function to add both click and touch events for tablet compatibility
+function addTapListener(element, handler) {
+    if (!element) return;
+    let touchMoved = false;
+    element.addEventListener('click', handler);
+    element.addEventListener('touchstart', () => { touchMoved = false; }, { passive: true });
+    element.addEventListener('touchmove', () => { touchMoved = true; }, { passive: true });
+    element.addEventListener('touchend', (e) => {
+        if (!touchMoved) {
+            e.preventDefault();
+            handler(e);
+        }
+    });
+}
+
 // Initialize Game
 async function init() {
     game.canvas = document.getElementById('gameCanvas');
@@ -9877,20 +9892,21 @@ async function init() {
     document.getElementById('play-again-btn').addEventListener('click', () => { showStartScreen(); });
 
     // Shop buttons
-    document.getElementById('shop-btn').addEventListener('click', openShop);
-    document.getElementById('shop-close-btn').addEventListener('click', closeShop);
+    // Shop buttons - with tablet touch support
+    addTapListener(document.getElementById('shop-btn'), openShop);
+    addTapListener(document.getElementById('shop-close-btn'), closeShop);
 
-    // Friends buttons
-    document.getElementById('friends-btn')?.addEventListener('click', openFriends);
-    document.getElementById('friends-close-btn')?.addEventListener('click', closeFriends);
-    document.getElementById('friend-search-btn')?.addEventListener('click', searchFriends);
+    // Friends buttons - with tablet touch support
+    addTapListener(document.getElementById('friends-btn'), openFriends);
+    addTapListener(document.getElementById('friends-close-btn'), closeFriends);
+    addTapListener(document.getElementById('friend-search-btn'), searchFriends);
     document.getElementById('friend-search-input')?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') searchFriends();
     });
 
-    // Achievements buttons
-    document.getElementById('achievements-btn')?.addEventListener('click', openAchievements);
-    document.getElementById('achievements-close-btn')?.addEventListener('click', closeAchievements);
+    // Achievements buttons - with tablet touch support
+    addTapListener(document.getElementById('achievements-btn'), openAchievements);
+    addTapListener(document.getElementById('achievements-close-btn'), closeAchievements);
     initAchievementsFilter();
 
     // Profile modal
@@ -9957,9 +9973,9 @@ async function init() {
         updateCoinsDisplay();
     });
 
-    // Shop tabs
+    // Shop tabs - with tablet touch support
     document.querySelectorAll('.shop-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
+        const handleTabClick = () => {
             document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             tab.classList.add('active');
@@ -9974,19 +9990,22 @@ async function init() {
             } else if (tab.dataset.tab === 'upgrades') {
                 renderUpgradesShop();
             }
-        });
+        };
+        addTapListener(tab, handleTabClick);
     });
 
-    // Accessory filter buttons
+    // Accessory filter buttons - with tablet touch support
     document.querySelectorAll('.acc-filter').forEach(filter => {
-        filter.addEventListener('click', () => {
+        addTapListener(filter, () => {
+            document.querySelectorAll('.acc-filter').forEach(f => f.classList.remove('active'));
+            filter.classList.add('active');
             renderAccessoriesShop(filter.dataset.type);
         });
     });
 
-    // Equipped slot click to unequip
+    // Equipped slot click to unequip - with tablet touch support
     document.querySelectorAll('.equipped-slot').forEach(slot => {
-        slot.addEventListener('click', async () => {
+        addTapListener(slot, async () => {
             const slotType = slot.dataset.slot;
             if (slotType) {
                 await unequipAccessory(slotType);
