@@ -440,6 +440,10 @@ button {
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
     letter-spacing: 0.5px;
     text-transform: uppercase;
+    /* Touch support for tablets */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(255, 215, 0, 0.3);
+    -webkit-touch-callout: none;
     position: relative;
     overflow: hidden;
 }
@@ -935,6 +939,9 @@ button:active {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    /* Touch support for tablets */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(155, 89, 182, 0.3);
 }
 
 .shop-tab:hover {
@@ -1083,6 +1090,9 @@ button:active {
     cursor: pointer;
     transition: all 0.3s ease;
     font-weight: 600;
+    /* Touch support for tablets */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(39, 174, 96, 0.3);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -1145,6 +1155,9 @@ button:active {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    /* Touch support for tablets */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(155, 89, 182, 0.3);
 }
 
 .acc-filter:hover {
@@ -1294,6 +1307,9 @@ button:active {
     cursor: pointer;
     font-weight: 600;
     transition: all 0.3s ease;
+    /* Touch support for tablets */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(52, 152, 219, 0.3);
 }
 
 .accessory-item .equip-btn:hover {
