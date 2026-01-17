@@ -358,6 +358,55 @@ const API = {
             return { ok: response.ok, data: await response.json() };
         } catch (e) { console.error('Failed to claim challenge reward:', e); }
         return null;
+    },
+
+    // ============================================
+    // ACHIEVEMENTS API FUNCTIONS
+    // ============================================
+
+    async getAchievements() {
+        if (this.isGuest || !this.token) return null;
+        try {
+            const response = await this.request('/achievements');
+            if (response.ok) return await response.json();
+        } catch (e) { console.error('Failed to get achievements:', e); }
+        return null;
+    },
+
+    async updateAchievementProgress(achievementId, progress) {
+        if (this.isGuest || !this.token) return null;
+        try {
+            const response = await this.request('/achievements/progress', {
+                method: 'POST',
+                body: JSON.stringify({ achievementId, progress })
+            });
+            return { ok: response.ok, data: await response.json() };
+        } catch (e) { console.error('Failed to update achievement progress:', e); }
+        return null;
+    },
+
+    async updateMultipleAchievements(updates) {
+        if (this.isGuest || !this.token) return null;
+        try {
+            const response = await this.request('/achievements/update-multiple', {
+                method: 'POST',
+                body: JSON.stringify({ updates })
+            });
+            return { ok: response.ok, data: await response.json() };
+        } catch (e) { console.error('Failed to update multiple achievements:', e); }
+        return null;
+    },
+
+    // ============================================
+    // USER PROFILE API FUNCTIONS
+    // ============================================
+
+    async getPublicProfile(userId) {
+        try {
+            const response = await this.request('/users/public/' + userId);
+            if (response.ok) return await response.json();
+        } catch (e) { console.error('Failed to get public profile:', e); }
+        return null;
     }
 };
 
@@ -372,7 +421,7 @@ function showAuthScreen() {
 }
 
 function hideAllScreens() {
-    const screens = ['auth-screen', 'start-screen', 'game-over', 'level-complete', 'game-complete', 'shop-screen', 'friends-screen', 'ui'];
+    const screens = ['auth-screen', 'start-screen', 'game-over', 'level-complete', 'game-complete', 'shop-screen', 'friends-screen', 'achievements-screen', 'ui'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
@@ -468,13 +517,26 @@ function displayHighscores(highscores, elementId) {
     const container = document.getElementById(elementId);
     if (!container) return;
 
-    container.innerHTML = highscores.map((hs, i) => `
-        <li>
-            <span class="rank">#${i + 1}</span>
-            <span class="player-name">${hs.username || hs.name}</span>
-            <span class="player-score">${hs.score}</span>
-        </li>
-    `).join('');
+    if (!highscores || highscores.length === 0) {
+        container.innerHTML = '<li style="color: rgba(255,255,255,0.5); text-align: center; font-style: italic;">Noch keine Einträge</li>';
+        return;
+    }
+
+    container.innerHTML = highscores.map((hs, i) => {
+        const isClickable = hs.user_id && !API.isGuest;
+        const clickAttr = isClickable ? `onclick="openProfile(${hs.user_id})"` : '';
+        const clickClass = isClickable ? 'clickable' : '';
+        const currentClass = API.user && hs.user_id === API.user.id ? 'current-player' : '';
+        const name = hs.username || hs.name || 'Unbekannt';
+
+        return `
+            <li class="${currentClass}">
+                <span class="rank">#${i + 1}</span>
+                <span class="player-name ${clickClass}" ${clickAttr}>${escapeHtml(name)}</span>
+                <span class="player-score">${hs.score}</span>
+            </li>
+        `;
+    }).join('');
 }
 
 function getGuestWarningHtml(type) {
@@ -6848,6 +6910,12 @@ async function levelComplete() {
 
         gameCompleteEl.classList.remove('hidden');
         await loadGlobalHighscores();
+
+        // Achievement checks für Spielsieg
+        checkGameCompleteAchievement();
+        checkScoreAchievement(game.score);
+        checkSurvivorAchievement(game.lives);
+        checkLevelAchievement(game.level);
     } else {
         document.getElementById('completed-level').textContent = game.level;
         document.getElementById('level-score').textContent = game.score;
@@ -6912,11 +6980,217 @@ async function gameOver() {
     hideAllScreens();
     document.getElementById('game-over').classList.remove('hidden');
     await loadGlobalHighscores();
+
+    // Achievement checks
+    checkScoreAchievement(game.score);
+    checkLevelAchievement(game.level);
+}
+
+// Performance Monitoring für Anti-Cheat (Stromsparmodus-Erkennung)
+const performanceMonitor = {
+    lastFrameTime: 0,
+    frameTimes: [],
+    maxSamples: 60, // 1 Sekunde bei 60 FPS
+    slowFrameCount: 0,
+    warningShown: false,
+    pausedForPerformance: false,
+    minAcceptableFPS: 20, // Unter 20 FPS = Warnung
+    criticalFPS: 12, // Unter 12 FPS = Spiel pausieren
+    slowFrameThreshold: 100, // Frame > 100ms gilt als langsam (unter 10 FPS)
+    consecutiveSlowFramesForPause: 30 // 30 langsame Frames in Folge = pausieren
+};
+
+function checkPerformance(timestamp) {
+    if (performanceMonitor.lastFrameTime === 0) {
+        performanceMonitor.lastFrameTime = timestamp;
+        return true; // Erster Frame, kein Check
+    }
+
+    const deltaTime = timestamp - performanceMonitor.lastFrameTime;
+    performanceMonitor.lastFrameTime = timestamp;
+
+    // Frame-Zeit speichern
+    performanceMonitor.frameTimes.push(deltaTime);
+    if (performanceMonitor.frameTimes.length > performanceMonitor.maxSamples) {
+        performanceMonitor.frameTimes.shift();
+    }
+
+    // Nur prüfen wenn wir genug Samples haben
+    if (performanceMonitor.frameTimes.length < 10) return true;
+
+    // Durchschnitts-FPS berechnen
+    const avgFrameTime = performanceMonitor.frameTimes.reduce((a, b) => a + b, 0) / performanceMonitor.frameTimes.length;
+    const avgFPS = 1000 / avgFrameTime;
+
+    // Prüfen auf extrem langsame Frames (Zeitlupe-Cheat)
+    if (deltaTime > performanceMonitor.slowFrameThreshold) {
+        performanceMonitor.slowFrameCount++;
+    } else {
+        // Reset bei normalem Frame
+        performanceMonitor.slowFrameCount = Math.max(0, performanceMonitor.slowFrameCount - 1);
+    }
+
+    // Kritisch: Viele langsame Frames in Folge = wahrscheinlich Stromsparmodus
+    if (performanceMonitor.slowFrameCount >= performanceMonitor.consecutiveSlowFramesForPause) {
+        if (!performanceMonitor.pausedForPerformance) {
+            pauseGameForPerformance();
+            return false;
+        }
+    }
+
+    // Warnung bei niedriger FPS
+    if (avgFPS < performanceMonitor.minAcceptableFPS && !performanceMonitor.warningShown) {
+        showPerformanceWarning();
+        performanceMonitor.warningShown = true;
+    } else if (avgFPS >= performanceMonitor.minAcceptableFPS + 5) {
+        // Warnung zurücksetzen wenn FPS wieder gut
+        performanceMonitor.warningShown = false;
+        hidePerformanceWarning();
+    }
+
+    // Kritisch niedrige FPS
+    if (avgFPS < performanceMonitor.criticalFPS && performanceMonitor.frameTimes.length >= 30) {
+        if (!performanceMonitor.pausedForPerformance) {
+            pauseGameForPerformance();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function pauseGameForPerformance() {
+    performanceMonitor.pausedForPerformance = true;
+    game.running = false;
+
+    // Performance-Warnung anzeigen
+    showPerformancePauseModal();
+}
+
+function showPerformanceWarning() {
+    // Kleine Warnung oben im Spiel
+    let warning = document.getElementById('perf-warning');
+    if (!warning) {
+        warning = document.createElement('div');
+        warning.id = 'perf-warning';
+        warning.style.cssText = `
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.9), rgba(192, 57, 43, 0.9));
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 1000;
+            animation: pulse 2s infinite;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        `;
+        warning.innerHTML = 'Niedrige Leistung erkannt - Stromsparmodus deaktivieren!';
+        document.body.appendChild(warning);
+    }
+    warning.style.display = 'block';
+}
+
+function hidePerformanceWarning() {
+    const warning = document.getElementById('perf-warning');
+    if (warning) warning.style.display = 'none';
+}
+
+function showPerformancePauseModal() {
+    // Vollbild-Modal für Pause wegen Performance
+    let modal = document.getElementById('perf-pause-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'perf-pause-modal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.98), rgba(15, 52, 96, 0.98));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            backdrop-filter: blur(10px);
+        `;
+        modal.innerHTML = `
+            <div style="
+                background: linear-gradient(145deg, rgba(42, 42, 74, 0.95), rgba(26, 26, 46, 0.98));
+                padding: 40px;
+                border-radius: 24px;
+                text-align: center;
+                max-width: 400px;
+                border: 2px solid rgba(231, 76, 60, 0.5);
+                box-shadow: 0 15px 50px rgba(0,0,0,0.5);
+            ">
+                <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                <h2 style="color: #E74C3C; margin: 0 0 15px 0; font-size: 24px;">Spiel pausiert</h2>
+                <p style="color: rgba(255,255,255,0.8); margin: 0 0 20px 0; line-height: 1.6;">
+                    Dein Gerät läuft zu langsam für das Spiel.<br><br>
+                    <strong>Bitte deaktiviere den Stromsparmodus</strong> und schließe andere Apps, um weiterzuspielen.
+                </p>
+                <p style="color: rgba(255,255,255,0.5); font-size: 12px; margin-bottom: 25px;">
+                    Das Spiel erfordert mindestens 20 FPS für faires Spielen.
+                </p>
+                <button id="perf-resume-btn" style="
+                    padding: 15px 40px;
+                    background: linear-gradient(135deg, #2ECC71, #27AE60);
+                    border: none;
+                    border-radius: 12px;
+                    color: white;
+                    font-size: 18px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                ">Erneut versuchen</button>
+                <br><br>
+                <button id="perf-quit-btn" style="
+                    padding: 10px 25px;
+                    background: transparent;
+                    border: 2px solid rgba(255,255,255,0.3);
+                    border-radius: 10px;
+                    color: rgba(255,255,255,0.7);
+                    font-size: 14px;
+                    cursor: pointer;
+                ">Zum Menü</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Event Listener
+        document.getElementById('perf-resume-btn').addEventListener('click', () => {
+            // Reset und erneut versuchen
+            performanceMonitor.slowFrameCount = 0;
+            performanceMonitor.frameTimes = [];
+            performanceMonitor.lastFrameTime = 0;
+            performanceMonitor.pausedForPerformance = false;
+            modal.style.display = 'none';
+            game.running = true;
+            requestAnimationFrame(gameLoop);
+        });
+
+        document.getElementById('perf-quit-btn').addEventListener('click', () => {
+            performanceMonitor.pausedForPerformance = false;
+            modal.style.display = 'none';
+            showStartScreen();
+        });
+    }
+    modal.style.display = 'flex';
 }
 
 // Game Loop
-function gameLoop() {
+function gameLoop(timestamp) {
     if (!game.running) return;
+
+    // Performance-Check (Anti-Cheat für Zeitlupe)
+    if (!checkPerformance(timestamp || performance.now())) {
+        return; // Spiel pausiert wegen Performance
+    }
 
     const ctx = game.ctx;
 
@@ -7381,6 +7655,956 @@ function escapeHtml(text) {
 }
 
 // ============================================
+// ACHIEVEMENTS UI FUNCTIONS
+// ============================================
+
+// Globale Variable für Achievement-Tracking im Spiel
+const achievementTracking = {
+    coinsThisGame: 0,
+    enemiesStompedThisGame: 0,
+    doubleJumpsThisGame: 0,
+    damageTakenThisLevel: 0,
+    levelsNoDamage: 0,
+    levelStartTime: 0,
+    fastestLevelTime: Infinity,
+    allCoinsCollected: false,
+    completedLevels: 0,
+    gamesPlayed: 0
+};
+
+function openAchievements() {
+    if (API.isGuest) {
+        alert('Bitte melde dich an, um Erfolge zu sehen.');
+        return;
+    }
+    hideAllScreens();
+    document.getElementById('achievements-screen').classList.remove('hidden');
+    loadAchievements();
+}
+
+function closeAchievements() {
+    hideAllScreens();
+    document.getElementById('start-screen').classList.remove('hidden');
+}
+
+let currentAchievementsFilter = 'all';
+let achievementsData = null;
+
+async function loadAchievements() {
+    const data = await API.getAchievements();
+    if (!data) {
+        document.getElementById('achievements-grid').innerHTML = '<p class="empty-message">Fehler beim Laden der Erfolge</p>';
+        return;
+    }
+
+    achievementsData = data;
+
+    // Update Stats
+    document.getElementById('achievements-unlocked').textContent = data.stats.unlocked;
+    document.getElementById('achievements-total').textContent = data.stats.total;
+    document.getElementById('achievements-percentage').textContent = data.stats.percentage + '%';
+    document.getElementById('achievements-rewards').textContent = data.stats.earnedRewards;
+
+    // Update Progress Bar
+    document.getElementById('achievements-progress-fill').style.width = data.stats.percentage + '%';
+
+    // Render Achievements
+    renderAchievements(data.achievements, data.categories);
+}
+
+function renderAchievements(achievements, categories) {
+    const grid = document.getElementById('achievements-grid');
+
+    // Filter anwenden
+    let filtered = achievements;
+    if (currentAchievementsFilter !== 'all') {
+        filtered = achievements.filter(a => a.category === currentAchievementsFilter);
+    }
+
+    // Sortieren: Freigeschaltete zuerst, dann nach Fortschritt
+    filtered.sort((a, b) => {
+        if (a.unlocked && !b.unlocked) return -1;
+        if (!a.unlocked && b.unlocked) return 1;
+        const progressA = a.progress / a.target;
+        const progressB = b.progress / b.target;
+        return progressB - progressA;
+    });
+
+    if (filtered.length === 0) {
+        grid.innerHTML = '<p class="empty-message">Keine Erfolge in dieser Kategorie</p>';
+        return;
+    }
+
+    grid.innerHTML = filtered.map(achievement => {
+        const progress = Math.min(achievement.progress, achievement.target);
+        const progressPercent = (progress / achievement.target) * 100;
+        const category = categories[achievement.category];
+
+        return `
+            <div class="achievement-card ${achievement.unlocked ? 'unlocked' : 'locked'} ${achievement.secret ? 'secret' : ''}">
+                <div class="achievement-icon">${achievement.icon}</div>
+                <div class="achievement-content">
+                    <div class="achievement-title">${escapeHtml(achievement.title)}</div>
+                    <div class="achievement-description">${escapeHtml(achievement.description)}</div>
+                    ${!achievement.unlocked ? `
+                        <div class="achievement-progress-container">
+                            <div class="achievement-progress-bar">
+                                <div class="achievement-progress-bar-fill" style="width: ${progressPercent}%"></div>
+                            </div>
+                            <div class="achievement-progress-text">${progress} / ${achievement.target}</div>
+                        </div>
+                    ` : ''}
+                    <div class="achievement-reward">
+                        <span>🪙</span> ${achievement.reward} Münzen
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function initAchievementsFilter() {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentAchievementsFilter = btn.dataset.filter;
+            if (achievementsData) {
+                renderAchievements(achievementsData.achievements, achievementsData.categories);
+            }
+        });
+    });
+}
+
+// Achievement Toast Notification anzeigen
+function showAchievementToast(achievement) {
+    // Entferne vorherige Toasts
+    const existingToast = document.querySelector('.achievement-toast');
+    if (existingToast) existingToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'achievement-toast';
+    toast.innerHTML = `
+        <div class="toast-icon">${achievement.icon}</div>
+        <div class="toast-content">
+            <div class="toast-title">Erfolg freigeschaltet!</div>
+            <div class="toast-name">${escapeHtml(achievement.title)}</div>
+            <div class="toast-reward">+${achievement.reward} Münzen</div>
+        </div>
+    `;
+    document.body.appendChild(toast);
+
+    // Nach Animation entfernen
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+
+// Achievement-Tracking am Spielende
+async function submitAchievementProgress() {
+    if (API.isGuest) return;
+
+    const updates = [];
+
+    // Münzen-Achievements
+    if (achievementTracking.coinsThisGame > 0) {
+        updates.push({ achievementId: 'coin_collector', progress: achievementTracking.coinsThisGame });
+        updates.push({ achievementId: 'coin_hoarder', progress: achievementTracking.coinsThisGame });
+        updates.push({ achievementId: 'coin_millionaire', progress: achievementTracking.coinsThisGame });
+    }
+
+    // Gegner-Achievements
+    if (achievementTracking.enemiesStompedThisGame > 0) {
+        updates.push({ achievementId: 'stomper', progress: achievementTracking.enemiesStompedThisGame });
+        updates.push({ achievementId: 'exterminator', progress: achievementTracking.enemiesStompedThisGame });
+        updates.push({ achievementId: 'legend_slayer', progress: achievementTracking.enemiesStompedThisGame });
+    }
+
+    // Doppelsprung-Achievement
+    if (achievementTracking.doubleJumpsThisGame > 0) {
+        updates.push({ achievementId: 'double_jump_master', progress: achievementTracking.doubleJumpsThisGame });
+    }
+
+    // Level ohne Schaden
+    if (achievementTracking.levelsNoDamage > 0) {
+        updates.push({ achievementId: 'untouchable', progress: achievementTracking.levelsNoDamage });
+        updates.push({ achievementId: 'ghost', progress: achievementTracking.levelsNoDamage });
+        updates.push({ achievementId: 'invincible', progress: achievementTracking.levelsNoDamage });
+    }
+
+    // Abgeschlossene Level
+    if (achievementTracking.completedLevels > 0) {
+        updates.push({ achievementId: 'first_steps', progress: achievementTracking.completedLevels });
+    }
+
+    // Speed-Achievement (schnellste Levelzeit in Sekunden)
+    if (achievementTracking.fastestLevelTime < Infinity) {
+        updates.push({ achievementId: 'speedrunner', progress: achievementTracking.fastestLevelTime });
+        updates.push({ achievementId: 'lightning', progress: achievementTracking.fastestLevelTime });
+    }
+
+    // Alle Münzen in einem Level
+    if (achievementTracking.allCoinsCollected) {
+        updates.push({ achievementId: 'perfect_collector', progress: 1 });
+    }
+
+    // Spiel gespielt
+    updates.push({ achievementId: 'dedicated_player', progress: 1 });
+    updates.push({ achievementId: 'veteran', progress: 1 });
+
+    if (updates.length === 0) return;
+
+    const result = await API.updateMultipleAchievements(updates);
+    if (result?.ok && result.data?.newlyUnlocked?.length > 0) {
+        // Zeige Toast für jedes neu freigeschaltete Achievement
+        for (const achievement of result.data.newlyUnlocked) {
+            showAchievementToast(achievement);
+            await new Promise(resolve => setTimeout(resolve, 500)); // Kurze Pause zwischen Toasts
+        }
+    }
+}
+
+// Spezielle Achievement-Checks
+async function checkScoreAchievement(score) {
+    if (API.isGuest) return;
+
+    const updates = [];
+    if (score >= 5000) updates.push({ achievementId: 'high_scorer', progress: score });
+    if (score >= 15000) updates.push({ achievementId: 'score_master', progress: score });
+    if (score >= 30000) updates.push({ achievementId: 'score_legend', progress: score });
+
+    if (updates.length > 0) {
+        const result = await API.updateMultipleAchievements(updates);
+        if (result?.ok && result.data?.newlyUnlocked?.length > 0) {
+            for (const achievement of result.data.newlyUnlocked) {
+                showAchievementToast(achievement);
+            }
+        }
+    }
+}
+
+async function checkLevelAchievement(level) {
+    if (API.isGuest) return;
+
+    const updates = [];
+    if (level >= 5) updates.push({ achievementId: 'world_traveler', progress: level });
+    if (level >= 10) updates.push({ achievementId: 'adventurer', progress: level });
+
+    if (updates.length > 0) {
+        const result = await API.updateMultipleAchievements(updates);
+        if (result?.ok && result.data?.newlyUnlocked?.length > 0) {
+            for (const achievement of result.data.newlyUnlocked) {
+                showAchievementToast(achievement);
+            }
+        }
+    }
+}
+
+async function checkGameCompleteAchievement() {
+    if (API.isGuest) return;
+
+    const result = await API.updateAchievementProgress('champion', 1);
+    if (result?.ok && result.data?.newlyUnlocked) {
+        showAchievementToast(result.data.achievement);
+    }
+}
+
+async function checkSurvivorAchievement(lives) {
+    if (API.isGuest) return;
+    if (lives === 1) {
+        const result = await API.updateAchievementProgress('survivor', 1);
+        if (result?.ok && result.data?.newlyUnlocked) {
+            showAchievementToast(result.data.achievement);
+        }
+    }
+}
+
+// Reset Achievement-Tracking für neues Spiel
+function resetAchievementTracking() {
+    achievementTracking.coinsThisGame = 0;
+    achievementTracking.enemiesStompedThisGame = 0;
+    achievementTracking.doubleJumpsThisGame = 0;
+    achievementTracking.damageTakenThisLevel = 0;
+    achievementTracking.levelsNoDamage = 0;
+    achievementTracking.levelStartTime = Date.now();
+    achievementTracking.fastestLevelTime = Infinity;
+    achievementTracking.allCoinsCollected = false;
+    achievementTracking.completedLevels = 0;
+}
+
+// Tracking-Funktionen, die im Spiel aufgerufen werden
+function trackAchievementCoin() {
+    achievementTracking.coinsThisGame++;
+}
+
+function trackAchievementEnemyStomped() {
+    achievementTracking.enemiesStompedThisGame++;
+}
+
+function trackAchievementDoubleJump() {
+    achievementTracking.doubleJumpsThisGame++;
+}
+
+function trackAchievementDamage() {
+    achievementTracking.damageTakenThisLevel++;
+}
+
+function trackAchievementLevelComplete(coinsCollected, totalCoins) {
+    achievementTracking.completedLevels++;
+
+    // Level ohne Schaden?
+    if (achievementTracking.damageTakenThisLevel === 0) {
+        achievementTracking.levelsNoDamage++;
+    }
+
+    // Level-Zeit berechnen
+    const levelTime = (Date.now() - achievementTracking.levelStartTime) / 1000;
+    if (levelTime < achievementTracking.fastestLevelTime) {
+        achievementTracking.fastestLevelTime = levelTime;
+    }
+
+    // Alle Münzen gesammelt?
+    if (coinsCollected >= totalCoins && totalCoins > 0) {
+        achievementTracking.allCoinsCollected = true;
+    }
+
+    // Reset für nächstes Level
+    achievementTracking.damageTakenThisLevel = 0;
+    achievementTracking.levelStartTime = Date.now();
+}
+
+// ============================================
+// USER PROFILE UI FUNCTIONS
+// ============================================
+
+// Achievement-Definitionen für die Anzeige
+const ACHIEVEMENT_DEFINITIONS = {
+    'first_steps': { title: 'Erste Schritte', icon: '🐾' },
+    'coin_collector': { title: 'Münzsammler', icon: '🪙' },
+    'coin_hoarder': { title: 'Münzhorterin', icon: '💰' },
+    'coin_millionaire': { title: 'Münzmillionär', icon: '🏦' },
+    'untouchable': { title: 'Unberührbar', icon: '🛡️' },
+    'ghost': { title: 'Geist', icon: '👻' },
+    'invincible': { title: 'Unbesiegbar', icon: '⭐' },
+    'stomper': { title: 'Hüpfer', icon: '🦘' },
+    'exterminator': { title: 'Vernichter', icon: '💥' },
+    'legend_slayer': { title: 'Legendärer Jäger', icon: '🏆' },
+    'speedrunner': { title: 'Speedrunner', icon: '⚡' },
+    'lightning': { title: 'Blitzschnell', icon: '🌩️' },
+    'world_traveler': { title: 'Weltreisender', icon: '🌍' },
+    'adventurer': { title: 'Abenteurer', icon: '🗺️' },
+    'champion': { title: 'Champion', icon: '👑' },
+    'high_scorer': { title: 'Punktejäger', icon: '📊' },
+    'score_master': { title: 'Punktemeister', icon: '📈' },
+    'score_legend': { title: 'Punktelegende', icon: '🌟' },
+    'double_jump_master': { title: 'Doppelsprung-Meister', icon: '🔄' },
+    'survivor': { title: 'Überlebender', icon: '💔' },
+    'perfect_collector': { title: 'Perfekter Sammler', icon: '💯' },
+    'dedicated_player': { title: 'Treuer Spieler', icon: '🎮' },
+    'veteran': { title: 'Veteran', icon: '🎖️' },
+    'secret_explorer': { title: 'Geheimforscher', icon: '🔮' }
+};
+
+// Aktuelles Profil-UserId speichern für Vergleich
+let currentProfileUserId = null;
+
+async function openProfile(userId) {
+    const modal = document.getElementById('profile-modal');
+    modal.classList.remove('hidden');
+    currentProfileUserId = userId;
+
+    // Loading state
+    document.getElementById('profile-username').textContent = 'Laden...';
+    document.getElementById('profile-user-title').textContent = '';
+    document.getElementById('profile-bio').textContent = '';
+
+    const data = await API.getPublicProfile(userId);
+    if (!data) {
+        document.getElementById('profile-username').textContent = 'Fehler beim Laden';
+        return;
+    }
+
+    // Banner setzen
+    const banner = document.getElementById('profile-banner');
+    if (data.user.bannerColors && data.user.bannerColors.length > 0) {
+        const gradient = data.user.bannerColors.length > 1
+            ? `linear-gradient(135deg, ${data.user.bannerColors.join(', ')})`
+            : data.user.bannerColors[0];
+        banner.style.background = gradient;
+    }
+
+    // Benutzer-Info
+    document.getElementById('profile-username').textContent = data.user.username;
+    document.getElementById('profile-member-since').textContent = formatDate(data.user.memberSince);
+
+    // Titel setzen
+    const titleEl = document.getElementById('profile-user-title');
+    if (data.user.titleInfo) {
+        titleEl.textContent = data.user.titleInfo.name;
+        titleEl.style.background = `linear-gradient(135deg, ${data.user.titleInfo.color}, ${adjustColor(data.user.titleInfo.color, -30)})`;
+        titleEl.style.color = '#fff';
+        titleEl.style.display = 'inline-block';
+    } else {
+        titleEl.style.display = 'none';
+    }
+
+    // Bio setzen
+    const bioEl = document.getElementById('profile-bio');
+    const bioSection = document.getElementById('profile-bio-section');
+    if (data.user.bio && data.user.bio.trim()) {
+        bioEl.textContent = '"' + data.user.bio + '"';
+        bioSection.style.display = 'block';
+    } else {
+        bioSection.style.display = 'none';
+    }
+
+    // Avatar-Skin anpassen
+    updateProfileAvatar(data.user.skin);
+
+    // Privatsphäre-Check
+    const statsHidden = !data.stats;
+    const achievementsHidden = !data.achievements;
+    const privacyNotice = document.getElementById('profile-privacy-notice');
+
+    if (statsHidden || achievementsHidden) {
+        privacyNotice.classList.remove('hidden');
+    } else {
+        privacyNotice.classList.add('hidden');
+    }
+
+    // Hauptstatistiken
+    const statsGrid = document.getElementById('profile-stats-grid');
+    if (!statsHidden) {
+        statsGrid.style.display = 'grid';
+        document.getElementById('profile-best-score').textContent = formatNumber(data.stats.bestScore);
+        document.getElementById('profile-rank').textContent = data.stats.rank > 0 ? '#' + data.stats.rank : '-';
+    } else {
+        document.getElementById('profile-best-score').textContent = '-';
+        document.getElementById('profile-rank').textContent = '-';
+    }
+
+    // Achievements
+    if (!achievementsHidden) {
+        document.getElementById('profile-achievements').textContent = `${data.achievements.unlocked}/${data.achievements.total}`;
+    } else {
+        document.getElementById('profile-achievements').textContent = '-';
+    }
+
+    // Coins (können separat versteckt sein)
+    if (data.user.coins !== null) {
+        document.getElementById('profile-coins').textContent = formatNumber(data.user.coins);
+    } else {
+        document.getElementById('profile-coins').textContent = '-';
+    }
+
+    // Detaillierte Statistiken
+    const statsSection = document.getElementById('profile-stats-section');
+    const platformSection = document.getElementById('profile-platform-section');
+    if (!statsHidden && data.sessions) {
+        statsSection.style.display = 'block';
+        platformSection.style.display = 'block';
+        document.getElementById('profile-games-played').textContent = data.sessions.gamesPlayed;
+        document.getElementById('profile-max-level').textContent = data.sessions.highestLevel;
+        document.getElementById('profile-play-time').textContent = data.sessions.totalPlayTimeMinutes + ' Min';
+        document.getElementById('profile-total-earned').textContent = formatNumber(data.sessions.totalCoinsEarned);
+        document.getElementById('profile-pc-score').textContent = formatNumber(data.stats.platformScores?.pc || 0);
+        document.getElementById('profile-mobile-score').textContent = formatNumber(data.stats.platformScores?.mobile || 0);
+    } else {
+        statsSection.style.display = 'none';
+        platformSection.style.display = 'none';
+    }
+
+    // Letzte Achievements
+    const recentSection = document.getElementById('profile-recent-achievements-section');
+    const recentContainer = document.getElementById('profile-recent-achievements');
+    if (!achievementsHidden && data.achievements.recent && data.achievements.recent.length > 0) {
+        recentSection.style.display = 'block';
+        recentContainer.innerHTML = data.achievements.recent.map(a => {
+            const def = ACHIEVEMENT_DEFINITIONS[a.achievement_id] || { title: '???', icon: '❓' };
+            return `
+                <div class="profile-achievement-badge">
+                    <span class="badge-icon">${def.icon}</span>
+                    <span class="badge-name">${def.title}</span>
+                </div>
+            `;
+        }).join('');
+    } else {
+        recentSection.style.display = 'none';
+    }
+
+    // Aktivitäts-Feed laden
+    loadActivityFeed(userId);
+
+    // Aktionen (Freund hinzufügen/entfernen, Bearbeiten, Vergleichen)
+    const actionsContainer = document.getElementById('profile-actions');
+    actionsContainer.innerHTML = '';
+
+    if (data.isOwnProfile) {
+        actionsContainer.innerHTML = `
+            <button class="btn-primary" onclick="openProfileEdit()">Profil bearbeiten</button>
+        `;
+    } else if (!API.isGuest) {
+        let buttons = '';
+
+        // Vergleichen-Button
+        if (API.user) {
+            buttons += `<button class="btn-secondary" onclick="openComparison(${API.user.id}, ${userId})">Vergleichen</button>`;
+        }
+
+        // Freund-Aktionen
+        if (data.friendshipStatus === 'accepted') {
+            buttons += `<button class="btn-remove" onclick="removeFriendFromProfile(${userId})">Freund entfernen</button>`;
+        } else if (data.friendshipStatus === 'pending') {
+            buttons += `<button disabled>Anfrage ausstehend</button>`;
+        } else if (data.allowFriendRequests !== false) {
+            buttons += `<button class="btn-accept" onclick="sendFriendRequestFromProfile(${userId})">Freund hinzufügen</button>`;
+        } else {
+            buttons += `<button disabled>Keine Anfragen erlaubt</button>`;
+        }
+
+        actionsContainer.innerHTML = buttons;
+    }
+}
+
+// Aktivitäts-Feed laden
+async function loadActivityFeed(userId) {
+    const container = document.getElementById('profile-activity-feed');
+    const section = document.getElementById('profile-activity-section');
+
+    try {
+        const response = await fetch(`/api/users/activity/${userId}`, {
+            headers: API.token ? { 'Authorization': `Bearer ${API.token}` } : {}
+        });
+
+        if (!response.ok) {
+            section.style.display = 'none';
+            return;
+        }
+
+        const data = await response.json();
+
+        if (!data.activities || data.activities.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+        container.innerHTML = data.activities.slice(0, 10).map(activity => {
+            let icon, text;
+            const timeAgo = formatTimeAgo(activity.timestamp);
+
+            switch (activity.type) {
+                case 'highscore':
+                    icon = '🏆';
+                    text = `Neuer Highscore: ${formatNumber(activity.score)} (Level ${activity.level})`;
+                    break;
+                case 'achievement':
+                    const def = ACHIEVEMENT_DEFINITIONS[activity.achievementId] || { title: '???', icon: '⭐' };
+                    icon = def.icon;
+                    text = `Achievement freigeschaltet: ${def.title}`;
+                    break;
+                case 'session':
+                    icon = '🎮';
+                    text = `Spiel beendet: ${formatNumber(activity.score)} Punkte, ${activity.coins} Münzen`;
+                    break;
+                default:
+                    icon = '📝';
+                    text = 'Aktivität';
+            }
+
+            return `
+                <div class="activity-item">
+                    <span class="activity-icon">${icon}</span>
+                    <span class="activity-text">${text}</span>
+                    <span class="activity-time">${timeAgo}</span>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading activity feed:', error);
+        section.style.display = 'none';
+    }
+}
+
+// Zeitangabe formatieren (z.B. "vor 2 Stunden")
+function formatTimeAgo(timestamp) {
+    const now = new Date();
+    const date = new Date(timestamp);
+    const diffMs = now - date;
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 7) return formatDate(timestamp);
+    if (diffDays > 0) return `vor ${diffDays} Tag${diffDays > 1 ? 'en' : ''}`;
+    if (diffHours > 0) return `vor ${diffHours} Std`;
+    if (diffMins > 0) return `vor ${diffMins} Min`;
+    return 'gerade eben';
+}
+
+function closeProfile() {
+    document.getElementById('profile-modal').classList.add('hidden');
+}
+
+function updateProfileAvatar(skin) {
+    const avatar = document.getElementById('profile-avatar');
+    // Skin-Farben anpassen
+    const skinColors = {
+        'default': '#8B4513',
+        'polar': '#F5F5F5',
+        'panda': '#1a1a1a',
+        'golden': '#FFD700',
+        'pink': '#FF69B4',
+        'blue': '#4169E1'
+    };
+    const color = skinColors[skin] || skinColors['default'];
+    avatar.style.background = `linear-gradient(135deg, ${color}, ${adjustColor(color, -20)})`;
+}
+
+function adjustColor(color, amount) {
+    // Einfache Farbhelligkeitsanpassung
+    const hex = color.replace('#', '');
+    const num = parseInt(hex, 16);
+    const r = Math.max(0, Math.min(255, (num >> 16) + amount));
+    const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount));
+    const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount));
+    return '#' + (0x1000000 + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+function formatNumber(num) {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+}
+
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+// ============================================
+// PROFILE EDIT MODAL FUNCTIONS
+// ============================================
+
+let profileEditData = {
+    bio: '',
+    banner: 'default',
+    title: null,
+    availableTitles: [],
+    availableBanners: [],
+    allTitles: {},
+    allBanners: {},
+    privacy: {}
+};
+
+async function openProfileEdit() {
+    // Eigenes erweitertes Profil laden
+    const response = await fetch('/api/users/profile/extended', {
+        headers: { 'Authorization': `Bearer ${API.token}` }
+    });
+
+    if (!response.ok) {
+        alert('Fehler beim Laden des Profils');
+        return;
+    }
+
+    const data = await response.json();
+    profileEditData = {
+        bio: data.bio || '',
+        banner: data.profileBanner || 'default',
+        title: data.selectedTitle,
+        availableTitles: data.availableTitles || ['newcomer'],
+        availableBanners: data.availableBanners || ['default', 'forest'],
+        allTitles: data.allTitles || {},
+        allBanners: data.allBanners || {},
+        privacy: data.privacy || {}
+    };
+
+    // Modal anzeigen
+    document.getElementById('profile-edit-modal').classList.remove('hidden');
+
+    // Bio-Feld
+    const bioInput = document.getElementById('profile-edit-bio');
+    bioInput.value = profileEditData.bio;
+    document.getElementById('bio-char-count').textContent = profileEditData.bio.length;
+
+    // Banner-Auswahl
+    const bannerGrid = document.getElementById('banner-selection');
+    bannerGrid.innerHTML = '';
+    for (const [id, banner] of Object.entries(profileEditData.allBanners)) {
+        const isAvailable = profileEditData.availableBanners.includes(id);
+        const isSelected = profileEditData.banner === id;
+        const gradient = banner.colors.length > 1
+            ? `linear-gradient(135deg, ${banner.colors.join(', ')})`
+            : banner.colors[0];
+
+        const div = document.createElement('div');
+        div.className = `banner-option ${isSelected ? 'selected' : ''} ${!isAvailable ? 'locked' : ''}`;
+        div.style.background = gradient;
+        div.innerHTML = `<span class="banner-name">${banner.name}</span>`;
+        if (isAvailable) {
+            div.onclick = () => selectBanner(id);
+        }
+        bannerGrid.appendChild(div);
+    }
+
+    // Titel-Auswahl
+    const titleGrid = document.getElementById('title-selection');
+    titleGrid.innerHTML = '';
+
+    // "Kein Titel" Option
+    const noTitleDiv = document.createElement('div');
+    noTitleDiv.className = `title-option ${profileEditData.title === null ? 'selected' : ''}`;
+    noTitleDiv.textContent = 'Kein Titel';
+    noTitleDiv.onclick = () => selectTitle(null);
+    titleGrid.appendChild(noTitleDiv);
+
+    for (const [id, title] of Object.entries(profileEditData.allTitles)) {
+        const isAvailable = profileEditData.availableTitles.includes(id);
+        const isSelected = profileEditData.title === id;
+
+        const div = document.createElement('div');
+        div.className = `title-option ${isSelected ? 'selected' : ''} ${!isAvailable ? 'locked' : ''}`;
+        div.textContent = title.name;
+        div.style.background = isAvailable ? `linear-gradient(135deg, ${title.color}, ${adjustColor(title.color, -30)})` : '';
+        div.title = title.description;
+        if (isAvailable) {
+            div.onclick = () => selectTitle(id);
+        }
+        titleGrid.appendChild(div);
+    }
+
+    // Privatsphäre-Einstellungen
+    document.getElementById('privacy-show-coins').checked = profileEditData.privacy.showCoins !== false;
+    document.getElementById('privacy-show-stats').checked = profileEditData.privacy.showStats !== false;
+    document.getElementById('privacy-show-achievements').checked = profileEditData.privacy.showAchievements !== false;
+    document.getElementById('privacy-allow-requests').checked = profileEditData.privacy.allowRequests !== false;
+}
+
+function selectBanner(bannerId) {
+    profileEditData.banner = bannerId;
+    document.querySelectorAll('.banner-option').forEach(el => el.classList.remove('selected'));
+    event.target.closest('.banner-option').classList.add('selected');
+}
+
+function selectTitle(titleId) {
+    profileEditData.title = titleId;
+    document.querySelectorAll('.title-option').forEach(el => el.classList.remove('selected'));
+    event.target.classList.add('selected');
+}
+
+function closeProfileEdit() {
+    document.getElementById('profile-edit-modal').classList.add('hidden');
+}
+
+async function saveProfileEdit() {
+    const bio = document.getElementById('profile-edit-bio').value.trim();
+    const privacy = {
+        showCoins: document.getElementById('privacy-show-coins').checked,
+        showStats: document.getElementById('privacy-show-stats').checked,
+        showAchievements: document.getElementById('privacy-show-achievements').checked,
+        allowRequests: document.getElementById('privacy-allow-requests').checked
+    };
+
+    try {
+        const response = await fetch('/api/users/profile/extended', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${API.token}`
+            },
+            body: JSON.stringify({
+                bio,
+                profileBanner: profileEditData.banner,
+                selectedTitle: profileEditData.title,
+                privacy
+            })
+        });
+
+        if (response.ok) {
+            closeProfileEdit();
+            // Eigenes Profil neu laden
+            if (API.user) {
+                openProfile(API.user.id);
+            }
+        } else {
+            const data = await response.json();
+            alert(data.error || 'Fehler beim Speichern');
+        }
+    } catch (error) {
+        console.error('Save profile error:', error);
+        alert('Fehler beim Speichern des Profils');
+    }
+}
+
+// ============================================
+// PLAYER COMPARISON FUNCTIONS
+// ============================================
+
+async function openComparison(userId1, userId2) {
+    const modal = document.getElementById('compare-modal');
+    modal.classList.remove('hidden');
+
+    document.getElementById('compare-name1').textContent = 'Laden...';
+    document.getElementById('compare-name2').textContent = 'Laden...';
+    document.getElementById('compare-stats1').innerHTML = '';
+    document.getElementById('compare-stats2').innerHTML = '';
+    document.getElementById('compare-summary').innerHTML = '';
+
+    try {
+        const response = await fetch(`/api/users/compare/${userId1}/${userId2}`, {
+            headers: API.token ? { 'Authorization': `Bearer ${API.token}` } : {}
+        });
+
+        if (!response.ok) {
+            document.getElementById('compare-name1').textContent = 'Fehler';
+            return;
+        }
+
+        const data = await response.json();
+        renderComparison(data.player1, data.player2);
+    } catch (error) {
+        console.error('Comparison error:', error);
+        document.getElementById('compare-name1').textContent = 'Fehler beim Laden';
+    }
+}
+
+function renderComparison(p1, p2) {
+    document.getElementById('compare-name1').textContent = p1.username;
+    document.getElementById('compare-name2').textContent = p2.username;
+
+    // Avatar aktualisieren
+    updateCompareAvatar('compare-avatar1', p1.skin);
+    updateCompareAvatar('compare-avatar2', p2.skin);
+
+    // Stats vergleichen
+    const stats = [
+        { label: 'Highscore', key: 'bestScore', icon: '🏆' },
+        { label: 'Rang', key: 'rank', icon: '🎖️', lower: true },
+        { label: 'Achievements', key: 'achievementsUnlocked', icon: '⭐' },
+        { label: 'Münzen', key: 'totalCoins', icon: '🪙' },
+        { label: 'Spiele', key: 'gamesPlayed', icon: '🎮' },
+        { label: 'Max Level', key: 'maxLevel', icon: '📊' },
+        { label: 'Spielzeit', key: 'playTimeMinutes', icon: '⏱️', suffix: ' Min' }
+    ];
+
+    let p1Wins = 0;
+    let p2Wins = 0;
+
+    const stats1Html = [];
+    const stats2Html = [];
+
+    stats.forEach(stat => {
+        const v1 = p1.stats[stat.key] || 0;
+        const v2 = p2.stats[stat.key] || 0;
+        const suffix = stat.suffix || '';
+
+        let winner1 = false;
+        let winner2 = false;
+
+        if (stat.lower) {
+            // Niedriger ist besser (z.B. Rang)
+            if (v1 < v2 && v1 > 0) { winner1 = true; p1Wins++; }
+            else if (v2 < v1 && v2 > 0) { winner2 = true; p2Wins++; }
+        } else {
+            if (v1 > v2) { winner1 = true; p1Wins++; }
+            else if (v2 > v1) { winner2 = true; p2Wins++; }
+        }
+
+        const format = (v) => stat.key === 'rank' && v > 0 ? `#${v}` : formatNumber(v) + suffix;
+
+        stats1Html.push(`
+            <div class="compare-stat-row ${winner1 ? 'winner' : ''}">
+                <span class="compare-stat-label">${stat.icon} ${stat.label}</span>
+                <span class="compare-stat-value">${format(v1)}</span>
+            </div>
+        `);
+
+        stats2Html.push(`
+            <div class="compare-stat-row ${winner2 ? 'winner' : ''}">
+                <span class="compare-stat-label">${stat.icon} ${stat.label}</span>
+                <span class="compare-stat-value">${format(v2)}</span>
+            </div>
+        `);
+    });
+
+    document.getElementById('compare-stats1').innerHTML = stats1Html.join('');
+    document.getElementById('compare-stats2').innerHTML = stats2Html.join('');
+
+    // Zusammenfassung
+    const summary = document.getElementById('compare-summary');
+    if (p1Wins > p2Wins) {
+        summary.innerHTML = `🏆 <span style="color: #2ECC71">${p1.username}</span> gewinnt mit ${p1Wins} zu ${p2Wins}!`;
+    } else if (p2Wins > p1Wins) {
+        summary.innerHTML = `🏆 <span style="color: #2ECC71">${p2.username}</span> gewinnt mit ${p2Wins} zu ${p1Wins}!`;
+    } else {
+        summary.innerHTML = `🤝 Unentschieden! Beide haben ${p1Wins} Kategorien gewonnen.`;
+    }
+}
+
+function updateCompareAvatar(elementId, skin) {
+    const avatar = document.getElementById(elementId);
+    const skinColors = {
+        'default': '#8B4513',
+        'polar': '#F5F5F5',
+        'panda': '#1a1a1a',
+        'golden': '#FFD700',
+        'pink': '#FF69B4',
+        'blue': '#4169E1'
+    };
+    const color = skinColors[skin] || skinColors['default'];
+    avatar.style.background = `linear-gradient(135deg, ${color}, ${adjustColor(color, -20)})`;
+}
+
+function closeComparison() {
+    document.getElementById('compare-modal').classList.add('hidden');
+}
+
+async function sendFriendRequestFromProfile(userId) {
+    const result = await API.sendFriendRequest(userId);
+    if (result?.ok) {
+        openProfile(userId); // Refresh profile
+    } else {
+        alert(result?.data?.error || 'Fehler beim Senden der Anfrage');
+    }
+}
+
+async function removeFriendFromProfile(userId) {
+    if (!confirm('Freund wirklich entfernen?')) return;
+    // Wir brauchen die friendship_id - das ist komplizierter
+    // Erstmal einfach schließen und zur Freundesliste verweisen
+    alert('Bitte entferne den Freund über die Freundesliste.');
+    closeProfile();
+}
+
+// Highscore-Liste mit klickbaren Namen rendern
+function displayHighscoresWithProfiles(highscores, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (!highscores || highscores.length === 0) {
+        container.innerHTML = '<li style="color: #888; text-align: center;">Noch keine Einträge</li>';
+        return;
+    }
+
+    container.innerHTML = highscores.map((entry, index) => {
+        const isClickable = entry.user_id && !API.isGuest;
+        const clickAttr = isClickable ? `onclick="openProfile(${entry.user_id})"` : '';
+        const clickClass = isClickable ? 'clickable' : '';
+        const currentClass = API.user && entry.user_id === API.user.id ? 'current-player' : '';
+
+        return `
+            <li class="${currentClass}">
+                <span class="rank">#${index + 1}</span>
+                <span class="player-name ${clickClass}" ${clickAttr}>${escapeHtml(entry.username || 'Unbekannt')}</span>
+                <span class="player-score">${entry.score}</span>
+            </li>
+        `;
+    }).join('');
+}
+
+// ============================================
 // DAILY CHALLENGE UI FUNCTIONS
 // ============================================
 
@@ -7637,12 +8861,14 @@ function removeChallengeHUD() {
 function trackCoinCollected() {
     game.challengeProgress.coinsThisGame++;
     game.challengeProgress.coinsTotal++;
+    trackAchievementCoin(); // Achievement tracking
     checkChallengeProgress();
 }
 
 function trackEnemyDefeatedByJump() {
     game.challengeProgress.enemiesDefeatedJump++;
     game.challengeProgress.enemiesDefeatedTotal++;
+    trackAchievementEnemyStomped(); // Achievement tracking
     checkChallengeProgress();
 }
 
@@ -7653,6 +8879,7 @@ function trackEnemyDefeated() {
 
 function trackDoubleJump() {
     game.challengeProgress.doubleJumps++;
+    trackAchievementDoubleJump(); // Achievement tracking
     checkChallengeProgress();
 }
 
@@ -7660,12 +8887,16 @@ function trackDamageTaken() {
     game.challengeProgress.damageTakenThisLevel++;
     game.challengeProgress.levelCompletedNoDamage = false;
     game.challengeProgress.bossDefeatedNoDamage = false;
+    trackAchievementDamage(); // Achievement tracking
 }
 
-function trackLevelCompleted(levelTime, allCoinsCollected) {
+function trackLevelCompleted(levelTime, allCoinsCollected, coinsCollected, totalCoins) {
     game.challengeProgress.levelsCompleted++;
     game.challengeProgress.currentLevelTime = levelTime;
     game.challengeProgress.allCoinsCollected = allCoinsCollected;
+
+    // Achievement tracking
+    trackAchievementLevelComplete(coinsCollected || 0, totalCoins || 0);
 
     // Reset für nächstes Level
     game.challengeProgress.damageTakenThisLevel = 0;
@@ -7680,6 +8911,7 @@ function trackBossDefeated() {
 
 function trackGameEnd() {
     checkChallengeProgress();
+    submitAchievementProgress(); // Achievement tracking am Spielende
 }
 
 // CSS für Notification Animation
@@ -7933,6 +9165,34 @@ async function init() {
         if (e.key === 'Enter') searchFriends();
     });
 
+    // Achievements buttons
+    document.getElementById('achievements-btn')?.addEventListener('click', openAchievements);
+    document.getElementById('achievements-close-btn')?.addEventListener('click', closeAchievements);
+    initAchievementsFilter();
+
+    // Profile modal
+    document.getElementById('profile-close-btn')?.addEventListener('click', closeProfile);
+    document.getElementById('profile-modal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'profile-modal') closeProfile();
+    });
+
+    // Profile edit modal
+    document.getElementById('profile-edit-close-btn')?.addEventListener('click', closeProfileEdit);
+    document.getElementById('profile-cancel-btn')?.addEventListener('click', closeProfileEdit);
+    document.getElementById('profile-save-btn')?.addEventListener('click', saveProfileEdit);
+    document.getElementById('profile-edit-modal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'profile-edit-modal') closeProfileEdit();
+    });
+    document.getElementById('profile-edit-bio')?.addEventListener('input', (e) => {
+        document.getElementById('bio-char-count').textContent = e.target.value.length;
+    });
+
+    // Comparison modal
+    document.getElementById('compare-close-btn')?.addEventListener('click', closeComparison);
+    document.getElementById('compare-modal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'compare-modal') closeComparison();
+    });
+
     // Daily Challenge buttons
     document.getElementById('challenge-accept-btn')?.addEventListener('click', acceptDailyChallenge);
     document.getElementById('challenge-decline-btn')?.addEventListener('click', declineDailyChallenge);
@@ -8162,6 +9422,14 @@ function actuallyStartGame() {
     // Ensure canvas is properly sized
     resizeCanvas();
 
+    // Performance-Monitor zurücksetzen
+    performanceMonitor.lastFrameTime = 0;
+    performanceMonitor.frameTimes = [];
+    performanceMonitor.slowFrameCount = 0;
+    performanceMonitor.warningShown = false;
+    performanceMonitor.pausedForPerformance = false;
+    hidePerformanceWarning();
+
     game.score = 0;
     game.lives = 3 + game.userProfile.extraLives; // Apply extra lives from upgrades
     game.level = 1;
@@ -8175,6 +9443,9 @@ function actuallyStartGame() {
     resetChallengeProgress();
     game.challengeProgress.startLives = game.lives;
     updateChallengeHUD();
+
+    // Achievement tracking initialisieren
+    resetAchievementTracking();
 
     updateUI();
 
