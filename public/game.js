@@ -523,7 +523,8 @@ function displayHighscores(highscores, elementId) {
     }
 
     container.innerHTML = highscores.map((hs, i) => {
-        const isClickable = hs.user_id && !API.isGuest;
+        // Profile sind für alle sichtbar (auch Gäste können Profile ansehen)
+        const isClickable = hs.user_id;
         const clickAttr = isClickable ? `onclick="openProfile(${hs.user_id})"` : '';
         const clickClass = isClickable ? 'clickable' : '';
         const currentClass = API.user && hs.user_id === API.user.id ? 'current-player' : '';
@@ -8589,7 +8590,8 @@ function displayHighscoresWithProfiles(highscores, containerId) {
     }
 
     container.innerHTML = highscores.map((entry, index) => {
-        const isClickable = entry.user_id && !API.isGuest;
+        // Profile sind für alle sichtbar (auch Gäste können Profile ansehen)
+        const isClickable = entry.user_id;
         const clickAttr = isClickable ? `onclick="openProfile(${entry.user_id})"` : '';
         const clickClass = isClickable ? 'clickable' : '';
         const currentClass = API.user && entry.user_id === API.user.id ? 'current-player' : '';

@@ -23,7 +23,7 @@ async function getHighscores(req, res) {
                 FROM highscores h
                 ${platformFilter}
             )
-            SELECT b.id, b.username, b.score, b.level_reached, b.created_at, b.platform, u.selected_skin
+            SELECT b.id, b.username, b.score, b.level_reached, b.created_at, b.platform, b.user_id, u.selected_skin
             FROM best_scores b
             LEFT JOIN users u ON b.user_id = u.id
             WHERE b.rn = 1
@@ -50,7 +50,8 @@ async function getHighscores(req, res) {
                 levelReached: row.level_reached,
                 skin: row.selected_skin || 'default',
                 platform: row.platform || 'pc',
-                date: row.created_at
+                date: row.created_at,
+                user_id: row.user_id // Für klickbare Profile in der Highscore-Liste
             })),
             total: totalCount,
             limit,
