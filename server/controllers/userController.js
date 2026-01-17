@@ -1,5 +1,39 @@
 const { pool } = require('../config/db');
 
+// Titel-Definitionen (basierend auf Achievements und anderen Bedingungen)
+const TITLES = {
+    'newcomer': { name: 'Neuling', description: 'Willkommen bei Little Bear!', requirement: 'Automatisch', color: '#95A5A6' },
+    'coin_collector': { name: 'Münzsammler', description: '100 Münzen gesammelt', requirement: 'achievement:coin_collector', color: '#F1C40F' },
+    'coin_master': { name: 'Münzmeister', description: '2000 Münzen gesammelt', requirement: 'achievement:coin_millionaire', color: '#FFD700' },
+    'untouchable': { name: 'Der Unberührbare', description: 'Level ohne Schaden', requirement: 'achievement:untouchable', color: '#3498DB' },
+    'ghost': { name: 'Geist', description: '5 Level ohne Schaden', requirement: 'achievement:ghost', color: '#9B59B6' },
+    'speedster': { name: 'Blitzschnell', description: 'Level unter 20 Sekunden', requirement: 'achievement:lightning', color: '#E74C3C' },
+    'champion': { name: 'Champion', description: 'Alle Level abgeschlossen', requirement: 'achievement:champion', color: '#E67E22' },
+    'legend': { name: 'Legende', description: '30.000 Punkte erreicht', requirement: 'achievement:score_legend', color: '#9B59B6' },
+    'veteran': { name: 'Veteran', description: '50 Spiele gespielt', requirement: 'achievement:veteran', color: '#1ABC9C' },
+    'hunter': { name: 'Jäger', description: '200 Gegner besiegt', requirement: 'achievement:legend_slayer', color: '#E74C3C' },
+    'perfectionist': { name: 'Perfektionist', description: 'Alle Münzen in Level', requirement: 'achievement:perfect_collector', color: '#2ECC71' },
+    'survivor': { name: 'Überlebenskünstler', description: 'Mit 1 Leben gewonnen', requirement: 'achievement:survivor', color: '#C0392B' },
+    'explorer': { name: 'Entdecker', description: 'Geheimes Achievement', requirement: 'achievement:secret_explorer', color: '#8E44AD' },
+    'top10': { name: 'Top 10 Spieler', description: 'In den Top 10', requirement: 'rank:10', color: '#F39C12' },
+    'top3': { name: 'Podiumsplatz', description: 'In den Top 3', requirement: 'rank:3', color: '#FFD700' },
+    'number_one': { name: '#1 Spieler', description: 'Platz 1 der Rangliste', requirement: 'rank:1', color: '#FF6B6B' }
+};
+
+// Banner-Definitionen
+const BANNERS = {
+    'default': { name: 'Standard', colors: ['#1a1a2e', '#16213e'], requirement: null },
+    'forest': { name: 'Waldgrün', colors: ['#1a472a', '#2d5a3d'], requirement: null },
+    'sunset': { name: 'Sonnenuntergang', colors: ['#c0392b', '#e74c3c', '#f39c12'], requirement: 'coins:100' },
+    'ocean': { name: 'Ozean', colors: ['#0c2461', '#1e3799', '#3498db'], requirement: 'coins:100' },
+    'purple': { name: 'Königlich', colors: ['#4a148c', '#7b1fa2', '#9c27b0'], requirement: 'coins:200' },
+    'gold': { name: 'Golden', colors: ['#5d4e37', '#8b7355', '#ffd700'], requirement: 'achievement:coin_millionaire' },
+    'fire': { name: 'Feuer', colors: ['#b71c1c', '#e53935', '#ff5722'], requirement: 'achievement:legend_slayer' },
+    'ice': { name: 'Eis', colors: ['#0d47a1', '#1976d2', '#b3e5fc'], requirement: 'achievement:ghost' },
+    'rainbow': { name: 'Regenbogen', colors: ['#e74c3c', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6'], requirement: 'achievement:champion' },
+    'champion': { name: 'Champion', colors: ['#ffd700', '#ff8c00', '#ff4500'], requirement: 'rank:1' }
+};
+
 // Shop items configuration (must match frontend)
 const SHOP_ITEMS = {
     skins: {
@@ -268,4 +302,556 @@ async function syncProfile(req, res) {
     }
 }
 
-module.exports = { getProfile, updateProfile, addCoins, purchase, getInventory, syncProfile };
+// Erweitertes eigenes Profil abrufen (mit Titeln, Bannern, Privatsphäre)
+async function getExtendedProfile(req, res) {
+    try {
+        const result = await pool.query(
+            `SELECT id, username, email, email_verified, total_coins,
+                    purchased_skins, purchased_upgrades, selected_skin, created_at,
+                    bio, profile_banner, selected_title, unlocked_titles,
+                    privacy_show_coins, privacy_show_stats, privacy_show_achievements, privacy_allow_requests
+             FROM users WHERE id = $1`,
+            [req.user.id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Benutzer nicht gefunden' });
+        }
+
+        const user = result.rows[0];
+
+        // Berechne verfügbare Titel basierend auf Achievements und Rang
+        const availableTitles = await getAvailableTitles(req.user.id);
+        const availableBanners = await getAvailableBanners(req.user.id, user.total_coins);
+
+        res.json({
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            emailVerified: user.email_verified,
+            totalCoins: user.total_coins,
+            purchasedSkins: user.purchased_skins || [],
+            purchasedUpgrades: user.purchased_upgrades || [],
+            selectedSkin: user.selected_skin,
+            createdAt: user.created_at,
+            // Neue Profil-Felder
+            bio: user.bio || '',
+            profileBanner: user.profile_banner || 'default',
+            selectedTitle: user.selected_title,
+            unlockedTitles: user.unlocked_titles || [],
+            availableTitles,
+            availableBanners,
+            allTitles: TITLES,
+            allBanners: BANNERS,
+            privacy: {
+                showCoins: user.privacy_show_coins,
+                showStats: user.privacy_show_stats,
+                showAchievements: user.privacy_show_achievements,
+                allowRequests: user.privacy_allow_requests
+            }
+        });
+    } catch (error) {
+        console.error('Get extended profile error:', error);
+        res.status(500).json({ error: 'Profil konnte nicht geladen werden' });
+    }
+}
+
+// Erweitertes Profil aktualisieren (Bio, Banner, Titel, Privatsphäre)
+async function updateExtendedProfile(req, res) {
+    const { bio, profileBanner, selectedTitle, privacy } = req.body;
+
+    try {
+        const user = await pool.query(
+            'SELECT total_coins, unlocked_titles FROM users WHERE id = $1',
+            [req.user.id]
+        );
+
+        if (user.rows.length === 0) {
+            return res.status(404).json({ error: 'Benutzer nicht gefunden' });
+        }
+
+        const userData = user.rows[0];
+        const updates = [];
+        const values = [];
+        let paramIndex = 1;
+
+        // Bio validieren und aktualisieren
+        if (bio !== undefined) {
+            const sanitizedBio = bio.substring(0, 200).trim();
+            updates.push(`bio = $${paramIndex++}`);
+            values.push(sanitizedBio);
+        }
+
+        // Banner validieren und aktualisieren
+        if (profileBanner !== undefined) {
+            const availableBanners = await getAvailableBanners(req.user.id, userData.total_coins);
+            if (!availableBanners.includes(profileBanner)) {
+                return res.status(400).json({ error: 'Banner nicht verfügbar' });
+            }
+            updates.push(`profile_banner = $${paramIndex++}`);
+            values.push(profileBanner);
+        }
+
+        // Titel validieren und aktualisieren
+        if (selectedTitle !== undefined) {
+            if (selectedTitle !== null) {
+                const availableTitles = await getAvailableTitles(req.user.id);
+                if (!availableTitles.includes(selectedTitle)) {
+                    return res.status(400).json({ error: 'Titel nicht freigeschaltet' });
+                }
+            }
+            updates.push(`selected_title = $${paramIndex++}`);
+            values.push(selectedTitle);
+        }
+
+        // Privatsphäre-Einstellungen aktualisieren
+        if (privacy !== undefined) {
+            if (privacy.showCoins !== undefined) {
+                updates.push(`privacy_show_coins = $${paramIndex++}`);
+                values.push(Boolean(privacy.showCoins));
+            }
+            if (privacy.showStats !== undefined) {
+                updates.push(`privacy_show_stats = $${paramIndex++}`);
+                values.push(Boolean(privacy.showStats));
+            }
+            if (privacy.showAchievements !== undefined) {
+                updates.push(`privacy_show_achievements = $${paramIndex++}`);
+                values.push(Boolean(privacy.showAchievements));
+            }
+            if (privacy.allowRequests !== undefined) {
+                updates.push(`privacy_allow_requests = $${paramIndex++}`);
+                values.push(Boolean(privacy.allowRequests));
+            }
+        }
+
+        if (updates.length === 0) {
+            return res.status(400).json({ error: 'Keine Änderungen angegeben' });
+        }
+
+        values.push(req.user.id);
+        await pool.query(
+            `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex}`,
+            values
+        );
+
+        res.json({ message: 'Profil aktualisiert' });
+    } catch (error) {
+        console.error('Update extended profile error:', error);
+        res.status(500).json({ error: 'Profil konnte nicht aktualisiert werden' });
+    }
+}
+
+// Hilfsfunktion: Verfügbare Titel basierend auf Achievements und Rang ermitteln
+async function getAvailableTitles(userId) {
+    const availableTitles = ['newcomer']; // Jeder hat den Neuling-Titel
+
+    // Achievements abrufen
+    const achievementsResult = await pool.query(
+        `SELECT achievement_id FROM user_achievements WHERE user_id = $1 AND unlocked = true`,
+        [userId]
+    );
+    const unlockedAchievements = achievementsResult.rows.map(r => r.achievement_id);
+
+    // Rang ermitteln
+    const rankResult = await pool.query(
+        `SELECT COUNT(*) + 1 as rank
+         FROM (SELECT user_id, MAX(score) as best FROM highscores GROUP BY user_id) sub
+         WHERE sub.best > (SELECT COALESCE(MAX(score), 0) FROM highscores WHERE user_id = $1)`,
+        [userId]
+    );
+    const userRank = parseInt(rankResult.rows[0]?.rank) || 9999;
+
+    // Titel basierend auf Anforderungen freischalten
+    for (const [titleId, title] of Object.entries(TITLES)) {
+        if (titleId === 'newcomer') continue;
+
+        const req = title.requirement;
+        if (req.startsWith('achievement:')) {
+            const achievementId = req.replace('achievement:', '');
+            if (unlockedAchievements.includes(achievementId)) {
+                availableTitles.push(titleId);
+            }
+        } else if (req.startsWith('rank:')) {
+            const requiredRank = parseInt(req.replace('rank:', ''));
+            if (userRank <= requiredRank) {
+                availableTitles.push(titleId);
+            }
+        }
+    }
+
+    return availableTitles;
+}
+
+// Hilfsfunktion: Verfügbare Banner basierend auf Achievements, Rang und Coins ermitteln
+async function getAvailableBanners(userId, totalCoins) {
+    const availableBanners = ['default', 'forest']; // Standard-Banner
+
+    // Achievements abrufen
+    const achievementsResult = await pool.query(
+        `SELECT achievement_id FROM user_achievements WHERE user_id = $1 AND unlocked = true`,
+        [userId]
+    );
+    const unlockedAchievements = achievementsResult.rows.map(r => r.achievement_id);
+
+    // Rang ermitteln
+    const rankResult = await pool.query(
+        `SELECT COUNT(*) + 1 as rank
+         FROM (SELECT user_id, MAX(score) as best FROM highscores GROUP BY user_id) sub
+         WHERE sub.best > (SELECT COALESCE(MAX(score), 0) FROM highscores WHERE user_id = $1)`,
+        [userId]
+    );
+    const userRank = parseInt(rankResult.rows[0]?.rank) || 9999;
+
+    // Banner basierend auf Anforderungen freischalten
+    for (const [bannerId, banner] of Object.entries(BANNERS)) {
+        if (availableBanners.includes(bannerId)) continue;
+
+        const req = banner.requirement;
+        if (!req) {
+            availableBanners.push(bannerId);
+        } else if (req.startsWith('coins:')) {
+            const requiredCoins = parseInt(req.replace('coins:', ''));
+            if (totalCoins >= requiredCoins) {
+                availableBanners.push(bannerId);
+            }
+        } else if (req.startsWith('achievement:')) {
+            const achievementId = req.replace('achievement:', '');
+            if (unlockedAchievements.includes(achievementId)) {
+                availableBanners.push(bannerId);
+            }
+        } else if (req.startsWith('rank:')) {
+            const requiredRank = parseInt(req.replace('rank:', ''));
+            if (userRank <= requiredRank) {
+                availableBanners.push(bannerId);
+            }
+        }
+    }
+
+    return availableBanners;
+}
+
+// Aktivitäts-Feed abrufen (letzte Spiele, Achievements, etc.)
+async function getActivityFeed(req, res) {
+    const { userId } = req.params;
+
+    try {
+        // Prüfen ob Benutzer existiert
+        const userResult = await pool.query('SELECT id, username FROM users WHERE id = $1', [userId]);
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Benutzer nicht gefunden' });
+        }
+
+        const activities = [];
+
+        // Letzte Highscores
+        const highscores = await pool.query(
+            `SELECT score, level_reached, platform, created_at
+             FROM highscores WHERE user_id = $1
+             ORDER BY created_at DESC LIMIT 10`,
+            [userId]
+        );
+        highscores.rows.forEach(row => {
+            activities.push({
+                type: 'highscore',
+                score: row.score,
+                level: row.level_reached,
+                platform: row.platform,
+                timestamp: row.created_at
+            });
+        });
+
+        // Letzte freigeschaltete Achievements
+        const achievements = await pool.query(
+            `SELECT achievement_id, unlocked_at
+             FROM user_achievements WHERE user_id = $1 AND unlocked = true
+             ORDER BY unlocked_at DESC LIMIT 10`,
+            [userId]
+        );
+        achievements.rows.forEach(row => {
+            activities.push({
+                type: 'achievement',
+                achievementId: row.achievement_id,
+                timestamp: row.unlocked_at
+            });
+        });
+
+        // Letzte Spielsitzungen
+        const sessions = await pool.query(
+            `SELECT coins_earned, max_level, final_score, duration_seconds, created_at
+             FROM game_sessions WHERE user_id = $1
+             ORDER BY created_at DESC LIMIT 10`,
+            [userId]
+        );
+        sessions.rows.forEach(row => {
+            activities.push({
+                type: 'session',
+                coins: row.coins_earned,
+                level: row.max_level,
+                score: row.final_score,
+                duration: row.duration_seconds,
+                timestamp: row.created_at
+            });
+        });
+
+        // Nach Zeitstempel sortieren
+        activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        res.json({
+            userId: parseInt(userId),
+            username: userResult.rows[0].username,
+            activities: activities.slice(0, 20) // Max 20 Einträge
+        });
+    } catch (error) {
+        console.error('Get activity feed error:', error);
+        res.status(500).json({ error: 'Aktivitäts-Feed konnte nicht geladen werden' });
+    }
+}
+
+// Spieler-Vergleich
+async function compareProfiles(req, res) {
+    const { userId1, userId2 } = req.params;
+
+    try {
+        // Beide Benutzer laden
+        const users = await pool.query(
+            `SELECT id, username, total_coins, selected_skin, created_at
+             FROM users WHERE id = ANY($1)`,
+            [[userId1, userId2]]
+        );
+
+        if (users.rows.length !== 2) {
+            return res.status(404).json({ error: 'Einer oder beide Benutzer nicht gefunden' });
+        }
+
+        const comparison = {};
+
+        for (const user of users.rows) {
+            // Highscore-Daten
+            const highscoreResult = await pool.query(
+                `SELECT MAX(score) as best_score, MAX(level_reached) as max_level, COUNT(*) as total_games
+                 FROM highscores WHERE user_id = $1`,
+                [user.id]
+            );
+
+            // Achievements
+            const achievementsResult = await pool.query(
+                `SELECT COUNT(*) as unlocked
+                 FROM user_achievements WHERE user_id = $1 AND unlocked = true`,
+                [user.id]
+            );
+
+            // Spielsitzungen
+            const sessionsResult = await pool.query(
+                `SELECT COUNT(*) as games, COALESCE(SUM(coins_earned), 0) as coins_earned,
+                        COALESCE(SUM(duration_seconds), 0) as play_time
+                 FROM game_sessions WHERE user_id = $1`,
+                [user.id]
+            );
+
+            // Rang
+            const rankResult = await pool.query(
+                `SELECT COUNT(*) + 1 as rank
+                 FROM (SELECT user_id, MAX(score) as best FROM highscores GROUP BY user_id) sub
+                 WHERE sub.best > (SELECT COALESCE(MAX(score), 0) FROM highscores WHERE user_id = $1)`,
+                [user.id]
+            );
+
+            const stats = highscoreResult.rows[0];
+            const sessions = sessionsResult.rows[0];
+
+            comparison[user.id] = {
+                username: user.username,
+                skin: user.selected_skin,
+                memberSince: user.created_at,
+                stats: {
+                    bestScore: stats.best_score || 0,
+                    maxLevel: stats.max_level || 1,
+                    totalGames: parseInt(stats.total_games) || 0,
+                    rank: parseInt(rankResult.rows[0]?.rank) || 0,
+                    totalCoins: user.total_coins,
+                    achievementsUnlocked: parseInt(achievementsResult.rows[0]?.unlocked) || 0,
+                    gamesPlayed: parseInt(sessions.games) || 0,
+                    coinsEarned: parseInt(sessions.coins_earned) || 0,
+                    playTimeMinutes: Math.floor(parseInt(sessions.play_time) / 60) || 0
+                }
+            };
+        }
+
+        res.json({
+            player1: comparison[userId1],
+            player2: comparison[userId2]
+        });
+    } catch (error) {
+        console.error('Compare profiles error:', error);
+        res.status(500).json({ error: 'Vergleich konnte nicht geladen werden' });
+    }
+}
+
+// Öffentliches Profil eines Benutzers abrufen (für andere Spieler sichtbar)
+async function getPublicProfile(req, res) {
+    const { userId } = req.params;
+
+    try {
+        // Benutzer-Grunddaten inkl. Privatsphäre-Einstellungen
+        const userResult = await pool.query(
+            `SELECT id, username, selected_skin, created_at, total_coins,
+                    bio, profile_banner, selected_title,
+                    privacy_show_coins, privacy_show_stats, privacy_show_achievements, privacy_allow_requests
+             FROM users WHERE id = $1`,
+            [userId]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Benutzer nicht gefunden' });
+        }
+
+        const user = userResult.rows[0];
+
+        // Bester Highscore (PC und Mobile)
+        const highscoreResult = await pool.query(
+            `SELECT MAX(score) as best_score,
+                    MAX(level_reached) as max_level,
+                    COUNT(*) as total_games
+             FROM highscores WHERE user_id = $1`,
+            [userId]
+        );
+
+        // Beste Scores getrennt nach Plattform
+        const platformScores = await pool.query(
+            `SELECT platform, MAX(score) as best_score
+             FROM highscores WHERE user_id = $1
+             GROUP BY platform`,
+            [userId]
+        );
+
+        // Achievements zählen
+        const achievementsResult = await pool.query(
+            `SELECT COUNT(*) as unlocked_count
+             FROM user_achievements
+             WHERE user_id = $1 AND unlocked = true`,
+            [userId]
+        );
+
+        // Letzte 5 freigeschaltete Achievements
+        const recentAchievements = await pool.query(
+            `SELECT achievement_id, unlocked_at
+             FROM user_achievements
+             WHERE user_id = $1 AND unlocked = true
+             ORDER BY unlocked_at DESC
+             LIMIT 5`,
+            [userId]
+        );
+
+        // Game Sessions Statistiken
+        const sessionStats = await pool.query(
+            `SELECT
+                COUNT(*) as games_played,
+                COALESCE(SUM(coins_earned), 0) as total_coins_earned,
+                COALESCE(MAX(final_score), 0) as highest_session_score,
+                COALESCE(MAX(max_level), 1) as highest_level_reached,
+                COALESCE(SUM(duration_seconds), 0) as total_play_time
+             FROM game_sessions WHERE user_id = $1`,
+            [userId]
+        );
+
+        // Freundschaftsstatus prüfen (wenn eingeloggt)
+        let friendshipStatus = null;
+        if (req.user && req.user.id !== parseInt(userId)) {
+            const friendshipResult = await pool.query(
+                `SELECT status FROM friends
+                 WHERE (user_id = $1 AND friend_id = $2) OR (user_id = $2 AND friend_id = $1)`,
+                [req.user.id, userId]
+            );
+            if (friendshipResult.rows.length > 0) {
+                friendshipStatus = friendshipResult.rows[0].status;
+            }
+        }
+
+        // Rang in der Highscore-Liste
+        const rankResult = await pool.query(
+            `SELECT COUNT(*) + 1 as rank
+             FROM (SELECT user_id, MAX(score) as best FROM highscores GROUP BY user_id) sub
+             WHERE sub.best > (SELECT COALESCE(MAX(score), 0) FROM highscores WHERE user_id = $1)`,
+            [userId]
+        );
+
+        // Plattform-Scores formatieren
+        const platformScoresObj = {};
+        platformScores.rows.forEach(row => {
+            platformScoresObj[row.platform || 'pc'] = row.best_score;
+        });
+
+        const stats = highscoreResult.rows[0];
+        const sessions = sessionStats.rows[0];
+        const isOwnProfile = req.user && req.user.id === parseInt(userId);
+
+        // Privatsphäre-Einstellungen berücksichtigen
+        const showCoins = isOwnProfile || user.privacy_show_coins;
+        const showStats = isOwnProfile || user.privacy_show_stats;
+        const showAchievements = isOwnProfile || user.privacy_show_achievements;
+
+        // Titel-Info holen
+        const titleInfo = user.selected_title ? TITLES[user.selected_title] : null;
+
+        res.json({
+            user: {
+                id: user.id,
+                username: user.username,
+                skin: user.selected_skin,
+                memberSince: user.created_at,
+                coins: showCoins ? user.total_coins : null,
+                bio: user.bio || '',
+                banner: user.profile_banner || 'default',
+                bannerColors: BANNERS[user.profile_banner || 'default']?.colors || BANNERS.default.colors,
+                title: user.selected_title,
+                titleInfo: titleInfo
+            },
+            stats: showStats ? {
+                bestScore: stats.best_score || 0,
+                maxLevel: stats.max_level || 1,
+                totalGames: parseInt(stats.total_games) || 0,
+                rank: parseInt(rankResult.rows[0]?.rank) || 0,
+                platformScores: platformScoresObj
+            } : null,
+            achievements: showAchievements ? {
+                unlocked: parseInt(achievementsResult.rows[0]?.unlocked_count) || 0,
+                total: 24, // Gesamtanzahl der Achievements
+                recent: recentAchievements.rows
+            } : null,
+            sessions: showStats ? {
+                gamesPlayed: parseInt(sessions.games_played) || 0,
+                totalCoinsEarned: parseInt(sessions.total_coins_earned) || 0,
+                highestScore: parseInt(sessions.highest_session_score) || 0,
+                highestLevel: parseInt(sessions.highest_level_reached) || 1,
+                totalPlayTimeMinutes: Math.floor(parseInt(sessions.total_play_time) / 60) || 0
+            } : null,
+            friendshipStatus,
+            allowFriendRequests: user.privacy_allow_requests,
+            isOwnProfile,
+            privacy: {
+                showCoins: user.privacy_show_coins,
+                showStats: user.privacy_show_stats,
+                showAchievements: user.privacy_show_achievements
+            }
+        });
+    } catch (error) {
+        console.error('Get public profile error:', error);
+        res.status(500).json({ error: 'Profil konnte nicht geladen werden' });
+    }
+}
+
+module.exports = {
+    getProfile,
+    updateProfile,
+    addCoins,
+    purchase,
+    getInventory,
+    syncProfile,
+    getPublicProfile,
+    getExtendedProfile,
+    updateExtendedProfile,
+    getActivityFeed,
+    compareProfiles,
+    TITLES,
+    BANNERS
+};

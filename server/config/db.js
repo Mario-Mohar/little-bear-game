@@ -140,6 +140,64 @@ async function initDatabase() {
             CREATE INDEX IF NOT EXISTS idx_daily_challenges_user_date ON daily_challenges(user_id, challenge_date)
         `);
 
+        // Create achievements table for tracking user achievements
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS user_achievements (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                achievement_id VARCHAR(50) NOT NULL,
+                progress INTEGER DEFAULT 0,
+                unlocked BOOLEAN DEFAULT FALSE,
+                unlocked_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, achievement_id)
+            )
+        `);
+
+        // Create index for faster achievement queries
+        await client.query(`
+            CREATE INDEX IF NOT EXISTS idx_user_achievements_user_id ON user_achievements(user_id)
+        `);
+
+        // Add profile customization columns to users table
+        await client.query(`
+            DO $$
+            BEGIN
+                -- Bio text
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'bio') THEN
+                    ALTER TABLE users ADD COLUMN bio VARCHAR(200) DEFAULT '';
+                END IF;
+                -- Profile banner
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'profile_banner') THEN
+                    ALTER TABLE users ADD COLUMN profile_banner VARCHAR(50) DEFAULT 'default';
+                END IF;
+                -- Selected title
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'selected_title') THEN
+                    ALTER TABLE users ADD COLUMN selected_title VARCHAR(50) DEFAULT NULL;
+                END IF;
+                -- Unlocked titles (array)
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'unlocked_titles') THEN
+                    ALTER TABLE users ADD COLUMN unlocked_titles TEXT[] DEFAULT '{}';
+                END IF;
+                -- Privacy: Show coins
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'privacy_show_coins') THEN
+                    ALTER TABLE users ADD COLUMN privacy_show_coins BOOLEAN DEFAULT TRUE;
+                END IF;
+                -- Privacy: Show stats
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'privacy_show_stats') THEN
+                    ALTER TABLE users ADD COLUMN privacy_show_stats BOOLEAN DEFAULT TRUE;
+                END IF;
+                -- Privacy: Show achievements
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'privacy_show_achievements') THEN
+                    ALTER TABLE users ADD COLUMN privacy_show_achievements BOOLEAN DEFAULT TRUE;
+                END IF;
+                -- Privacy: Allow friend requests
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'privacy_allow_requests') THEN
+                    ALTER TABLE users ADD COLUMN privacy_allow_requests BOOLEAN DEFAULT TRUE;
+                END IF;
+            END $$;
+        `);
+
         console.log('Database tables created successfully');
     } finally {
         client.release();

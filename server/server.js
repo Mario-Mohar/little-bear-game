@@ -9,6 +9,7 @@ const userRoutes = require('./routes/users');
 const highscoreRoutes = require('./routes/highscores');
 const friendsRoutes = require('./routes/friends');
 const challengesRoutes = require('./routes/challenges');
+const achievementsRoutes = require('./routes/achievements');
 const { initDatabase } = require('./config/db');
 
 const app = express();
@@ -40,6 +41,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/highscores', highscoreRoutes);
 app.use('/api/friends', friendsRoutes);
 app.use('/api/challenges', challengesRoutes);
+app.use('/api/achievements', achievementsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
