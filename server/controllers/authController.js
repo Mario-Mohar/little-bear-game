@@ -51,53 +51,71 @@ async function register(req, res) {
     const { username, email, password } = req.body;
 
     try {
-        // Check if user already exists
-        const existingUser = await pool.query(
-            'SELECT id FROM users WHERE email = $1 OR username = $2',
-            [email.toLowerCase(), username]
+        // E-Mail ist optional - normalisiere nur wenn vorhanden
+        const normalizedEmail = email ? email.toLowerCase().trim() : null;
+
+        // Check if username already exists (unique constraint)
+        const existingUsername = await pool.query(
+            'SELECT id FROM users WHERE username = $1',
+            [username]
         );
 
-        if (existingUser.rows.length > 0) {
-            return res.status(400).json({ error: 'Benutzername oder E-Mail existiert bereits' });
+        if (existingUsername.rows.length > 0) {
+            return res.status(400).json({ error: 'Benutzername ist bereits vergeben' });
+        }
+
+        // Check if email already exists (nur wenn E-Mail angegeben)
+        if (normalizedEmail) {
+            const existingEmail = await pool.query(
+                'SELECT id FROM users WHERE email = $1',
+                [normalizedEmail]
+            );
+
+            if (existingEmail.rows.length > 0) {
+                return res.status(400).json({ error: 'E-Mail-Adresse ist bereits registriert' });
+            }
         }
 
         // Hash password
         const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-        // Generate verification token
-        const verificationToken = crypto.randomBytes(32).toString('hex');
+        // Generate verification token (nur wenn E-Mail vorhanden)
+        const verificationToken = normalizedEmail ? crypto.randomBytes(32).toString('hex') : null;
 
-        // Create user
+        // Create user (E-Mail ist optional)
         const result = await pool.query(
-            `INSERT INTO users (username, email, password_hash, verification_token)
-             VALUES ($1, $2, $3, $4)
+            `INSERT INTO users (username, email, password_hash, verification_token, email_verified)
+             VALUES ($1, $2, $3, $4, $5)
              RETURNING id, username, email, email_verified, total_coins, purchased_skins, purchased_upgrades, selected_skin`,
-            [username, email.toLowerCase(), passwordHash, verificationToken]
+            [username, normalizedEmail, passwordHash, verificationToken, !normalizedEmail] // Ohne E-Mail = auto-verified
         );
 
         const user = result.rows[0];
 
-        // Send verification email if Resend is configured, otherwise auto-verify
-        const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/api/auth/verify/${verificationToken}`;
-        const emailSent = await sendEmail(
-            email,
-            'Little Bear - Bestätige deine E-Mail',
-            `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h1 style="color: #8B4513;">Willkommen bei Little Bear!</h1>
-                    <p>Hallo ${username},</p>
-                    <p>Bitte klicke auf den Button unten, um deine E-Mail zu bestätigen:</p>
-                    <a href="${verifyUrl}" style="display: inline-block; background: #8B4513; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 20px 0;">E-Mail bestätigen</a>
-                    <p style="color: #666; font-size: 12px;">Oder kopiere diesen Link: ${verifyUrl}</p>
-                    <p style="color: #666; font-size: 12px;">Dieser Link läuft in 24 Stunden ab.</p>
-                </div>
-            `
-        );
+        // Send verification email nur wenn E-Mail angegeben und Resend konfiguriert
+        let emailSent = false;
+        if (normalizedEmail) {
+            const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/api/auth/verify/${verificationToken}`;
+            emailSent = await sendEmail(
+                normalizedEmail,
+                'Little Bear - Bestätige deine E-Mail',
+                `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <h1 style="color: #8B4513;">Willkommen bei Little Bear!</h1>
+                        <p>Hallo ${username},</p>
+                        <p>Bitte klicke auf den Button unten, um deine E-Mail zu bestätigen:</p>
+                        <a href="${verifyUrl}" style="display: inline-block; background: #8B4513; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 20px 0;">E-Mail bestätigen</a>
+                        <p style="color: #666; font-size: 12px;">Oder kopiere diesen Link: ${verifyUrl}</p>
+                        <p style="color: #666; font-size: 12px;">Dieser Link läuft in 24 Stunden ab.</p>
+                    </div>
+                `
+            );
 
-        // Auto-verify if no email service or email failed
-        if (!emailSent) {
-            await pool.query('UPDATE users SET email_verified = true WHERE id = $1', [user.id]);
-            user.email_verified = true;
+            // Auto-verify if no email service or email failed
+            if (!emailSent) {
+                await pool.query('UPDATE users SET email_verified = true WHERE id = $1', [user.id]);
+                user.email_verified = true;
+            }
         }
 
         // Generate token
@@ -124,18 +142,23 @@ async function register(req, res) {
 }
 
 async function login(req, res) {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body; // identifier kann Username oder E-Mail sein
 
     try {
+        // Prüfe ob identifier eine E-Mail oder ein Username ist
+        const isEmail = identifier && identifier.includes('@');
+        const normalizedIdentifier = identifier ? identifier.toLowerCase().trim() : '';
+
+        // Suche nach Username ODER E-Mail
         const result = await pool.query(
             `SELECT id, username, email, password_hash, email_verified, total_coins,
                     purchased_skins, purchased_upgrades, selected_skin
-             FROM users WHERE email = $1`,
-            [email.toLowerCase()]
+             FROM users WHERE ${isEmail ? 'email' : 'LOWER(username)'} = $1`,
+            [normalizedIdentifier]
         );
 
         if (result.rows.length === 0) {
-            return res.status(401).json({ error: 'Ungültige E-Mail oder Passwort' });
+            return res.status(401).json({ error: 'Ungültiger Benutzername/E-Mail oder Passwort' });
         }
 
         const user = result.rows[0];
@@ -143,7 +166,7 @@ async function login(req, res) {
         // Verify password
         const validPassword = await bcrypt.compare(password, user.password_hash);
         if (!validPassword) {
-            return res.status(401).json({ error: 'Ungültige E-Mail oder Passwort' });
+            return res.status(401).json({ error: 'Ungültiger Benutzername/E-Mail oder Passwort' });
         }
 
         // Update last login

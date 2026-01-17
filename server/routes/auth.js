@@ -12,18 +12,26 @@ const validateRegister = [
         .withMessage('Benutzername muss 3-50 Zeichen lang sein')
         .matches(/^[a-zA-Z0-9_äöüÄÖÜß]+$/)
         .withMessage('Benutzername darf nur Buchstaben, Zahlen und Unterstriche enthalten'),
+    // E-Mail ist optional - nur validieren wenn angegeben
     body('email')
+        .optional({ checkFalsy: true })
         .isEmail()
         .normalizeEmail()
-        .withMessage('Gültige E-Mail-Adresse erforderlich'),
+        .withMessage('Wenn angegeben, muss die E-Mail-Adresse gültig sein'),
     body('password')
         .isLength({ min: 6 })
         .withMessage('Passwort muss mindestens 6 Zeichen lang sein')
 ];
 
+// Login akzeptiert Username ODER E-Mail als "identifier"
 const validateLogin = [
-    body('email').isEmail().normalizeEmail().withMessage('Gültige E-Mail-Adresse erforderlich'),
-    body('password').notEmpty().withMessage('Passwort erforderlich')
+    body('identifier')
+        .trim()
+        .notEmpty()
+        .withMessage('Benutzername oder E-Mail erforderlich'),
+    body('password')
+        .notEmpty()
+        .withMessage('Passwort erforderlich')
 ];
 
 const validatePassword = [

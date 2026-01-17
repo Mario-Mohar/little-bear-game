@@ -1,0 +1,35 @@
+● Hier sind einige Ideen, um das Spiel langfristig interessant zu halten:
+
+  Tägliche Inhalte:
+  - Täglicher Login-Bonus - Münzen oder Items für tägliches Spielen, mit Streak-Belohnungen
+
+  Progression & Achievements:
+  - Erfolge-System - Freischaltbare Achievements (z.B. "Erstes Level ohne Schaden", "1000 Münzen gesammelt", "Alle Bosse besiegt")
+  - Spieler-Level mit XP - Erfahrungspunkte sammeln, höheres Level = mehr Freischaltungen
+  - Freischaltbare Fähigkeiten - Doppelsprung, Dash, Wandsprung als permanente Upgrades
+
+  Neue Spielmodi:
+  - Endless/Survival Mode - Unendlich generierte Level, wie weit kommt man?
+  - Speedrun-Modus - Timer + Bestzeiten + Geister anderer Spieler
+  - Boss Rush - Alle Bosse hintereinander ohne Pause
+
+  Mehr Customization:
+  - Accessoires - Hüte, Brillen, Capes zusätzlich zu Skins
+  - Trail-Effekte - Partikel beim Laufen/Springen
+  - Siegestänze - Animationen nach Level-Abschluss
+
+  Saisonale Events:
+  - Halloween - Gruselige Level, Kürbis-Skin, spezielle Gegner
+  - Weihnachten - Schnee-Level, Weihnachtsmütze, Geschenke sammeln
+  - Zeitlich begrenzte Belohnungen - Exklusive Items die nur während Events verfügbar sind
+
+  Soziale Features:
+  - Wöchentliche Ranglisten - Wettbewerb mit Reset jede Woche
+  - Herausforderungen verschicken - "Schlag meinen Score in Level 3"
+
+  Content-Updates:
+  - Neue Welten/Themen - Unterwasser, Vulkan, Wolken, Höhle
+  - Neue Gegnertypen - Fliegende Gegner, Gegner mit Projektilen
+  - Geheime Level - Versteckte Eingänge in normalen Leveln
+
+  Welche dieser Ideen interessiert dich am meisten? Ich kann dir bei der Umsetzung helfen.

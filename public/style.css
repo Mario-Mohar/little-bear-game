@@ -292,6 +292,12 @@ button:active {
     margin-top: 8px;
 }
 
+.email-hint {
+    font-size: 11px;
+    color: #888;
+    margin: -5px 0 10px 0;
+}
+
 /* User Info */
 .user-info {
     display: flex;
@@ -822,17 +828,20 @@ button:disabled {
 
 #touch-controls {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    /* Mehr Abstand vom unteren Rand für bessere Erreichbarkeit */
+    bottom: 15px;
+    /* Mehr Abstand von den Seiten, damit Buttons nicht am Rand sind */
+    left: 15px;
+    right: 15px;
     /* Feste Höhe - wird von JavaScript berücksichtigt */
     height: var(--touch-controls-height, 160px);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 30px;
+    /* Größeres Padding für bessere Touch-Bereiche */
+    padding: 25px 40px;
     /* Mehr Abstand vom unteren Rand, um versehentliches Rausklicken zu verhindern */
-    padding-bottom: max(30px, env(safe-area-inset-bottom));
+    padding-bottom: max(35px, env(safe-area-inset-bottom));
     pointer-events: none; /* Container fängt keine Events */
     z-index: 1000;
     background: linear-gradient(
@@ -842,6 +851,7 @@ button:disabled {
         rgba(0, 0, 0, 0.2) 80%,
         transparent 100%
     );
+    border-radius: 20px;
     /* Smooth transitions bei Orientierungswechsel */
     transition: height 0.2s ease;
 }
@@ -990,12 +1000,17 @@ button:disabled {
     }
 
     #touch-controls {
-        padding: 10px 15px;
+        /* Bessere Positionierung auf kleinen Bildschirmen */
+        bottom: 12px;
+        left: 10px;
+        right: 10px;
+        padding: 15px 25px;
+        padding-bottom: max(25px, env(safe-area-inset-bottom));
         gap: 10px;
     }
 
     .touch-left, .touch-right {
-        gap: 12px;
+        gap: 15px;
     }
 
     #ui {
@@ -1042,11 +1057,16 @@ button:disabled {
     }
 
     #touch-controls {
-        padding: 8px 10px;
+        /* Bessere Positionierung auf sehr kleinen Bildschirmen */
+        bottom: 10px;
+        left: 8px;
+        right: 8px;
+        padding: 12px 20px;
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
     }
 
     .touch-left, .touch-right {
-        gap: 10px;
+        gap: 12px;
     }
 
     #ui {
@@ -1061,7 +1081,12 @@ button:disabled {
     }
 
     #touch-controls {
-        padding: 8px 20px;
+        /* Bessere Positionierung im Landscape-Modus */
+        bottom: 10px;
+        left: 20px;
+        right: 20px;
+        padding: 10px 30px;
+        padding-bottom: max(15px, env(safe-area-inset-bottom));
     }
 
     .touch-btn {
@@ -1079,7 +1104,7 @@ button:disabled {
     }
 
     .touch-left, .touch-right {
-        gap: 12px;
+        gap: 15px;
     }
 
     #ui {
@@ -1115,7 +1140,12 @@ button:disabled {
     }
 
     #touch-controls {
-        padding: 5px 15px;
+        /* Bessere Positionierung auf sehr flachen Displays */
+        bottom: 8px;
+        left: 15px;
+        right: 15px;
+        padding: 8px 25px;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
     }
 
     #ui {
@@ -1151,6 +1181,441 @@ button:disabled {
     }
 }
 
+/* =============================================================================
+   FRIENDS SCREEN
+   ============================================================================= */
+
+.friends-button {
+    background: linear-gradient(180deg, #3498DB 0%, #2980B9 100%) !important;
+    box-shadow: 0 5px 20px rgba(52, 152, 219, 0.4) !important;
+}
+
+.friends-button:hover {
+    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.6) !important;
+}
+
+#friends-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    color: white;
+    z-index: 100;
+    overflow-y: auto;
+}
+
+#friends-screen h1 {
+    color: #FFD700;
+    margin-bottom: 15px;
+}
+
+#friends-screen h3 {
+    color: #3498DB;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+/* Freund hinzufügen Sektion */
+.friends-add-section {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 20px;
+}
+
+.search-form {
+    display: flex;
+    gap: 10px;
+}
+
+.search-form input {
+    flex: 1;
+    padding: 10px 15px;
+    font-size: 14px;
+    border: 2px solid #444;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    outline: none;
+}
+
+.search-form input:focus {
+    border-color: #3498DB;
+}
+
+.search-form input::placeholder {
+    color: #888;
+}
+
+.search-form button {
+    padding: 10px 20px;
+    margin-top: 0;
+    font-size: 14px;
+}
+
+.search-results {
+    margin-top: 10px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.search-result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-bottom: 5px;
+}
+
+.search-result-item .username {
+    color: #fff;
+    font-weight: bold;
+}
+
+.search-result-item button {
+    padding: 5px 15px;
+    margin-top: 0;
+    font-size: 12px;
+    background: linear-gradient(180deg, #27AE60 0%, #1E8449 100%);
+}
+
+.search-result-item button:disabled {
+    background: #555;
+}
+
+/* Friends Tabs */
+.friends-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    width: 100%;
+    max-width: 400px;
+    justify-content: center;
+}
+
+.friends-tab {
+    padding: 8px 20px;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid #555;
+    border-radius: 20px;
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 0;
+    position: relative;
+}
+
+.friends-tab:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: none;
+    box-shadow: none;
+}
+
+.friends-tab.active {
+    background: linear-gradient(180deg, #3498DB 0%, #2980B9 100%);
+    color: white;
+    border-color: #3498DB;
+}
+
+.badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #E74C3C;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 16px;
+    text-align: center;
+}
+
+/* Friends Content */
+.friends-content {
+    display: none;
+    width: 100%;
+    max-width: 400px;
+}
+
+.friends-content.active {
+    display: block;
+}
+
+.friends-list-content {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.empty-message {
+    text-align: center;
+    color: #888;
+    font-style: italic;
+    padding: 20px;
+}
+
+/* Friend Item */
+.friend-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.friend-info {
+    flex: 1;
+}
+
+.friend-info .friend-name {
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.friend-info .friend-score {
+    color: #FFD700;
+    font-size: 12px;
+}
+
+.friend-info .friend-status {
+    color: #888;
+    font-size: 11px;
+}
+
+.friend-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.friend-actions button {
+    padding: 6px 12px;
+    margin-top: 0;
+    font-size: 12px;
+}
+
+.btn-accept {
+    background: linear-gradient(180deg, #27AE60 0%, #1E8449 100%) !important;
+}
+
+.btn-decline, .btn-remove {
+    background: linear-gradient(180deg, #E74C3C 0%, #C0392B 100%) !important;
+}
+
+.btn-cancel {
+    background: linear-gradient(180deg, #7F8C8D 0%, #606060 100%) !important;
+}
+
+#friends-close-btn {
+    margin-top: 20px;
+    background: linear-gradient(180deg, #E74C3C 0%, #C0392B 100%) !important;
+    box-shadow: 0 5px 20px rgba(231, 76, 60, 0.4) !important;
+}
+
+/* =============================================================================
+   DAILY CHALLENGE MODAL
+   ============================================================================= */
+
+#challenge-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    padding: 20px;
+}
+
+.challenge-modal-content {
+    background: linear-gradient(145deg, #2a2a4a, #1a1a2e);
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border: 3px solid rgba(255, 215, 0, 0.3);
+    color: white;
+}
+
+.challenge-modal-content h2 {
+    color: #FFD700;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+#challenge-info {
+    margin-bottom: 25px;
+}
+
+.challenge-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 10px;
+}
+
+.challenge-description {
+    font-size: 14px;
+    color: #ccc;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.challenge-reward {
+    font-size: 18px;
+    color: #FFD700;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.challenge-reward span {
+    color: #FFD700;
+}
+
+.challenge-difficulty {
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.challenge-difficulty.easy {
+    background: #27AE60;
+    color: white;
+}
+
+.challenge-difficulty.medium {
+    background: #F39C12;
+    color: white;
+}
+
+.challenge-difficulty.hard {
+    background: #E74C3C;
+    color: white;
+}
+
+.challenge-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.challenge-actions button {
+    padding: 12px 30px;
+    font-size: 16px;
+    margin-top: 0;
+}
+
+.challenge-status {
+    margin-top: 10px;
+}
+
+.challenge-progress {
+    margin-bottom: 20px;
+}
+
+.progress-bar {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    height: 20px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, #27AE60, #2ECC71);
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+
+#challenge-progress-text {
+    color: #ccc;
+    font-size: 14px;
+}
+
+.challenge-completed-text,
+.challenge-claimed-text {
+    font-size: 18px;
+    color: #27AE60;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.challenge-declined-text {
+    font-size: 16px;
+    color: #888;
+    margin-bottom: 20px;
+}
+
+#challenge-claim-btn {
+    background: linear-gradient(180deg, #27AE60 0%, #1E8449 100%) !important;
+    padding: 12px 30px;
+    font-size: 16px;
+}
+
+#challenge-continue-btn,
+#challenge-done-btn,
+#challenge-skip-btn {
+    padding: 12px 30px;
+    font-size: 16px;
+}
+
+/* Challenge HUD während des Spiels */
+#challenge-hud {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    padding: 8px 20px;
+    border-radius: 20px;
+    color: white;
+    font-size: 12px;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 2px solid rgba(255, 215, 0, 0.5);
+}
+
+#challenge-hud .challenge-hud-title {
+    color: #FFD700;
+    font-weight: bold;
+}
+
+#challenge-hud .challenge-hud-progress {
+    color: #ccc;
+}
+
+#challenge-hud.completed {
+    border-color: #27AE60;
+    background: rgba(39, 174, 96, 0.3);
+}
+
+#challenge-hud.completed .challenge-hud-title {
+    color: #27AE60;
+}
+
 /* Credits */
 .credits {
     margin-top: 20px;
@@ -1175,7 +1640,9 @@ button:disabled {
    ============================================================================= */
 @supports (padding: env(safe-area-inset-bottom)) {
     #touch-controls {
-        padding-bottom: calc(10px + env(safe-area-inset-bottom));
+        /* Zusätzlicher Abstand für Geräte mit Home-Indicator */
+        bottom: calc(15px + env(safe-area-inset-bottom));
+        padding-bottom: 20px;
     }
 
     #game-container {

@@ -67,10 +67,10 @@ const API = {
         return { ok: response.ok, data };
     },
 
-    async login(email, password) {
+    async login(identifier, password) {
         const response = await this.request('/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ identifier, password })
         });
         const data = await response.json();
         if (response.ok) {
@@ -209,6 +209,155 @@ const API = {
             return response.ok;
         } catch (e) { console.error('Failed to update skin:', e); }
         return false;
+    },
+
+    // ============================================
+    // FRIENDS API FUNCTIONS
+    // ============================================
+
+    async searchFriends(query) {
+        if (this.isGuest || !this.token) return { users: [] };
+        try {
+            const response = await this.request('/friends/search?query=' + encodeURIComponent(query));
+            if (response.ok) return await response.json();
+        } catch (e) { console.error('Failed to search friends:', e); }
+        return { users: [] };
+    },
+
+    async sendFriendRequest(friendId) {
+        if (this.isGuest || !this.token) return null;
+        try {
+            const response = await this.request('/friends/request', {
+                method: 'POST',
+                body: JSON.stringify({ friendId })
+            });
+            return { ok: response.ok, data: await response.json() };
+        } catch (e) { console.error('Failed to send friend request:', e); }
+        return null;
+    },
+
+    async getFriends() {
+        if (this.isGuest || !this.token) return { friends: [] };
+        try {
+            const response = await this.request('/friends');
+            if (response.ok) return await response.json();
+        } catch (e) { console.error('Failed to get friends:', e); }
+        return { friends: [] };
+    },
+
+    async getPendingRequests() {
+        if (this.isGuest || !this.token) return { requests: [] };
+        try {
+            const response = await this.request('/friends/pending');
+            if (response.ok) return await response.json();
+        } catch (e) { console.error('Failed to get pending requests:', e); }
+        return { requests: [] };
+    },
+
+    async getSentRequests() {
+        if (this.isGuest || !this.token) return { requests: [] };
+        try {
+            const response = await this.request('/friends/sent');
+            if (response.ok) return await response.json();
+        } catch (e) { console.error('Failed to get sent requests:', e); }
+        return { requests: [] };
+    },
+
+    async acceptFriendRequest(requestId) {
+        if (this.isGuest || !this.token) return null;
+        try {
+            const response = await this.request('/friends/accept/' + requestId, { method: 'POST' });
+            return { ok: response.ok, data: await response.json() };
+        } catch (e) { console.error('Failed to accept friend request:', e); }
+        return null;
+    },
+
+    async declineFriendRequest(requestId) {
+        if (this.isGuest || !this.token) return null;
+        try {
+            const response = await this.request('/friends/decline/' + requestId, { method: 'DELETE' });
+            return { ok: response.ok, data: await response.json() };
+        } catch (e) { console.error('Failed to decline friend request:', e); }
+        return null;
+    },
+
+    async cancelFriendRequest(requestId) {
+        if (this.isGuest || !this.token) return null;
+        try {
+            const response = await this.request('/friends/cancel/' + requestId, { method: 'DELETE' });
+            return { ok: response.ok, data: await response.json() };
+        } catch (e) { console.error('Failed to cancel friend request:', e); }
+        return null;
+    },
+
+    async removeFriend(friendshipId) {
+        if (this.isGuest || !this.token) return null;
+        try {
+            const response = await this.request('/friends/' + friendshipId, { method: 'DELETE' });
+            return { ok: response.ok, data: await response.json() };
+        } catch (e) { console.error('Failed to remove friend:', e); }
+        return null;
+    },
+
+    // ============================================
+    // DAILY CHALLENGES API FUNCTIONS
+    // ============================================
+
+    async getTodayChallenge() {
+        if (this.isGuest || !this.token) return null;
+        try {
+            const response = await this.request('/challenges/today');
+            if (response.ok) return await response.json();
+        } catch (e) { console.error('Failed to get today challenge:', e); }
+        return null;
+    },
+
+    async getActiveChallenge() {
+        if (this.isGuest || !this.token) return null;
+        try {
+            const response = await this.request('/challenges/active');
+            if (response.ok) return await response.json();
+        } catch (e) { console.error('Failed to get active challenge:', e); }
+        return null;
+    },
+
+    async acceptChallenge() {
+        if (this.isGuest || !this.token) return null;
+        try {
+            const response = await this.request('/challenges/accept', { method: 'POST' });
+            return { ok: response.ok, data: await response.json() };
+        } catch (e) { console.error('Failed to accept challenge:', e); }
+        return null;
+    },
+
+    async declineChallenge() {
+        if (this.isGuest || !this.token) return null;
+        try {
+            const response = await this.request('/challenges/decline', { method: 'POST' });
+            return { ok: response.ok, data: await response.json() };
+        } catch (e) { console.error('Failed to decline challenge:', e); }
+        return null;
+    },
+
+    async updateChallengeProgress(progress, completed = false) {
+        if (this.isGuest || !this.token) return null;
+        try {
+            const response = await this.request('/challenges/progress', {
+                method: 'POST',
+                body: JSON.stringify({ progress, completed })
+            });
+            return { ok: response.ok, data: await response.json() };
+        } catch (e) { console.error('Failed to update challenge progress:', e); }
+        return null;
+    },
+
+    async claimChallengeReward() {
+        if (this.isGuest || !this.token) return null;
+        try {
+            const response = await this.request('/challenges/claim', { method: 'POST' });
+            return { ok: response.ok, data: await response.json() };
+        } catch (e) { console.error('Failed to claim challenge reward:', e); }
+        return null;
     }
 };
 
@@ -223,7 +372,7 @@ function showAuthScreen() {
 }
 
 function hideAllScreens() {
-    const screens = ['auth-screen', 'start-screen', 'game-over', 'level-complete', 'game-complete', 'shop-screen', 'ui'];
+    const screens = ['auth-screen', 'start-screen', 'game-over', 'level-complete', 'game-complete', 'shop-screen', 'friends-screen', 'ui'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
@@ -1957,6 +2106,22 @@ const game = {
         ownedUpgrades: [],
         selectedSkin: 'default',
         extraLives: 0
+    },
+    // Daily Challenge Tracking
+    activeChallenge: null,
+    challengeProgress: {
+        coinsThisGame: 0,
+        coinsTotal: 0,
+        enemiesDefeatedJump: 0,
+        enemiesDefeatedTotal: 0,
+        doubleJumps: 0,
+        levelsCompleted: 0,
+        levelCompletedNoDamage: true,
+        bossDefeatedNoDamage: true,
+        damageTakenThisLevel: 0,
+        allCoinsCollected: false,
+        currentLevelTime: 0,
+        startLives: 0
     }
 };
 
@@ -2286,6 +2451,7 @@ class Player {
             } else if (this.jumpCount === 2) {
                 // Double jump effect - sparkles!
                 createParticles(this.x + this.width / 2, this.y + this.height / 2, 8, '#FFD700');
+                trackDoubleJump(); // Challenge tracking
             } else if (this.jumpCount === 3) {
                 // Triple jump effect - purple sparkles!
                 createParticles(this.x + this.width / 2, this.y + this.height / 2, 10, '#9932CC');
@@ -2377,6 +2543,7 @@ class Player {
                 game.coinsCollected++;
                 game.score += 10;
                 updateUI();
+                trackCoinCollected(); // Challenge tracking
                 createParticles(coin.x + coin.width / 2, coin.y + coin.height / 2, 8, '#FFD700');
             }
         }
@@ -2400,8 +2567,10 @@ class Player {
                     game.score += 50;
                     updateUI();
                     createParticles(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 10, '#FF6347');
+                    trackEnemyDefeatedByJump(); // Challenge tracking
                 } else if (this.invulnerable <= 0) {
                     // Player touched enemy from side or below - Spieler verliert Leben (only if not invulnerable)
+                    trackDamageTaken(); // Challenge tracking
                     this.die();
                 }
             }
@@ -2428,6 +2597,7 @@ class Player {
                     game.bossDefeated = true;
                     createParticles(game.boss.x + game.boss.width / 2, game.boss.y + game.boss.height / 2, 30, '#FFD700');
                     createParticles(game.boss.x + game.boss.width / 2, game.boss.y + game.boss.height / 2, 20, '#FF4500');
+                    trackBossDefeated(); // Challenge tracking
                 } else {
                     // Boss damaged
                     createParticles(game.boss.x + game.boss.width / 2, game.boss.y + game.boss.height / 2, 15, '#FF0000');
@@ -2438,6 +2608,7 @@ class Player {
                 this.velX = this.x < game.boss.x ? -5 : 5;
             } else if (this.invulnerable <= 0) {
                 // Player touched boss from side or below - take damage (only if not invulnerable)
+                trackDamageTaken(); // Challenge tracking
                 this.die();
             }
         }
@@ -6621,6 +6792,7 @@ function drawPowerUpBar(ctx, x, y, label, timeLeft, progress, color) {
 async function levelComplete() {
     game.running = false;
     hideTouchControls();
+    removeChallengeHUD(); // Challenge HUD entfernen während Screen
 
     // Calculate time taken
     const timeTaken = Math.floor((Date.now() - game.levelStartTime) / 1000);
@@ -6650,6 +6822,10 @@ async function levelComplete() {
     const actualEarnedCoins = addCoinsToProfile(baseEarnedCoins, game.level);
 
     updateUI();
+
+    // Challenge tracking - Level abgeschlossen
+    const allCoinsCollected = game.coinsCollected === game.totalCoins && game.totalCoins > 0;
+    trackLevelCompleted(timeTaken, allCoinsCollected);
 
     hideAllScreens();
 
@@ -6715,6 +6891,9 @@ function nextLevel() {
     game.bossDefeated = false;
     updateUI();
 
+    // Challenge HUD wieder anzeigen
+    updateChallengeHUD();
+
     generateLevel(game.level);
     game.player = new Player(100, 400 + getYOffset());
     game.running = true;
@@ -6725,6 +6904,8 @@ function nextLevel() {
 async function gameOver() {
     game.running = false;
     hideTouchControls();
+    removeChallengeHUD(); // Challenge HUD entfernen
+    trackGameEnd(); // Challenge tracking für Spiel-Ende
     await saveHighscore();
     updateCoinsDisplay();
     document.getElementById('final-score').textContent = game.score;
@@ -6845,6 +7026,7 @@ function gameLoop() {
             projectile.alive = false;
             game.lives--;
             game.player.invulnerable = 90; // 1.5 seconds invulnerability
+            trackDamageTaken(); // Challenge tracking
 
             // Create hit particles
             for (let i = 0; i < 8; i++) {
@@ -6996,6 +7178,522 @@ function closeShop() {
     document.getElementById('start-screen').classList.remove('hidden');
     updateCoinsDisplay();
 }
+
+// ============================================
+// FRIENDS UI FUNCTIONS
+// ============================================
+
+function openFriends() {
+    if (API.isGuest) {
+        alert('Bitte melde dich an, um Freunde hinzuzufügen.');
+        return;
+    }
+    hideAllScreens();
+    document.getElementById('friends-screen').classList.remove('hidden');
+    loadFriendsData();
+    setupFriendsTabs();
+}
+
+function closeFriends() {
+    hideAllScreens();
+    document.getElementById('start-screen').classList.remove('hidden');
+}
+
+async function loadFriendsData() {
+    // Lade alle Daten parallel
+    const [friendsData, pendingData, sentData] = await Promise.all([
+        API.getFriends(),
+        API.getPendingRequests(),
+        API.getSentRequests()
+    ]);
+
+    renderFriendsList(friendsData.friends || []);
+    renderPendingRequests(pendingData.requests || []);
+    renderSentRequests(sentData.requests || []);
+
+    // Update Badge für Anfragen
+    const pendingCount = (pendingData.requests || []).length;
+    const badge = document.getElementById('pending-count');
+    if (pendingCount > 0) {
+        badge.textContent = pendingCount;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+function renderFriendsList(friends) {
+    const container = document.getElementById('friends-list-content');
+    if (friends.length === 0) {
+        container.innerHTML = '<p class="empty-message">Noch keine Freunde. Suche nach Spielern!</p>';
+        return;
+    }
+
+    container.innerHTML = friends.map(friend => `
+        <div class="friend-item">
+            <div class="friend-info">
+                <div class="friend-name">${escapeHtml(friend.username)}</div>
+                <div class="friend-score">Highscore: ${friend.best_score || 0}</div>
+            </div>
+            <div class="friend-actions">
+                <button class="btn-remove" onclick="removeFriend(${friend.friendship_id})">Entfernen</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderPendingRequests(requests) {
+    const container = document.getElementById('pending-list-content');
+    if (requests.length === 0) {
+        container.innerHTML = '<p class="empty-message">Keine offenen Anfragen</p>';
+        return;
+    }
+
+    container.innerHTML = requests.map(req => `
+        <div class="friend-item">
+            <div class="friend-info">
+                <div class="friend-name">${escapeHtml(req.username)}</div>
+                <div class="friend-status">Möchte dein Freund sein</div>
+            </div>
+            <div class="friend-actions">
+                <button class="btn-accept" onclick="acceptRequest(${req.request_id})">Annehmen</button>
+                <button class="btn-decline" onclick="declineRequest(${req.request_id})">Ablehnen</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderSentRequests(requests) {
+    const container = document.getElementById('sent-list-content');
+    if (requests.length === 0) {
+        container.innerHTML = '<p class="empty-message">Keine gesendeten Anfragen</p>';
+        return;
+    }
+
+    container.innerHTML = requests.map(req => `
+        <div class="friend-item">
+            <div class="friend-info">
+                <div class="friend-name">${escapeHtml(req.username)}</div>
+                <div class="friend-status">Anfrage gesendet</div>
+            </div>
+            <div class="friend-actions">
+                <button class="btn-cancel" onclick="cancelRequest(${req.request_id})">Zurückziehen</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function setupFriendsTabs() {
+    const tabs = document.querySelectorAll('.friends-tab');
+    const contents = document.querySelectorAll('.friends-content');
+
+    tabs.forEach(tab => {
+        tab.onclick = () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.add('active');
+        };
+    });
+}
+
+async function searchFriends() {
+    const query = document.getElementById('friend-search-input').value.trim();
+    if (query.length < 2) {
+        document.getElementById('friend-search-results').innerHTML =
+            '<p style="color: #888; font-size: 12px;">Mindestens 2 Zeichen eingeben</p>';
+        return;
+    }
+
+    const result = await API.searchFriends(query);
+    const container = document.getElementById('friend-search-results');
+
+    if (result.users.length === 0) {
+        container.innerHTML = '<p style="color: #888; font-size: 12px;">Keine Benutzer gefunden</p>';
+        return;
+    }
+
+    container.innerHTML = result.users.map(user => `
+        <div class="search-result-item">
+            <span class="username">${escapeHtml(user.username)}</span>
+            <button onclick="sendFriendRequest(${user.id}, this)">Hinzufügen</button>
+        </div>
+    `).join('');
+}
+
+async function sendFriendRequest(friendId, btn) {
+    btn.disabled = true;
+    btn.textContent = '...';
+    const result = await API.sendFriendRequest(friendId);
+    if (result && result.ok) {
+        btn.textContent = 'Gesendet!';
+        loadFriendsData(); // Refresh lists
+    } else {
+        btn.textContent = result?.data?.error || 'Fehler';
+        setTimeout(() => {
+            btn.textContent = 'Hinzufügen';
+            btn.disabled = false;
+        }, 2000);
+    }
+}
+
+async function acceptRequest(requestId) {
+    const result = await API.acceptFriendRequest(requestId);
+    if (result && result.ok) {
+        loadFriendsData();
+    } else {
+        alert(result?.data?.error || 'Fehler beim Annehmen');
+    }
+}
+
+async function declineRequest(requestId) {
+    const result = await API.declineFriendRequest(requestId);
+    if (result && result.ok) {
+        loadFriendsData();
+    } else {
+        alert(result?.data?.error || 'Fehler beim Ablehnen');
+    }
+}
+
+async function cancelRequest(requestId) {
+    const result = await API.cancelFriendRequest(requestId);
+    if (result && result.ok) {
+        loadFriendsData();
+    } else {
+        alert(result?.data?.error || 'Fehler beim Zurückziehen');
+    }
+}
+
+async function removeFriend(friendshipId) {
+    if (!confirm('Möchtest du diesen Freund wirklich entfernen?')) return;
+    const result = await API.removeFriend(friendshipId);
+    if (result && result.ok) {
+        loadFriendsData();
+    } else {
+        alert(result?.data?.error || 'Fehler beim Entfernen');
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ============================================
+// DAILY CHALLENGE UI FUNCTIONS
+// ============================================
+
+async function showChallengeModal() {
+    if (API.isGuest) return false; // Gäste haben keine Challenges
+
+    const result = await API.getTodayChallenge();
+    if (!result || !result.hasChallenge) return false;
+
+    const challenge = result.challenge;
+    game.activeChallenge = challenge;
+
+    // UI aktualisieren
+    document.getElementById('challenge-title').textContent = challenge.title;
+    document.getElementById('challenge-description').textContent = challenge.description;
+    document.getElementById('challenge-reward').textContent = challenge.reward;
+
+    // Schwierigkeit anzeigen
+    const diffEl = document.getElementById('challenge-difficulty');
+    const diffLabels = { 1: 'Leicht', 2: 'Mittel', 3: 'Schwer' };
+    const diffClasses = { 1: 'easy', 2: 'medium', 3: 'hard' };
+    diffEl.textContent = diffLabels[challenge.difficulty];
+    diffEl.className = 'challenge-difficulty ' + diffClasses[challenge.difficulty];
+
+    // Status-spezifische Anzeige
+    hideAllChallengeStatuses();
+
+    if (challenge.status === 'pending') {
+        document.getElementById('challenge-status-pending').classList.remove('hidden');
+    } else if (challenge.status === 'active') {
+        document.getElementById('challenge-status-active').classList.remove('hidden');
+        updateChallengeProgressUI(challenge.progress, challenge.target);
+    } else if (challenge.status === 'completed' && !challenge.rewardClaimed) {
+        document.getElementById('challenge-status-completed').classList.remove('hidden');
+    } else if (challenge.status === 'completed' && challenge.rewardClaimed) {
+        document.getElementById('challenge-status-claimed').classList.remove('hidden');
+    } else if (challenge.status === 'declined') {
+        document.getElementById('challenge-status-declined').classList.remove('hidden');
+    }
+
+    document.getElementById('challenge-modal').classList.remove('hidden');
+    return true;
+}
+
+function hideAllChallengeStatuses() {
+    const statuses = ['challenge-status-pending', 'challenge-status-active', 'challenge-status-completed', 'challenge-status-claimed', 'challenge-status-declined'];
+    statuses.forEach(id => document.getElementById(id).classList.add('hidden'));
+}
+
+function hideChallengeModal() {
+    const modal = document.getElementById('challenge-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function updateChallengeProgressUI(progress, target) {
+    const percentage = Math.min((progress / target) * 100, 100);
+    document.getElementById('challenge-progress-bar').style.width = percentage + '%';
+    document.getElementById('challenge-progress-text').textContent = `${progress} / ${target}`;
+}
+
+async function acceptDailyChallenge() {
+    const result = await API.acceptChallenge();
+    if (result && result.ok) {
+        game.activeChallenge = result.data.challenge;
+        game.activeChallenge.status = 'active';
+        resetChallengeProgress();
+        hideChallengeModal();
+        actuallyStartGame(); // Spiel starten nach Annehmen
+    }
+}
+
+async function declineDailyChallenge() {
+    const result = await API.declineChallenge();
+    if (result && result.ok) {
+        game.activeChallenge = null;
+        hideChallengeModal();
+        actuallyStartGame(); // Spiel starten nach Ablehnen
+    }
+}
+
+async function claimChallengeReward() {
+    const result = await API.claimChallengeReward();
+    if (result && result.ok) {
+        game.userProfile.totalCoins = result.data.totalCoins;
+        updateCoinsDisplay();
+
+        hideAllChallengeStatuses();
+        document.getElementById('challenge-status-claimed').classList.remove('hidden');
+
+        // Zeige Belohnung
+        alert(`+${result.data.reward} Münzen erhalten!`);
+    }
+}
+
+function resetChallengeProgress() {
+    game.challengeProgress = {
+        coinsThisGame: 0,
+        coinsTotal: 0,
+        enemiesDefeatedJump: 0,
+        enemiesDefeatedTotal: 0,
+        doubleJumps: 0,
+        levelsCompleted: 0,
+        levelCompletedNoDamage: true,
+        bossDefeatedNoDamage: true,
+        damageTakenThisLevel: 0,
+        allCoinsCollected: false,
+        currentLevelTime: 0,
+        startLives: game.lives
+    };
+}
+
+// Wird aufgerufen wenn eine Challenge-relevante Aktion passiert
+async function checkChallengeProgress() {
+    if (!game.activeChallenge || game.activeChallenge.status !== 'active') return;
+
+    const challenge = game.activeChallenge;
+    const progress = game.challengeProgress;
+    let currentProgress = 0;
+    let completed = false;
+
+    switch (challenge.type) {
+        case 'collect_coins_single_game':
+            currentProgress = progress.coinsThisGame;
+            break;
+        case 'collect_coins_total':
+            currentProgress = progress.coinsTotal;
+            break;
+        case 'defeat_enemies_jump':
+            currentProgress = progress.enemiesDefeatedJump;
+            break;
+        case 'defeat_enemies_total':
+            currentProgress = progress.enemiesDefeatedTotal;
+            break;
+        case 'double_jumps':
+            currentProgress = progress.doubleJumps;
+            break;
+        case 'complete_levels_streak':
+            currentProgress = progress.levelsCompleted;
+            break;
+        case 'complete_level_no_damage':
+            // Wird beim Level-Abschluss geprüft
+            if (progress.levelCompletedNoDamage && progress.damageTakenThisLevel === 0) {
+                currentProgress = 1;
+                completed = true;
+            }
+            break;
+        case 'collect_all_coins_level':
+            if (progress.allCoinsCollected) {
+                currentProgress = 1;
+                completed = true;
+            }
+            break;
+        case 'complete_level_time':
+            // Wird beim Level-Abschluss geprüft
+            if (progress.currentLevelTime > 0 && progress.currentLevelTime <= challenge.target) {
+                if (!challenge.targetLevel || game.level === challenge.targetLevel) {
+                    currentProgress = 1;
+                    completed = true;
+                }
+            }
+            break;
+        case 'defeat_boss_no_damage':
+            if (progress.bossDefeatedNoDamage && game.bossDefeated) {
+                currentProgress = 1;
+                completed = true;
+            }
+            break;
+        case 'reach_score':
+            currentProgress = game.score;
+            break;
+        case 'finish_with_all_lives':
+            // Wird am Spielende geprüft
+            if (game.lives >= progress.startLives) {
+                currentProgress = 1;
+            }
+            break;
+    }
+
+    // Progress aktualisieren wenn sich etwas geändert hat
+    if (currentProgress > 0 || completed) {
+        if (currentProgress >= challenge.target) completed = true;
+
+        const result = await API.updateChallengeProgress(currentProgress, completed);
+        if (result && result.ok) {
+            game.activeChallenge.progress = result.data.progress;
+
+            if (result.data.completed) {
+                game.activeChallenge.status = 'completed';
+                showChallengeCompletedNotification();
+            }
+
+            updateChallengeHUD();
+        }
+    }
+}
+
+function showChallengeCompletedNotification() {
+    // Kurze Benachrichtigung während des Spiels
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(145deg, #27AE60, #1E8449);
+        color: white;
+        padding: 20px 40px;
+        border-radius: 15px;
+        font-size: 20px;
+        font-weight: bold;
+        z-index: 1000;
+        animation: fadeInOut 3s forwards;
+        text-align: center;
+    `;
+    notification.innerHTML = `Challenge abgeschlossen!<br><span style="font-size: 14px;">+${game.activeChallenge.reward} Münzen warten!</span>`;
+    document.body.appendChild(notification);
+
+    setTimeout(() => notification.remove(), 3000);
+}
+
+function updateChallengeHUD() {
+    let hud = document.getElementById('challenge-hud');
+
+    if (!game.activeChallenge || game.activeChallenge.status !== 'active') {
+        if (hud) hud.remove();
+        return;
+    }
+
+    if (!hud) {
+        hud = document.createElement('div');
+        hud.id = 'challenge-hud';
+        document.getElementById('game-container').appendChild(hud);
+    }
+
+    const challenge = game.activeChallenge;
+    const progress = Math.min(challenge.progress || 0, challenge.target);
+
+    hud.innerHTML = `
+        <span class="challenge-hud-title">${challenge.title}</span>
+        <span class="challenge-hud-progress">${progress}/${challenge.target}</span>
+    `;
+
+    if (challenge.status === 'completed') {
+        hud.classList.add('completed');
+    }
+}
+
+function removeChallengeHUD() {
+    const hud = document.getElementById('challenge-hud');
+    if (hud) hud.remove();
+}
+
+// Challenge-Tracking Hilfsfunktionen (werden aus dem Spielcode aufgerufen)
+function trackCoinCollected() {
+    game.challengeProgress.coinsThisGame++;
+    game.challengeProgress.coinsTotal++;
+    checkChallengeProgress();
+}
+
+function trackEnemyDefeatedByJump() {
+    game.challengeProgress.enemiesDefeatedJump++;
+    game.challengeProgress.enemiesDefeatedTotal++;
+    checkChallengeProgress();
+}
+
+function trackEnemyDefeated() {
+    game.challengeProgress.enemiesDefeatedTotal++;
+    checkChallengeProgress();
+}
+
+function trackDoubleJump() {
+    game.challengeProgress.doubleJumps++;
+    checkChallengeProgress();
+}
+
+function trackDamageTaken() {
+    game.challengeProgress.damageTakenThisLevel++;
+    game.challengeProgress.levelCompletedNoDamage = false;
+    game.challengeProgress.bossDefeatedNoDamage = false;
+}
+
+function trackLevelCompleted(levelTime, allCoinsCollected) {
+    game.challengeProgress.levelsCompleted++;
+    game.challengeProgress.currentLevelTime = levelTime;
+    game.challengeProgress.allCoinsCollected = allCoinsCollected;
+
+    // Reset für nächstes Level
+    game.challengeProgress.damageTakenThisLevel = 0;
+    game.challengeProgress.levelCompletedNoDamage = true;
+
+    checkChallengeProgress();
+}
+
+function trackBossDefeated() {
+    checkChallengeProgress();
+}
+
+function trackGameEnd() {
+    checkChallengeProgress();
+}
+
+// CSS für Notification Animation
+const challengeStyle = document.createElement('style');
+challengeStyle.textContent = `
+    @keyframes fadeInOut {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+        25% { transform: translate(-50%, -50%) scale(1); }
+        75% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+`;
+document.head.appendChild(challengeStyle);
 
 // Mobile Touch Controls Setup - Robustes Touch-Tracking
 function setupTouchControls() {
@@ -7227,6 +7925,34 @@ async function init() {
     document.getElementById('shop-btn').addEventListener('click', openShop);
     document.getElementById('shop-close-btn').addEventListener('click', closeShop);
 
+    // Friends buttons
+    document.getElementById('friends-btn')?.addEventListener('click', openFriends);
+    document.getElementById('friends-close-btn')?.addEventListener('click', closeFriends);
+    document.getElementById('friend-search-btn')?.addEventListener('click', searchFriends);
+    document.getElementById('friend-search-input')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') searchFriends();
+    });
+
+    // Daily Challenge buttons
+    document.getElementById('challenge-accept-btn')?.addEventListener('click', acceptDailyChallenge);
+    document.getElementById('challenge-decline-btn')?.addEventListener('click', declineDailyChallenge);
+    document.getElementById('challenge-continue-btn')?.addEventListener('click', () => {
+        hideChallengeModal();
+        actuallyStartGame();
+    });
+    document.getElementById('challenge-claim-btn')?.addEventListener('click', async () => {
+        await claimChallengeReward();
+        // Nach Belohnung: Weiter-Button erscheint
+    });
+    document.getElementById('challenge-done-btn')?.addEventListener('click', () => {
+        hideChallengeModal();
+        actuallyStartGame();
+    });
+    document.getElementById('challenge-skip-btn')?.addEventListener('click', () => {
+        hideChallengeModal();
+        actuallyStartGame();
+    });
+
     // Logout button
     document.getElementById('logout-btn')?.addEventListener('click', () => {
         API.logout();
@@ -7259,18 +7985,18 @@ function calculateExtraLives(upgrades) {
 }
 
 function setupAuthHandlers() {
-    // Login form
+    // Login form - akzeptiert Username oder E-Mail
     document.getElementById('login-btn')?.addEventListener('click', async () => {
-        const email = document.getElementById('login-email').value;
+        const identifier = document.getElementById('login-identifier').value;
         const password = document.getElementById('login-password').value;
         const errorEl = document.getElementById('login-error');
 
-        if (!email || !password) {
-            errorEl.textContent = 'Bitte alle Felder ausfullen';
+        if (!identifier || !password) {
+            errorEl.textContent = 'Bitte alle Felder ausfüllen';
             return;
         }
 
-        const result = await API.login(email, password);
+        const result = await API.login(identifier, password);
         if (result.ok) {
             game.userProfile = {
                 name: result.data.user.username,
@@ -7287,19 +8013,29 @@ function setupAuthHandlers() {
         }
     });
 
-    // Register form
+    // Register form - E-Mail ist optional
     document.getElementById('register-btn')?.addEventListener('click', async () => {
-        const username = document.getElementById('register-username').value;
-        const email = document.getElementById('register-email').value;
+        const username = document.getElementById('register-username').value.trim();
+        const email = document.getElementById('register-email').value.trim(); // Optional
         const password = document.getElementById('register-password').value;
         const errorEl = document.getElementById('register-error');
 
-        if (!username || !email || !password) {
-            errorEl.textContent = 'Bitte alle Felder ausfullen';
+        if (!username || !password) {
+            errorEl.textContent = 'Bitte Benutzername und Passwort eingeben';
             return;
         }
 
-        const result = await API.register(username, email, password);
+        if (username.length < 3 || username.length > 50) {
+            errorEl.textContent = 'Benutzername muss 3-50 Zeichen lang sein';
+            return;
+        }
+
+        if (password.length < 6) {
+            errorEl.textContent = 'Passwort muss mindestens 6 Zeichen lang sein';
+            return;
+        }
+
+        const result = await API.register(username, email || null, password);
         if (result.ok) {
             game.userProfile = {
                 name: result.data.user.username,
@@ -7312,7 +8048,9 @@ function setupAuthHandlers() {
             game.playerName = result.data.user.username;
 
             // Zeige Bestätigungsmeldung
-            if (result.data.user.emailVerified) {
+            if (!email) {
+                showRegistrationSuccess('Registrierung erfolgreich! Du kannst jetzt spielen.');
+            } else if (result.data.user.emailVerified) {
                 showRegistrationSuccess('Registrierung erfolgreich! Du kannst jetzt spielen.');
             } else {
                 showRegistrationSuccess('Registrierung erfolgreich! Bitte bestätige deine E-Mail-Adresse.');
@@ -7387,7 +8125,7 @@ function setupAuthHandlers() {
     });
 }
 
-function startGame() {
+async function startGame() {
     // For guests, load profile from input
     if (API.isGuest) {
         const nameInput = document.getElementById('player-name');
@@ -7398,7 +8136,26 @@ function startGame() {
     }
     updateCoinsDisplay();
 
+    // Zeige Challenge-Modal für eingeloggte Benutzer (wenn Challenge pending oder active ist)
+    if (!API.isGuest) {
+        const result = await API.getTodayChallenge();
+        if (result && result.hasChallenge) {
+            const challenge = result.challenge;
+            // Nur anzeigen wenn pending oder active (nicht completed/declined)
+            if (challenge.status === 'pending' || challenge.status === 'active' ||
+                (challenge.status === 'completed' && !challenge.rewardClaimed)) {
+                await showChallengeModal();
+                return; // Warte auf Benutzeraktion im Modal
+            }
+        }
+    }
+
+    actuallyStartGame();
+}
+
+function actuallyStartGame() {
     hideAllScreens();
+    hideChallengeModal();
     document.getElementById('ui').classList.remove('hidden');
     showTouchControls();
 
@@ -7413,6 +8170,12 @@ function startGame() {
     game.obstacles = [];
     game.boss = null;
     game.bossDefeated = false;
+
+    // Challenge tracking initialisieren
+    resetChallengeProgress();
+    game.challengeProgress.startLives = game.lives;
+    updateChallengeHUD();
+
     updateUI();
 
     // Show guest warning before level starts

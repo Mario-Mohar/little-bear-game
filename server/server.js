@@ -7,6 +7,8 @@ const rateLimit = require('express-rate-limit');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const highscoreRoutes = require('./routes/highscores');
+const friendsRoutes = require('./routes/friends');
+const challengesRoutes = require('./routes/challenges');
 const { initDatabase } = require('./config/db');
 
 const app = express();
@@ -36,6 +38,8 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/highscores', highscoreRoutes);
+app.use('/api/friends', friendsRoutes);
+app.use('/api/challenges', challengesRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

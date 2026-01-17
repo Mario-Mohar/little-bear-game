@@ -48,7 +48,7 @@
             <div id="login-form" class="auth-form">
                 <h2>Anmelden</h2>
                 <div class="form-group">
-                    <input type="email" id="login-email" placeholder="E-Mail" required>
+                    <input type="text" id="login-identifier" placeholder="Benutzername oder E-Mail" required>
                 </div>
                 <div class="form-group">
                     <input type="password" id="login-password" placeholder="Passwort" required>
@@ -65,11 +65,12 @@
                     <input type="text" id="register-username" placeholder="Benutzername (3-50 Zeichen)" required>
                 </div>
                 <div class="form-group">
-                    <input type="email" id="register-email" placeholder="E-Mail" required>
+                    <input type="email" id="register-email" placeholder="E-Mail (optional)">
                 </div>
                 <div class="form-group">
                     <input type="password" id="register-password" placeholder="Passwort (min. 6 Zeichen)" required>
                 </div>
+                <p class="email-hint">E-Mail nur nötig für Passwort-Wiederherstellung</p>
                 <div id="register-error" class="error-message"></div>
                 <button id="register-btn">Registrieren</button>
                 <p class="auth-switch">Bereits ein Konto? <a href="#" id="show-login">Anmelden</a></p>
@@ -109,6 +110,46 @@
             </div>
         </div>
 
+        <!-- Daily Challenge Modal -->
+        <div id="challenge-modal" class="hidden">
+            <div class="challenge-modal-content">
+                <h2>Tägliche Herausforderung</h2>
+                <div id="challenge-info">
+                    <div class="challenge-title" id="challenge-title">Challenge Name</div>
+                    <div class="challenge-description" id="challenge-description">Challenge Beschreibung</div>
+                    <div class="challenge-reward">
+                        Belohnung: <span id="challenge-reward">0</span> Münzen
+                    </div>
+                    <div class="challenge-difficulty" id="challenge-difficulty"></div>
+                </div>
+                <div id="challenge-status-pending" class="challenge-actions">
+                    <button id="challenge-accept-btn" class="btn-accept">Annehmen</button>
+                    <button id="challenge-decline-btn" class="btn-decline">Ablehnen</button>
+                </div>
+                <div id="challenge-status-active" class="challenge-status hidden">
+                    <div class="challenge-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="challenge-progress-bar"></div>
+                        </div>
+                        <span id="challenge-progress-text">0 / 0</span>
+                    </div>
+                    <button id="challenge-continue-btn">Weiter zum Spiel</button>
+                </div>
+                <div id="challenge-status-completed" class="challenge-status hidden">
+                    <div class="challenge-completed-text">Challenge abgeschlossen!</div>
+                    <button id="challenge-claim-btn" class="btn-accept">Belohnung einfordern</button>
+                </div>
+                <div id="challenge-status-claimed" class="challenge-status hidden">
+                    <div class="challenge-claimed-text">Belohnung erhalten!</div>
+                    <button id="challenge-done-btn">Weiter</button>
+                </div>
+                <div id="challenge-status-declined" class="challenge-status hidden">
+                    <div class="challenge-declined-text">Morgen gibt es eine neue Challenge!</div>
+                    <button id="challenge-skip-btn">Weiter zum Spiel</button>
+                </div>
+            </div>
+        </div>
+
         <div id="start-screen" class="hidden">
             <h1>Little Bear</h1>
             <div id="user-info" class="user-info">
@@ -136,6 +177,7 @@
             <div class="start-buttons">
                 <button id="start-btn">Spiel starten</button>
                 <button id="shop-btn" class="shop-button">Shop</button>
+                <button id="friends-btn" class="friends-button">Freunde</button>
             </div>
 
             <div class="credits">
@@ -143,6 +185,51 @@
                 <p><strong>Programmierer:</strong> Mario Mohar</p>
                 <p>Since 2025/2026</p>
             </div>
+        </div>
+
+        <!-- Friends Screen -->
+        <div id="friends-screen" class="hidden">
+            <h1>Freunde</h1>
+
+            <!-- Freund hinzufügen -->
+            <div class="friends-add-section">
+                <h3>Freund hinzufügen</h3>
+                <div class="search-form">
+                    <input type="text" id="friend-search-input" placeholder="Username oder E-Mail eingeben">
+                    <button id="friend-search-btn">Suchen</button>
+                </div>
+                <div id="friend-search-results" class="search-results"></div>
+            </div>
+
+            <!-- Tabs für verschiedene Listen -->
+            <div class="friends-tabs">
+                <button class="friends-tab active" data-tab="friends-list">Freunde</button>
+                <button class="friends-tab" data-tab="pending-list">Anfragen <span id="pending-count" class="badge hidden">0</span></button>
+                <button class="friends-tab" data-tab="sent-list">Gesendet</button>
+            </div>
+
+            <!-- Freundesliste -->
+            <div id="friends-list" class="friends-content active">
+                <div id="friends-list-content" class="friends-list-content">
+                    <p class="empty-message">Noch keine Freunde</p>
+                </div>
+            </div>
+
+            <!-- Eingehende Anfragen -->
+            <div id="pending-list" class="friends-content">
+                <div id="pending-list-content" class="friends-list-content">
+                    <p class="empty-message">Keine offenen Anfragen</p>
+                </div>
+            </div>
+
+            <!-- Gesendete Anfragen -->
+            <div id="sent-list" class="friends-content">
+                <div id="sent-list-content" class="friends-list-content">
+                    <p class="empty-message">Keine gesendeten Anfragen</p>
+                </div>
+            </div>
+
+            <button id="friends-close-btn">Zurück zum Menü</button>
         </div>
 
         <div id="shop-screen" class="hidden">
