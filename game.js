@@ -2167,7 +2167,11 @@ const game = {
         totalCoins: 0,
         ownedSkins: ['default'],
         ownedUpgrades: [],
+        ownedAccessories: [],
         selectedSkin: 'default',
+        selectedHat: null,
+        selectedGlasses: null,
+        selectedCape: null,
         extraLives: 0
     },
     // Daily Challenge Tracking
