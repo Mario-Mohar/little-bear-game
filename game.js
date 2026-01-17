@@ -7934,11 +7934,24 @@ let currentAccessoryFilter = 'all';
 function renderAccessoriesShop(filterType = currentAccessoryFilter) {
     currentAccessoryFilter = filterType;
     const grid = document.getElementById('accessories-grid');
-    if (!grid) return;
+
+    console.log('renderAccessoriesShop called, grid:', grid, 'SHOP.accessories:', SHOP.accessories?.length);
+
+    if (!grid) {
+        console.error('accessories-grid not found!');
+        return;
+    }
     grid.innerHTML = '';
 
+    // Stelle sicher, dass ownedAccessories existiert
+    if (!game.userProfile.ownedAccessories) {
+        game.userProfile.ownedAccessories = [];
+    }
+
     // Filtere Accessoires nach Typ
-    let accessories = SHOP.accessories;
+    let accessories = SHOP.accessories || [];
+    console.log('Accessories to render:', accessories.length);
+
     if (filterType !== 'all') {
         accessories = accessories.filter(acc => acc.type === filterType);
     }
@@ -9898,6 +9911,16 @@ async function init() {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             tab.classList.add('active');
             document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
+
+            // Re-render the appropriate content when tab is clicked
+            if (tab.dataset.tab === 'accessories') {
+                renderAccessoriesShop();
+                updateEquippedAccessories();
+            } else if (tab.dataset.tab === 'skins') {
+                renderSkinsShop();
+            } else if (tab.dataset.tab === 'upgrades') {
+                renderUpgradesShop();
+            }
         });
     });
 
