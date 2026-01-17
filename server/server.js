@@ -10,6 +10,7 @@ const highscoreRoutes = require('./routes/highscores');
 const friendsRoutes = require('./routes/friends');
 const challengesRoutes = require('./routes/challenges');
 const achievementsRoutes = require('./routes/achievements');
+const adminRoutes = require('./routes/admin');
 const { initDatabase } = require('./config/db');
 
 const app = express();
@@ -42,10 +43,16 @@ app.use('/api/highscores', highscoreRoutes);
 app.use('/api/friends', friendsRoutes);
 app.use('/api/challenges', challengesRoutes);
 app.use('/api/achievements', achievementsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Serve admin panel
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/admin.html'));
 });
 
 // Serve game for any other route
