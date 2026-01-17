@@ -2192,53 +2192,61 @@ const game = {
     }
 };
 
-// Shop items configuration
+// Shop items configuration - PREISE ERHÖHT!
 const SHOP = {
     skins: [
         { id: 'default', name: 'Klassischer Bär', price: 0, color: '#8B4513' },
-        { id: 'polar', name: 'Eisbär', price: 50, color: '#F5F5F5' },
-        { id: 'panda', name: 'Pandabär', price: 75, color: '#1a1a1a' },
-        { id: 'golden', name: 'Goldener Bär', price: 150, color: '#FFD700' },
-        { id: 'pink', name: 'Rosa Bär', price: 100, color: '#FF69B4' },
-        { id: 'blue', name: 'Blauer Bär', price: 100, color: '#4169E1' }
+        { id: 'polar', name: 'Eisbär', price: 500, color: '#F5F5F5' },
+        { id: 'panda', name: 'Pandabär', price: 750, color: '#1a1a1a' },
+        { id: 'golden', name: 'Goldener Bär', price: 2500, color: '#FFD700' },
+        { id: 'pink', name: 'Rosa Bär', price: 800, color: '#FF69B4' },
+        { id: 'blue', name: 'Blauer Bär', price: 800, color: '#4169E1' },
+        { id: 'rainbow', name: 'Regenbogen-Bär', price: 5000, color: 'rainbow' },
+        { id: 'galaxy', name: 'Galaxie-Bär', price: 7500, color: 'galaxy' },
+        { id: 'diamond', name: 'Diamant-Bär', price: 15000, color: '#B9F2FF' }
     ],
     upgrades: [
-        { id: 'extra_life_1', name: '+1 Startleben', price: 100, type: 'extraLife', value: 1, maxOwned: 1 },
-        { id: 'extra_life_2', name: '+2 Startleben', price: 250, type: 'extraLife', value: 2, maxOwned: 1, requires: 'extra_life_1' },
-        { id: 'coin_magnet', name: 'Münzmagnet', price: 200, type: 'coinMagnet', description: 'Münzen werden angezogen' },
-        { id: 'double_coins', name: 'Doppelte Münzen', price: 300, type: 'doubleCoins', description: '2x Münzen aus Leveln' }
+        { id: 'extra_life_1', name: '+1 Startleben', price: 1000, type: 'extraLife', value: 1, maxOwned: 1, description: 'Starte mit 4 Leben' },
+        { id: 'extra_life_2', name: '+2 Startleben', price: 3000, type: 'extraLife', value: 2, maxOwned: 1, requires: 'extra_life_1', description: 'Starte mit 6 Leben' },
+        { id: 'extra_life_3', name: '+3 Startleben', price: 8000, type: 'extraLife', value: 3, maxOwned: 1, requires: 'extra_life_2', description: 'Starte mit 9 Leben' },
+        { id: 'coin_magnet', name: 'Münzmagnet', price: 2000, type: 'coinMagnet', description: 'Münzen werden angezogen' },
+        { id: 'double_coins', name: 'Doppelte Münzen', price: 5000, type: 'doubleCoins', description: '2x Münzen aus Leveln' },
+        { id: 'triple_coins', name: 'Dreifache Münzen', price: 15000, type: 'tripleCoins', requires: 'double_coins', description: '3x Münzen aus Leveln' },
+        { id: 'shield_respawn', name: 'Schutzschild', price: 4000, type: 'shieldRespawn', description: '3 Sek. Unverwundbar nach Respawn' },
+        { id: 'speed_boost', name: 'Schnelle Füße', price: 3500, type: 'speedBoost', description: '+15% Laufgeschwindigkeit' },
+        { id: 'super_jump', name: 'Super-Sprung', price: 6000, type: 'superJump', description: '+20% Sprunghöhe' }
     ],
     accessories: [
-        // Hüte
-        { id: 'hat_crown', name: 'Krone', price: 200, type: 'hat', icon: '👑', description: 'Fühle dich wie ein König!' },
-        { id: 'hat_wizard', name: 'Zauberhut', price: 150, type: 'hat', icon: '🎩', description: 'Magische Kräfte!' },
-        { id: 'hat_party', name: 'Partyhut', price: 75, type: 'hat', icon: '🎉', description: 'Party-Time!' },
-        { id: 'hat_cap', name: 'Baseball-Cap', price: 50, type: 'hat', icon: '🧢', description: 'Cool und lässig' },
-        { id: 'hat_cowboy', name: 'Cowboyhut', price: 125, type: 'hat', icon: '🤠', description: 'Yeehaw!' },
-        { id: 'hat_pirate', name: 'Piratenhut', price: 175, type: 'hat', icon: '🏴‍☠️', description: 'Arrr, Matrose!' },
-        { id: 'hat_chef', name: 'Kochmütze', price: 100, type: 'hat', icon: '👨‍🍳', description: 'Meisterkoch' },
-        { id: 'hat_viking', name: 'Wikingerhelm', price: 200, type: 'hat', icon: '⚔️', description: 'Für Valhalla!' },
-        // Brillen
-        { id: 'glasses_cool', name: 'Sonnenbrille', price: 80, type: 'glasses', icon: '😎', description: 'Super cool!' },
-        { id: 'glasses_nerd', name: 'Nerd-Brille', price: 60, type: 'glasses', icon: '🤓', description: 'Intelligent aussehen' },
-        { id: 'glasses_star', name: 'Star-Brille', price: 120, type: 'glasses', icon: '⭐', description: 'Superstar!' },
-        { id: 'glasses_heart', name: 'Herz-Brille', price: 90, type: 'glasses', icon: '💕', description: 'Voller Liebe' },
-        { id: 'glasses_3d', name: '3D-Brille', price: 70, type: 'glasses', icon: '🎬', description: 'Kino-Feeling' },
-        { id: 'glasses_monocle', name: 'Monokel', price: 150, type: 'glasses', icon: '🧐', description: 'Sehr distinguiert' },
-        // Capes
-        { id: 'cape_hero', name: 'Helden-Cape', price: 175, type: 'cape', icon: '🦸', description: 'Superhelden-Power!' },
-        { id: 'cape_royal', name: 'Königsmantel', price: 250, type: 'cape', icon: '👑', description: 'Majestätisch!' },
-        { id: 'cape_wizard', name: 'Zauberumhang', price: 200, type: 'cape', icon: '✨', description: 'Mystische Kräfte' },
-        { id: 'cape_rainbow', name: 'Regenbogen-Cape', price: 150, type: 'cape', icon: '🌈', description: 'Farbenfroh!' },
-        { id: 'cape_fire', name: 'Feuer-Cape', price: 225, type: 'cape', icon: '🔥', description: 'Heiß, heiß, heiß!' },
-        { id: 'cape_ice', name: 'Eis-Cape', price: 225, type: 'cape', icon: '❄️', description: 'Eiskalt!' },
-        { id: 'cape_invisible', name: 'Unsichtbarkeits-Umhang', price: 300, type: 'cape', icon: '👻', description: 'Fast unsichtbar...' },
-        // Spezial
-        { id: 'acc_wings', name: 'Engelsflügel', price: 350, type: 'special', icon: '👼', description: 'Himmlisch!' },
-        { id: 'acc_halo', name: 'Heiligenschein', price: 200, type: 'special', icon: '😇', description: 'Heilig!' },
-        { id: 'acc_devil_horns', name: 'Teufelshörner', price: 175, type: 'special', icon: '😈', description: 'Ein kleiner Teufel' },
-        { id: 'acc_bow', name: 'Schleife', price: 75, type: 'special', icon: '🎀', description: 'Süß und niedlich' },
-        { id: 'acc_scarf', name: 'Schal', price: 100, type: 'special', icon: '🧣', description: 'Warm und gemütlich' }
+        // Hüte - Preise erhöht
+        { id: 'hat_crown', name: 'Krone', price: 3000, type: 'hat', icon: '👑', description: 'Fühle dich wie ein König!' },
+        { id: 'hat_wizard', name: 'Zauberhut', price: 2000, type: 'hat', icon: '🎩', description: 'Magische Kräfte!' },
+        { id: 'hat_party', name: 'Partyhut', price: 800, type: 'hat', icon: '🎉', description: 'Party-Time!' },
+        { id: 'hat_cap', name: 'Baseball-Cap', price: 500, type: 'hat', icon: '🧢', description: 'Cool und lässig' },
+        { id: 'hat_cowboy', name: 'Cowboyhut', price: 1500, type: 'hat', icon: '🤠', description: 'Yeehaw!' },
+        { id: 'hat_pirate', name: 'Piratenhut', price: 2500, type: 'hat', icon: '🏴‍☠️', description: 'Arrr, Matrose!' },
+        { id: 'hat_chef', name: 'Kochmütze', price: 1200, type: 'hat', icon: '👨‍🍳', description: 'Meisterkoch' },
+        { id: 'hat_viking', name: 'Wikingerhelm', price: 3500, type: 'hat', icon: '⚔️', description: 'Für Valhalla!' },
+        // Brillen - Preise erhöht
+        { id: 'glasses_cool', name: 'Sonnenbrille', price: 1000, type: 'glasses', icon: '😎', description: 'Super cool!' },
+        { id: 'glasses_nerd', name: 'Nerd-Brille', price: 600, type: 'glasses', icon: '🤓', description: 'Intelligent aussehen' },
+        { id: 'glasses_star', name: 'Star-Brille', price: 1800, type: 'glasses', icon: '⭐', description: 'Superstar!' },
+        { id: 'glasses_heart', name: 'Herz-Brille', price: 1200, type: 'glasses', icon: '💕', description: 'Voller Liebe' },
+        { id: 'glasses_3d', name: '3D-Brille', price: 900, type: 'glasses', icon: '🎬', description: 'Kino-Feeling' },
+        { id: 'glasses_monocle', name: 'Monokel', price: 2500, type: 'glasses', icon: '🧐', description: 'Sehr distinguiert' },
+        // Capes - Preise erhöht
+        { id: 'cape_hero', name: 'Helden-Cape', price: 2500, type: 'cape', icon: '🦸', description: 'Superhelden-Power!' },
+        { id: 'cape_royal', name: 'Königsmantel', price: 4000, type: 'cape', icon: '👑', description: 'Majestätisch!' },
+        { id: 'cape_wizard', name: 'Zauberumhang', price: 3000, type: 'cape', icon: '✨', description: 'Mystische Kräfte' },
+        { id: 'cape_rainbow', name: 'Regenbogen-Cape', price: 2000, type: 'cape', icon: '🌈', description: 'Farbenfroh!' },
+        { id: 'cape_fire', name: 'Feuer-Cape', price: 3500, type: 'cape', icon: '🔥', description: 'Heiß, heiß, heiß!' },
+        { id: 'cape_ice', name: 'Eis-Cape', price: 3500, type: 'cape', icon: '❄️', description: 'Eiskalt!' },
+        { id: 'cape_invisible', name: 'Unsichtbarkeits-Umhang', price: 5000, type: 'cape', icon: '👻', description: 'Fast unsichtbar...' },
+        // Spezial - Preise erhöht
+        { id: 'acc_wings', name: 'Engelsflügel', price: 8000, type: 'special', icon: '👼', description: 'Himmlisch!' },
+        { id: 'acc_halo', name: 'Heiligenschein', price: 4000, type: 'special', icon: '😇', description: 'Heilig!' },
+        { id: 'acc_devil_horns', name: 'Teufelshörner', price: 3000, type: 'special', icon: '😈', description: 'Ein kleiner Teufel' },
+        { id: 'acc_bow', name: 'Schleife', price: 1000, type: 'special', icon: '🎀', description: 'Süß und niedlich' },
+        { id: 'acc_scarf', name: 'Schal', price: 1500, type: 'special', icon: '🧣', description: 'Warm und gemütlich' }
     ]
 };
 
@@ -2301,10 +2309,8 @@ function addCoinsToProfile(amount, level) {
     if (API.isGuest) {
         finalAmount = Math.floor(amount * API.GUEST_COIN_MULTIPLIER);
     } else {
-        // Double coins upgrade only works for registered users
-        if (game.userProfile.ownedUpgrades.includes('double_coins')) {
-            finalAmount *= 2;
-        }
+        // Coin multiplier upgrades only work for registered users
+        finalAmount *= getCoinMultiplier();
     }
 
     game.userProfile.totalCoins += finalAmount;
@@ -2539,29 +2545,32 @@ class Player {
             }
         }
 
-        // Calculate speed (with speed boost)
-        const currentSpeed = this.hasSpeedBoost ? CONFIG.PLAYER.SPEED * 1.6 : CONFIG.PLAYER.SPEED;
+        // Calculate speed (with speed boost from powerup OR permanent upgrade)
+        const hasPermanentSpeed = hasSpeedBoost();
+        const speedMultiplier = (this.hasSpeedBoost || hasPermanentSpeed) ? 1.15 : 1;
+        const currentSpeed = CONFIG.PLAYER.SPEED * speedMultiplier * (this.hasSpeedBoost ? 1.4 : 1);
 
         // Horizontal movement
         if (game.keys['ArrowLeft'] || game.keys['KeyA']) {
             if (this.velX > -currentSpeed) {
-                this.velX -= this.hasSpeedBoost ? 1.5 : 1;
+                this.velX -= (this.hasSpeedBoost || hasPermanentSpeed) ? 1.3 : 1;
             }
             this.facingRight = false;
         }
         if (game.keys['ArrowRight'] || game.keys['KeyD']) {
             if (this.velX < currentSpeed) {
-                this.velX += this.hasSpeedBoost ? 1.5 : 1;
+                this.velX += (this.hasSpeedBoost || hasPermanentSpeed) ? 1.3 : 1;
             }
             this.facingRight = true;
         }
 
         // Jumping (with double/triple jump)
         const jumpKeyPressed = game.keys['Space'] || game.keys['ArrowUp'] || game.keys['KeyW'];
+        const jumpMultiplier = hasSuperJump() ? 1.2 : 1;
         if (jumpKeyPressed && this.canJump && this.jumpCount < this.maxJumps) {
             this.jumping = true;
             this.grounded = false;
-            this.velY = -CONFIG.PLAYER.JUMP_FORCE;
+            this.velY = -CONFIG.PLAYER.JUMP_FORCE * jumpMultiplier;
             this.jumpCount++;
             this.canJump = false;
 
@@ -2823,7 +2832,8 @@ class Player {
         this.velX = 0;
         this.velY = 0;
         this.jumpCount = 0;
-        this.invulnerable = 120; // 2 seconds of invulnerability after respawn
+        // More invulnerability with shield_respawn upgrade (3 sec extra = 180 frames)
+        this.invulnerable = hasShieldRespawn() ? 300 : 120; // 5 sec with upgrade, 2 sec without
         game.cameraX = 0;
 
         // Reset maxJumps based on current power-up state
@@ -2844,7 +2854,7 @@ class Player {
         const profile = game.userProfile;
 
         // Determine secondary colors based on skin
-        let earColor, faceColor;
+        let earColor, faceColor, useGradient = false, gradientColors = null;
         if (skinColor === '#F5F5F5') { // Polar bear
             earColor = '#E8E8E8';
             faceColor = '#FFFFFF';
@@ -2857,9 +2867,23 @@ class Player {
         } else if (skinColor === '#FF69B4') { // Pink
             earColor = '#FF1493';
             faceColor = '#FFB6C1';
-        } else if (skinColor === '#4169E1') { // Ice
+        } else if (skinColor === '#4169E1') { // Blue
             earColor = '#1E90FF';
             faceColor = '#B0E0E6';
+        } else if (skinColor === 'rainbow') { // Rainbow - animated!
+            useGradient = true;
+            const time = Date.now() / 500;
+            gradientColors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#8B00FF'];
+            earColor = gradientColors[Math.floor(time) % gradientColors.length];
+            faceColor = '#FFFACD';
+        } else if (skinColor === 'galaxy') { // Galaxy - animated!
+            useGradient = true;
+            gradientColors = ['#1a0033', '#4B0082', '#8B008B', '#FF1493'];
+            earColor = '#9400D3';
+            faceColor = '#E6E6FA';
+        } else if (skinColor === '#B9F2FF') { // Diamond
+            earColor = '#87CEEB';
+            faceColor = '#F0FFFF';
         } else { // Default brown
             earColor = '#A0522D';
             faceColor = '#DEB887';
@@ -2870,8 +2894,16 @@ class Player {
             this.drawCape(ctx, screenX, profile.selectedCape);
         }
 
-        // Body
-        ctx.fillStyle = skinColor;
+        // Body - use gradient for special skins
+        if (useGradient && gradientColors) {
+            const gradient = ctx.createLinearGradient(screenX, this.y, screenX + this.width, this.y + this.height);
+            gradientColors.forEach((color, i) => {
+                gradient.addColorStop(i / (gradientColors.length - 1), color);
+            });
+            ctx.fillStyle = gradient;
+        } else {
+            ctx.fillStyle = skinColor;
+        }
         ctx.beginPath();
         ctx.roundRect(screenX, this.y, this.width, this.height, 8);
         ctx.fill();
@@ -9969,7 +10001,31 @@ function calculateExtraLives(upgrades) {
     let extra = 0;
     if (upgrades.includes('extra_life_1')) extra += 1;
     if (upgrades.includes('extra_life_2')) extra += 2;
+    if (upgrades.includes('extra_life_3')) extra += 3;
     return extra;
+}
+
+// Berechne Münz-Multiplikator basierend auf Upgrades
+function getCoinMultiplier() {
+    const upgrades = game.userProfile?.ownedUpgrades || [];
+    if (upgrades.includes('triple_coins')) return 3;
+    if (upgrades.includes('double_coins')) return 2;
+    return 1;
+}
+
+// Prüfe ob Spieler Speed-Boost hat
+function hasSpeedBoost() {
+    return game.userProfile?.ownedUpgrades?.includes('speed_boost') || false;
+}
+
+// Prüfe ob Spieler Super-Sprung hat
+function hasSuperJump() {
+    return game.userProfile?.ownedUpgrades?.includes('super_jump') || false;
+}
+
+// Prüfe ob Spieler Schutzschild nach Respawn hat
+function hasShieldRespawn() {
+    return game.userProfile?.ownedUpgrades?.includes('shield_respawn') || false;
 }
 
 function setupAuthHandlers() {
