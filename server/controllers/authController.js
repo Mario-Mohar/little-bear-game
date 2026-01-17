@@ -86,7 +86,8 @@ async function register(req, res) {
         const result = await pool.query(
             `INSERT INTO users (username, email, password_hash, verification_token, email_verified)
              VALUES ($1, $2, $3, $4, $5)
-             RETURNING id, username, email, email_verified, total_coins, purchased_skins, purchased_upgrades, selected_skin`,
+             RETURNING id, username, email, email_verified, total_coins, purchased_skins, purchased_upgrades, selected_skin,
+                       purchased_accessories, selected_hat, selected_glasses, selected_cape`,
             [username, normalizedEmail, passwordHash, verificationToken, !normalizedEmail] // Ohne E-Mail = auto-verified
         );
 
@@ -131,7 +132,11 @@ async function register(req, res) {
                 totalCoins: user.total_coins,
                 purchasedSkins: user.purchased_skins,
                 purchasedUpgrades: user.purchased_upgrades,
-                selectedSkin: user.selected_skin
+                selectedSkin: user.selected_skin,
+                purchasedAccessories: user.purchased_accessories || [],
+                selectedHat: user.selected_hat,
+                selectedGlasses: user.selected_glasses,
+                selectedCape: user.selected_cape
             },
             token
         });
@@ -152,7 +157,8 @@ async function login(req, res) {
         // Suche nach Username ODER E-Mail
         const result = await pool.query(
             `SELECT id, username, email, password_hash, email_verified, total_coins,
-                    purchased_skins, purchased_upgrades, selected_skin
+                    purchased_skins, purchased_upgrades, selected_skin,
+                    purchased_accessories, selected_hat, selected_glasses, selected_cape
              FROM users WHERE ${isEmail ? 'email' : 'LOWER(username)'} = $1`,
             [normalizedIdentifier]
         );
@@ -185,7 +191,11 @@ async function login(req, res) {
                 totalCoins: user.total_coins,
                 purchasedSkins: user.purchased_skins,
                 purchasedUpgrades: user.purchased_upgrades,
-                selectedSkin: user.selected_skin
+                selectedSkin: user.selected_skin,
+                purchasedAccessories: user.purchased_accessories || [],
+                selectedHat: user.selected_hat,
+                selectedGlasses: user.selected_glasses,
+                selectedCape: user.selected_cape
             },
             token
         });
