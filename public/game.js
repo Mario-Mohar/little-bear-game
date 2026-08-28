@@ -470,8 +470,58 @@ function updateUserInfoDisplay() {
     }
 }
 
+/**
+ * Highscores ohne Server.
+ *
+ * Als statische Seite ausgeliefert gibt es kein Backend: die globalen Listen
+ * bleiben leer und jeder Aufruf schreibt einen 404 in die Konsole. Das Spiel
+ * führt ohnehin eine lokale Bestenliste im localStorage, die hier bisher nur
+ * nie angezeigt wurde. Die Trennung nach PC und Mobile ergibt ohne gemeinsamen
+ * Server keinen Sinn, deshalb wird die zweite Liste ausgeblendet statt leer
+ * gezeigt.
+ */
+const LOCAL_HIGHSCORE_LISTS = [
+    'highscore-entries-pc', 'win-highscore-entries-pc',
+    'gameover-highscore-entries-pc', 'auth-highscore-entries-pc',
+];
+const HIDDEN_HIGHSCORE_LISTS = [
+    'highscore-entries-mobile', 'win-highscore-entries-mobile',
+    'gameover-highscore-entries-mobile', 'auth-highscore-entries-mobile',
+];
+const LOCAL_HIGHSCORE_TITLE = 'Bestenliste auf diesem Gerät';
+
+function displayLocalHighscores() {
+    for (const id of LOCAL_HIGHSCORE_LISTS) {
+        displayHighscores(game.highscores, id);
+        const heading = document.getElementById(id)?.closest('.highscore-list')?.querySelector('h3');
+        if (heading) heading.textContent = LOCAL_HIGHSCORE_TITLE;
+    }
+    for (const id of HIDDEN_HIGHSCORE_LISTS) {
+        const list = document.getElementById(id)?.closest('.highscore-list');
+        if (list) list.style.display = 'none';
+    }
+}
+
+/**
+ * Blendet aus, was ohne Server nicht funktionieren kann. Ein Knopf, der nur
+ * eine Fehlermeldung bringt, ist schlechter als kein Knopf.
+ */
+function hideOnlineOnlyFeatures() {
+    for (const id of ['friends-btn', 'achievements-btn']) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    }
+}
+
 async function loadGlobalHighscores() {
     console.log('Loading global highscores...');
+
+    // Ohne Server gibt es nichts Globales zu holen.
+    if (!API.isOnline) {
+        displayLocalHighscores();
+        hideOnlineOnlyFeatures();
+        return;
+    }
 
     // Load both PC and Mobile highscores in parallel
     const [pcData, mobileData] = await Promise.all([
@@ -2440,6 +2490,7 @@ async function saveHighscore() {
     game.highscores.sort((a, b) => b.score - a.score);
     game.highscores = game.highscores.slice(0, 5);
     localStorage.setItem('littleBearHighscores', JSON.stringify(game.highscores));
+    if (!API.isOnline) displayLocalHighscores();
 
     // Save to server if logged in
     if (!API.isGuest) {
