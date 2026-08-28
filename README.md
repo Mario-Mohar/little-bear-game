@@ -8,6 +8,16 @@ account, nothing to install.
 
 **[English](#english) · [Deutsch](#deutsch)**
 
+<p align="center">
+  <img src="docs/spiel.png" alt="Level one: the bear on the left, mushroom enemies, coins and floating platforms, with level, points, lives, timer and coin counter along the top" width="820">
+</p>
+
+<p align="center">
+  <img src="docs/start.png" alt="Start screen with the coin count, the controls, a high score list titled Bestenliste auf diesem Gerät, and buttons for starting the game and opening the shop" width="330">
+</p>
+
+<p align="center"><sub>Screenshots from the static version, the one the link above serves. · Screenshots aus der statischen Fassung, die der Link oben ausliefert.</sub></p>
+
 ---
 
 # English
