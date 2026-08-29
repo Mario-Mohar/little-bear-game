@@ -1,6 +1,16 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'little-bear-secret-key-change-in-production';
+// Kein Fallback: ein Geheimnis, das im oeffentlichen Repo steht, ist kein
+// Standardwert, sondern ein veroeffentlichtes Passwort -- jeder koennte damit
+// Tokens fuer beliebige Konten ausstellen. Fehlt es, starten wir gar nicht,
+// genauso wie config/db.js es bei DATABASE_URL haelt.
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+    console.error('ERROR: JWT_SECRET environment variable is not set!');
+    console.error('Please set JWT_SECRET in Railway Variables or .env file');
+    process.exit(1);
+}
 
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
@@ -40,10 +50,19 @@ function optionalAuth(req, res, next) {
 
 function generateToken(user) {
     return jwt.sign(
-        { id: user.id, username: user.username, email: user.email },
+        { id: user.id, username: user.username, email: user.email, isAdmin: user.is_admin === true },
         JWT_SECRET,
         { expiresIn: '7d' }
     );
 }
 
-module.exports = { authenticateToken, optionalAuth, generateToken, JWT_SECRET };
+// Muss hinter authenticateToken haengen, nie allein: ohne req.user gibt es
+// nichts zu pruefen.
+function requireAdmin(req, res, next) {
+    if (!req.user || req.user.isAdmin !== true) {
+        return res.status(403).json({ error: 'Admin-Rechte erforderlich' });
+    }
+    next();
+}
+
+module.exports = { authenticateToken, optionalAuth, requireAdmin, generateToken, JWT_SECRET };

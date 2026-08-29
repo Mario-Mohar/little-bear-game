@@ -32,8 +32,23 @@ async function initDatabase() {
                 purchased_upgrades TEXT[] DEFAULT '{}',
                 selected_skin VARCHAR(50) DEFAULT 'default',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_login TIMESTAMP
+                last_login TIMESTAMP,
+                is_admin BOOLEAN NOT NULL DEFAULT FALSE
             )
+        `);
+
+        // Add is_admin column if it doesn't exist (for existing databases).
+        // Admin ist eine Eigenschaft des Kontos, kein geteiltes Passwort.
+        // Freischalten von Hand:
+        //   UPDATE users SET is_admin = TRUE WHERE username = '<name>';
+        await client.query(`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                               WHERE table_name = 'users' AND column_name = 'is_admin') THEN
+                    ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT FALSE;
+                END IF;
+            END $$;
         `);
 
         // Migration: E-Mail optional machen für bestehende Datenbanken

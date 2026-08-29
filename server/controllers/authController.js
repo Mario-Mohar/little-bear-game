@@ -158,7 +158,8 @@ async function login(req, res) {
         const result = await pool.query(
             `SELECT id, username, email, password_hash, email_verified, total_coins,
                     purchased_skins, purchased_upgrades, selected_skin,
-                    purchased_accessories, selected_hat, selected_glasses, selected_cape
+                    purchased_accessories, selected_hat, selected_glasses, selected_cape,
+                    is_admin
              FROM users WHERE ${isEmail ? 'email' : 'LOWER(username)'} = $1`,
             [normalizedIdentifier]
         );

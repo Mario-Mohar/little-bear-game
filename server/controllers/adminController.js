@@ -1,19 +1,5 @@
 const { pool } = require('../config/db');
 
-// Admin credentials (in production, use environment variables)
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'LittleBearAdmin2025!';
-
-// Verify admin password
-async function verifyAdmin(req, res) {
-    const { password } = req.body;
-
-    if (password === ADMIN_PASSWORD) {
-        res.json({ success: true, message: 'Admin-Zugang gewährt' });
-    } else {
-        res.status(401).json({ success: false, error: 'Falsches Passwort' });
-    }
-}
-
 // Search users
 async function searchUsers(req, res) {
     const { query } = req.query;
@@ -310,7 +296,6 @@ async function setCoins(req, res) {
 }
 
 module.exports = {
-    verifyAdmin,
     searchUsers,
     getUserDetails,
     resetCoins,

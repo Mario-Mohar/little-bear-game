@@ -1,9 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
-// Verify admin password
-router.post('/verify', adminController.verifyAdmin);
+// Jede Route hier braucht ein gueltiges Token UND ein Konto mit is_admin.
+// Vorher haette jeder, der den Server erreicht, Konten loeschen koennen: das
+// frueher hier stehende /verify prueft ein Passwort und antwortet nur
+// { success: true } -- ohne Token, ohne Sitzung. Die Sperre lag damit
+// ausschliesslich im Client. Der Admin-Panel meldet sich jetzt ueber
+// /api/auth/login an wie jeder andere auch.
+router.use(authenticateToken);
+router.use(requireAdmin);
 
 // Get statistics
 router.get('/stats', adminController.getStats);
