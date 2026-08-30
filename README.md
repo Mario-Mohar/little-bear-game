@@ -58,6 +58,20 @@ npm start
 Needs Node 18+ and a PostgreSQL database. `railway.json` is included; the app
 was built to run there.
 
+Admin rights belong to an account, not to a shared password. Register normally,
+then grant them from a shell on the server:
+
+```bash
+npm run make-admin -- yourname      # grant
+npm run make-admin -- --list        # who has them
+npm run make-admin -- --revoke name # take them away
+```
+
+There is deliberately no route for this — it needs a shell and the database
+credentials. Note that `is_admin` travels in the JWT, which lives seven days: a
+new admin has to sign in again, and a revoked one keeps the rights in an
+already-issued token until it expires.
+
 ## Serving just the game
 
 ```bash
@@ -115,6 +129,20 @@ npm start
 
 Braucht Node 18+ und eine PostgreSQL-Datenbank. Die `railway.json` liegt bei,
 dort war die Anwendung zum Laufen gedacht.
+
+Adminrechte hängen am Konto, nicht an einem geteilten Passwort. Normal
+registrieren, dann auf dem Server in einer Shell vergeben:
+
+```bash
+npm run make-admin -- deinname       # geben
+npm run make-admin -- --list         # zeigen, wer sie hat
+npm run make-admin -- --revoke name  # nehmen
+```
+
+Dafür gibt es bewusst keine Route — es braucht eine Shell und die
+Datenbank-Zugangsdaten. `is_admin` reist im JWT mit, und das lebt sieben Tage:
+wer gerade Admin wurde, muss sich neu anmelden, und wem die Rechte genommen
+wurden, behält sie in einem bereits ausgestellten Token bis zum Ablauf.
 
 ## Nur das Spiel ausliefern
 

@@ -5,7 +5,8 @@
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
-    "dev": "node server/server.js"
+    "dev": "node server/server.js",
+    "make-admin": "node server/scripts/make-admin.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -21,6 +22,10 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["game", "platformer", "little-bear"],
+  "keywords": [
+    "game",
+    "platformer",
+    "little-bear"
+  ],
   "license": "ISC"
 }
