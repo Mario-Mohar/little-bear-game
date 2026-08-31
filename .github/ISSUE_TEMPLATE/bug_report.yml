@@ -1,0 +1,33 @@
+name: Bug report
+description: Something behaves differently than it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "**Never paste a JWT, a DATABASE_URL or a JWT_SECRET.** A token from this server is a working key to an account until it expires."
+  - type: dropdown
+    id: mode
+    attributes:
+      label: How are you playing
+      options: ["Static page, no account", "With a server and an account"]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+    validations:
+      required: true

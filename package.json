@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server/server.js",
     "dev": "node server/server.js",
-    "make-admin": "node server/scripts/make-admin.js"
+    "make-admin": "node server/scripts/make-admin.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -16,8 +18,8 @@
     "express-rate-limit": "^7.1.5",
     "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.2",
-    "resend": "^2.0.0",
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "resend": "^2.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -27,5 +29,8 @@
     "platformer",
     "little-bear"
   ],
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "vitest": "^4.1.11"
+  }
 }
