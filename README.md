@@ -1,5 +1,7 @@
 # Little Bear
 
+[![codecov](https://codecov.io/gh/Mario-Mohar/little-bear-game/graph/badge.svg)](https://codecov.io/gh/Mario-Mohar/little-bear-game)
+
 A browser platformer: run, double jump, collect coins, avoid the mushrooms.
 Levels are generated, so it keeps going.
 
