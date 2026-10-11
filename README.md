@@ -57,7 +57,7 @@ cp .env.example .env      # fill in DATABASE_URL and JWT_SECRET
 npm start
 ```
 
-Needs Node 18+ and a PostgreSQL database. `railway.json` is included; the app
+Needs Node 22+ and a PostgreSQL database. `railway.json` is included; the app
 was built to run there.
 
 Admin rights belong to an account, not to a shared password. Register normally,
@@ -129,7 +129,7 @@ cp .env.example .env      # DATABASE_URL und JWT_SECRET eintragen
 npm start
 ```
 
-Braucht Node 18+ und eine PostgreSQL-Datenbank. Die `railway.json` liegt bei,
+Braucht Node 22+ und eine PostgreSQL-Datenbank. Die `railway.json` liegt bei,
 dort war die Anwendung zum Laufen gedacht.
 
 Adminrechte hängen am Konto, nicht an einem geteilten Passwort. Normal

@@ -1,8 +1,11 @@
+const { matchedData } = require('express-validator');
 const { pool } = require('../config/db');
 
 // Freund per Username oder E-Mail suchen
 async function searchUser(req, res) {
-    const { query } = req.query;
+    // Express 5 keeps req.query read-only, so the trimmed value from the
+    // validator only exists in matchedData
+    const { query } = matchedData(req, { locations: ['query'] });
 
     if (!query || query.length < 2) {
         return res.status(400).json({ error: 'Suchbegriff muss mindestens 2 Zeichen lang sein' });
