@@ -23,7 +23,6 @@ async function sendEmail(to, subject, html) {
 
     console.log('Sende E-Mail an:', to);
     console.log('Von:', EMAIL_FROM);
-    console.log('API Key vorhanden:', process.env.RESEND_API_KEY ? 'Ja (' + process.env.RESEND_API_KEY.substring(0, 10) + '...)' : 'Nein');
 
     try {
         const { data, error } = await resend.emails.send({
