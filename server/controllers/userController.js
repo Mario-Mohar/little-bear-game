@@ -170,19 +170,18 @@ async function addCoins(req, res) {
     const { coins, level, sessionData } = req.body;
 
     try {
-        // Server-side validation of coins earned
+        // Der Client schickt die Grundmenge, ohne Multiplikator. Nur der
+        // Server rechnet ihn ein, sonst zaehlte er doppelt (#16).
         const maxPossibleCoins = calculateMaxCoins(level);
         const validatedCoins = Math.min(coins, maxPossibleCoins);
 
-        // Get user's upgrades to check for double_coins
         const userResult = await pool.query(
             'SELECT purchased_upgrades, total_coins FROM users WHERE id = $1',
             [req.user.id]
         );
 
         const upgrades = userResult.rows[0]?.purchased_upgrades || [];
-        const hasDoubleCo = upgrades.includes('double_coins');
-        const finalCoins = hasDoubleCo ? validatedCoins * 2 : validatedCoins;
+        const finalCoins = validatedCoins * coinMultiplier(upgrades);
 
         // Update coins
         const result = await pool.query(
@@ -210,13 +209,20 @@ async function addCoins(req, res) {
     }
 }
 
+// Wie getCoinMultiplier im Client: das hoechste gekaufte Upgrade zaehlt.
+function coinMultiplier(upgrades) {
+    if (upgrades.includes('triple_coins')) return 3;
+    if (upgrades.includes('double_coins')) return 2;
+    return 1;
+}
+
 function calculateMaxCoins(level) {
     // Base coins per level + collected coins bonus
     // This should match frontend calculation
     const baseCoins = 10 + (level * 5);
     const maxCollectedBonus = 50; // Max coins collectible per level
     const allCoinsBonus = 10;
-    return (baseCoins + maxCollectedBonus + allCoinsBonus) * 2; // *2 for double_coins upgrade margin
+    return (baseCoins + maxCollectedBonus + allCoinsBonus) * 2; // Spielraum, gilt fuer die Grundmenge
 }
 
 async function purchase(req, res) {

@@ -51,4 +51,32 @@ describe("app", () => {
     expect(query).toHaveBeenCalledWith(expect.any(String), ["%bear%", "bear", 7]);
     query.mockRestore();
   });
+
+  async function addCoins(coins, upgrades) {
+    const query = vi.spyOn(pool, "query").mockImplementation(async (sql) => {
+      if (sql.startsWith("SELECT purchased_upgrades")) return { rows: [{ purchased_upgrades: upgrades, total_coins: 1000 }] };
+      return { rows: [{ total_coins: 1234 }] };
+    });
+    const token = jwt.sign({ id: 7, username: "bear" }, process.env.JWT_SECRET);
+    const res = await fetch(`${base}/api/users/coins`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ coins, level: 1 }),
+    });
+    const update = query.mock.calls.find(([sql]) => sql.startsWith("UPDATE users SET total_coins"));
+    query.mockRestore();
+    return { res, added: update?.[1][0] };
+  }
+
+  it("applies the coin multiplier once, on the server (#16)", async () => {
+    expect((await addCoins(30, [])).added).toBe(30);
+    expect((await addCoins(30, ["double_coins"])).added).toBe(60);
+    expect((await addCoins(30, ["double_coins", "triple_coins"])).added).toBe(90);
+  });
+
+  it("refuses negative coins before touching the database", async () => {
+    const { res, added } = await addCoins(-500, []);
+    expect(res.status).toBe(400);
+    expect(added).toBeUndefined();
+  });
 });
