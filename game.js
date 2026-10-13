@@ -52,12 +52,27 @@ const API = {
         return fetch(this.baseUrl + endpoint, { ...options, headers: { ...headers, ...options.headers } });
     },
 
+    // Ohne Server antwortet der statische Webserver mit HTML, und json()
+    // warf einen Fehler, den niemand fing: das Formular blieb einfach stumm
+    // (#18). Jetzt kommt immer ein Ergebnis mit Fehlermeldung zurueck.
+    async authRequest(endpoint, body) {
+        try {
+            const response = await this.request(endpoint, {
+                method: 'POST',
+                body: JSON.stringify(body)
+            });
+            const data = await response.json();
+            return { response, data };
+        } catch (e) {
+            return {
+                response: { ok: false },
+                data: { error: 'Anmelden geht nur mit dem Server. Du kannst als Gast spielen.' }
+            };
+        }
+    },
+
     async register(username, email, password) {
-        const response = await this.request('/auth/register', {
-            method: 'POST',
-            body: JSON.stringify({ username, email, password })
-        });
-        const data = await response.json();
+        const { response, data } = await this.authRequest('/auth/register', { username, email, password });
         if (response.ok) {
             this.token = data.token;
             this.user = data.user;
@@ -68,11 +83,7 @@ const API = {
     },
 
     async login(identifier, password) {
-        const response = await this.request('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({ identifier, password })
-        });
-        const data = await response.json();
+        const { response, data } = await this.authRequest('/auth/login', { identifier, password });
         if (response.ok) {
             this.token = data.token;
             this.user = data.user;
@@ -507,9 +518,18 @@ function displayLocalHighscores() {
  * eine Fehlermeldung bringt, ist schlechter als kein Knopf.
  */
 function hideOnlineOnlyFeatures() {
-    for (const id of ['friends-btn', 'achievements-btn']) {
+    // Anmelden und Registrieren brauchen den Server genauso (#18).
+    for (const id of ['friends-btn', 'achievements-btn', 'login-form', 'register-form', 'forgot-form']) {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
+    }
+    const gast = document.querySelector('#auth-screen .guest-option');
+    if (gast && !document.getElementById('offline-note')) {
+        const hinweis = document.createElement('p');
+        hinweis.id = 'offline-note';
+        hinweis.className = 'guest-note';
+        hinweis.textContent = 'Diese Version läuft ohne Server, Konten gibt es hier nicht.';
+        gast.prepend(hinweis);
     }
 }
 
@@ -2304,12 +2324,8 @@ const SHOP = {
 function loadUserProfile(playerName) {
     let allProfiles = JSON.parse(localStorage.getItem('littleBearProfiles') || '{}');
 
-    // TEMP: Reset Mario's profile once to give fresh 7000 coins (remove this after testing)
-    if (playerName === 'Mario' && !localStorage.getItem('marioResetDone')) {
-        delete allProfiles['Mario'];
-        localStorage.setItem('littleBearProfiles', JSON.stringify(allProfiles));
-        localStorage.setItem('marioResetDone', 'true');
-    }
+    // Ueberbleibsel eines alten Testcodes (#17)
+    localStorage.removeItem('marioResetDone');
 
     if (playerName && allProfiles[playerName]) {
         game.userProfile = { ...game.userProfile, ...allProfiles[playerName] };
@@ -2327,11 +2343,6 @@ function loadUserProfile(playerName) {
             selectedCape: null,
             extraLives: 0
         };
-
-        // TEST: Give Mario 7000 coins when first created
-        if (playerName === 'Mario') {
-            game.userProfile.totalCoins = 7000;
-        }
     }
 
     // Ensure accessory arrays exist for old profiles
@@ -2366,12 +2377,20 @@ function addCoinsToProfile(amount, level) {
     game.userProfile.totalCoins += finalAmount;
     saveUserProfile();
 
-    // Sync with server if logged in
+    // Sync with server if logged in. Der Server bekommt die Grundmenge und
+    // rechnet den Multiplikator selbst ein; vorher schickte der Client schon
+    // die verdoppelte Menge, und der Server verdoppelte noch einmal (#16).
+    // Sein Kontostand ist danach massgeblich.
     if (!API.isGuest) {
-        API.addCoins(finalAmount, level || game.level, {
+        API.addCoins(amount, level || game.level, {
             maxLevel: game.level,
             score: game.score,
             duration: Math.floor((Date.now() - game.levelStartTime) / 1000)
+        }).then(data => {
+            if (data && typeof data.totalCoins === 'number') {
+                game.userProfile.totalCoins = data.totalCoins;
+                saveUserProfile();
+            }
         });
     }
 
@@ -7547,13 +7566,14 @@ function nextLevel() {
     game.obstacles = [];
     game.boss = null;
     game.bossDefeated = false;
-    updateUI();
 
     // Challenge HUD wieder anzeigen
     updateChallengeHUD();
 
     generateLevel(game.level);
     game.player = new Player(100, 400 + getYOffset());
+    // Erst nach generateLevel, sonst steht die Muenzzahl des alten Levels da (#19).
+    updateUI();
     game.running = true;
     gameLoop();
 }
@@ -10309,21 +10329,29 @@ function actuallyStartGame() {
     // Achievement tracking initialisieren
     resetAchievementTracking();
 
-    updateUI();
-
-    // Show guest warning before level starts
-    if (API.isGuest) {
-        showGuestLevelWarning();
-    }
-
     generateLevel(game.level);
     game.player = new Player(100, 400 + getYOffset());
+    // Erst nach generateLevel: das setzt die Muenzzahl des Levels (#19).
+    updateUI();
+
+    // Gaeste sehen vorher den Hinweis. Das Level laeuft erst los, wenn er
+    // weggeklickt ist; vorher liefen Gegner und Uhr schon dahinter (#15).
+    if (API.isGuest) {
+        showGuestLevelWarning(startLevelLoop);
+    } else {
+        startLevelLoop();
+    }
+}
+
+function startLevelLoop() {
+    game.levelStartTime = Date.now();
+    achievementTracking.levelStartTime = Date.now();
     game.running = true;
     gameLoop();
 }
 
 // Show guest warning before level
-function showGuestLevelWarning() {
+function showGuestLevelWarning(onContinue) {
     // Create a temporary overlay warning
     const overlay = document.createElement('div');
     overlay.id = 'guest-level-warning-overlay';
@@ -10355,6 +10383,7 @@ function showGuestLevelWarning() {
 
     document.getElementById('continue-guest-btn').addEventListener('click', () => {
         overlay.remove();
+        onContinue();
     });
 
     document.getElementById('register-instead-btn').addEventListener('click', () => {
